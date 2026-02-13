@@ -1,0 +1,37 @@
+:host ::ng-deep .income-card {
+  @apply relative rounded-3xl border border-white/10 px-7 py-8 text-white;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+.card-header {
+  @apply mb-2;
+}
+
+.card-title {
+  @apply text-lg font-medium text-white/90;
+}
+
+.income-amount {
+  @apply my-6 text-5xl font-bold tracking-tight;
+}
+
+.budget-row {
+  @apply mb-2 flex items-center justify-between text-sm text-white/80;
+}
+
+.budget-track {
+  @apply mb-4 h-2 w-full overflow-hidden rounded-full bg-white/20;
+}
+
+.budget-fill {
+  @apply h-full rounded-full bg-amber-300 transition-all duration-300;
+}
+
+.dropdown {
+  @apply w-full cursor-pointer rounded-xl border border-white/20 px-4 py-3 text-sm font-medium text-white backdrop-blur;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dropdown option {
+  background: #5b21b6;
+}

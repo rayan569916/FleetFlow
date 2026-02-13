@@ -1,0 +1,24 @@
+<div class="min-h-screen bg-slate-50 app-shell" [class.sidebar-expanded]="(sidebarExpanded$ | async) ?? false">
+  <button class="mobile-overlay" [class.open]="(sidebarExpanded$ | async) ?? false" (click)="closeSidebar()"
+    aria-label="Close sidebar"></button>
+  <app-sidebar [expanded]="(sidebarExpanded$ | async) ?? false" />
+
+  <main class="content-shell">
+    <app-header (menuClicked)="toggleSidebar()" />
+
+    <section class="grid-row-1">
+      <app-recent-activity [activity]="(activity$ | async) ?? []" />
+      <div class="flex flex-col gap-2">
+        <app-income-card [snapshot]="(income$ | async)" [selectedPeriod]="(period$ | async) ?? 'today'"
+          (periodChange)="onPeriodChange($event)" />
+        <app-total-cargo-card [snapshot]="(income$ | async)" [selectedPeriod]="(period$ | async) ?? 'today'"
+          (periodChange)="onPeriodChange($event)" />
+      </div>
+      <app-trends-chart [trendPoints]="(trends$ | async) ?? []" />
+    </section>
+
+    <section class="grid-row-2">
+      <app-drivers-list [drivers]="(drivers$ | async) ?? []" />
+    </section>
+  </main>
+</div>

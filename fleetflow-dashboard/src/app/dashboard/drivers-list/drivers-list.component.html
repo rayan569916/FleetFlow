@@ -1,0 +1,35 @@
+<app-card>
+  <div class="mb-6 flex items-center justify-between card-header">
+    <h2 class="text-lg font-semibold tracking-tight text-slate-800 card-title">Active Drivers</h2>
+    <span class="rounded-lg bg-amber-300/20 px-4 py-2 text-sm font-semibold text-amber-600 online-pill">{{ activeCount
+      }} Online</span>
+  </div>
+
+  <div class="mt-4 grid gap-4 drivers-grid">
+    @for (driver of drivers(); track trackById($index)) {
+    <article
+      class="flex items-center gap-4 rounded-2xl border border-slate-200 p-5 transition-all duration-300 driver-card">
+      <div
+        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-violet-600 to-violet-400 text-lg font-semibold text-white driver-avatar">
+        @if (driver.avatarUrl) {
+        <img [src]="driver.avatarUrl" [alt]="driver.name" class="h-full w-full rounded-full object-cover" />
+        } @else {
+        {{ driver.initials }}
+        }
+      </div>
+
+      <div class="flex-1 driver-info">
+        <h3 class="text-base font-semibold text-slate-800 driver-name">{{ driver.name }}</h3>
+        <p class="font-mono text-sm text-slate-500 driver-contact">{{ driver.contact }}</p>
+      </div>
+
+      <div class="ml-auto flex items-center gap-2 driver-status">
+        <span class="h-2.5 w-2.5 rounded-full status-dot" [class.active]="driver.status === 'active'"
+          [class.inactive]="driver.status === 'inactive'"></span>
+        <span class="text-xs font-medium text-slate-500 status-text">{{ driver.status === 'active' ? 'Active' :
+          'Offline' }}</span>
+      </div>
+    </article>
+    }
+  </div>
+</app-card>

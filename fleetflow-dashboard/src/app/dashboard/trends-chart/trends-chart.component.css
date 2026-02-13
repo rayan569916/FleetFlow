@@ -1,0 +1,29 @@
+
+.chart-svg {
+  overflow: visible;
+}
+
+.area-path {
+  fill: url(#areaGradient);
+}
+
+.line-path {
+  fill: none;
+  stroke: #7c3aed;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.chart-point {
+  fill: #fff;
+  stroke: #7c3aed;
+  stroke-width: 3;
+  transition: all 0.2s ease;
+}
+
+.chart-point:hover {
+  r: 8;
+  stroke-width: 4;
+}
+

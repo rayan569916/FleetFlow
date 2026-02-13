@@ -1,0 +1,20 @@
+.activity-list {
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.activity-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.activity-item {
+  border-color: rgba(124, 58, 237, 0.1);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.02), rgba(124, 58, 237, 0.01));
+}
+
+.activity-item:hover {
+  border-color: rgba(124, 58, 237, 0.15);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(124, 58, 237, 0.02));
+  transform: translateX(4px);
+}

@@ -1,0 +1,20 @@
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 0.25rem;
+  width: 100%;
+  background: linear-gradient(to right, #7c3aed, #a78bfa);
+  opacity: 0;
+  transition: opacity 0.300s;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}

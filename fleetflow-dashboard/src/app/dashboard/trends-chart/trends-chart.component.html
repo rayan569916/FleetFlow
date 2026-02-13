@@ -1,0 +1,43 @@
+<app-card extraClass="h-full">
+  <div class="mb-6 flex items-center justify-between">
+    <h2 class="text-lg font-semibold tracking-tight text-slate-800">Yearly Income Trends</h2>
+    <span class="rounded-lg bg-amber-300/20 px-3 py-1 text-sm font-semibold text-amber-600">2024</span>
+  </div>
+
+  <div class="relative mt-4 h-[300px] py-4">
+    @if (hoveredPoint(); as point) {
+      <div class="pointer-events-none absolute z-10 rounded-lg bg-slate-800/95 px-3 py-2 text-sm font-semibold text-white" [style.left.px]="point.x - 15" [style.top.px]="point.y - 44">
+        {{ point.label }}
+      </div>
+    }
+
+    <svg class="chart-svg h-full w-full" viewBox="0 0 600 250" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color: rgba(124, 58, 237, 0.3); stop-opacity: 1" />
+          <stop offset="100%" style="stop-color: rgba(124, 58, 237, 0.02); stop-opacity: 1" />
+        </linearGradient>
+      </defs>
+
+      <path [attr.d]="areaPath()" class="area-path" />
+      <path [attr.d]="linePath()" class="line-path" />
+
+      @for (point of mappedPoints(); track trackByMonth($index)) {
+        <circle
+          class="chart-point"
+          [attr.cx]="point.x"
+          [attr.cy]="point.y"
+          r="6"
+          (mouseenter)="onPointEnter(point)"
+          (mouseleave)="onPointLeave()"
+        />
+      }
+    </svg>
+
+    <div class="mt-3 flex justify-between px-4">
+      @for (point of mappedPoints(); track trackByMonth($index)) {
+        <span class="text-xs font-medium text-slate-400">{{ point.month }}</span>
+      }
+    </div>
+  </div>
+</app-card>
