@@ -50,3 +50,14 @@ export const TREND_DATA_2024: TrendPoint[] = [
   { month: 'NOV', value: 58400, label: '€58.4K' },
   { month: 'DEC', value: 54300, label: '€54.3K' }
 ];
+
+export const designations = [
+    { id: 1, name: 'Cashier' },
+    { id: 2, name: 'Manager' }
+  ];
+
+export const offices = [
+    { id: 101, name: 'Main Branch - Dubai' },
+    { id: 102, name: 'Secondary Office - Abu Dhabi' },
+    { id: 103, name: 'Logistics Hub - Riyadh' }
+  ];

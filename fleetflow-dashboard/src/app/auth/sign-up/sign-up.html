@@ -1,0 +1,98 @@
+<form class="space-y-6" [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+  <!-- Full Name -->
+  <div>
+    <label class="block text-sm font-medium text-slate-700">Full Name</label>
+    <input type="text" formControlName="fullName"
+      class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md text-sm shadow-sm focus:ring-1 outline-none transition-all"
+      [class.border-red-500]="signupForm.get('fullName')?.touched && signupForm.get('fullName')?.invalid"
+      [class.focus:ring-red-500]="signupForm.get('fullName')?.touched && signupForm.get('fullName')?.invalid"
+      [class.focus:ring-indigo-500]="signupForm.get('fullName')?.touched && signupForm.get('fullName')?.invalid"
+      [class.border-slate-300]="!(signupForm.get('fullName')?.touched && signupForm.get('fullName')?.invalid)">
+  </div>
+
+  <!-- Email -->
+  <div>
+    <label class="block text-sm font-medium text-slate-700">Email address</label>
+    <input type="email" formControlName="email"
+      class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md text-sm shadow-sm focus:ring-1 outline-none transition-all"
+      [class.border-red-500]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid"
+      [class.border-slate-300]="!(signupForm.get('email')?.touched && signupForm.get('email')?.invalid)"
+      [class.focus:ring-red-500]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid"
+      [class.focus:ring-indigo-500]="!(signupForm.get('email')?.touched && signupForm.get('email')?.invalid)">
+
+  </div>
+
+  <!-- Designation Lookup -->
+  <div>
+    <label class="block text-sm font-medium text-slate-700">Designation</label>
+    <select formControlName="designationId"
+      class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md text-sm shadow-sm focus:ring-1 outline-none transition-all cursor-pointer"
+      [class.border-red-500]="signupForm.get('designationId')?.touched && signupForm.get('designationId')?.invalid"
+      [class.border-slate-300]="!(signupForm.get('designationId')?.touched && signupForm.get('designationId')?.invalid)">
+      <option value="" disabled selected>Select Designation</option>
+      <option *ngFor="let d of designations" [value]="d.id">{{ d.name }}</option>
+    </select>
+    <p *ngIf="signupForm.get('designationId')?.touched && signupForm.get('designationId')?.invalid"
+      class="mt-1 text-xs text-red-500">
+      Designation is required.
+    </p>
+  </div>
+
+  <!-- Office Lookup -->
+  <div>
+    <label class="block text-sm font-medium text-slate-700">Office</label>
+    <select formControlName="officeId"
+      class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md text-sm shadow-sm focus:ring-1 outline-none transition-all cursor-pointer"
+      [class.border-red-500]="signupForm.get('officeId')?.touched && signupForm.get('officeId')?.invalid"
+      [class.border-slate-300]="!(signupForm.get('officeId')?.touched && signupForm.get('officeId')?.invalid)">
+      <option value="" disabled selected>Select Office</option>
+      <option *ngFor="let o of offices" [value]="o.id">{{ o.name }}</option>
+    </select>
+    <p *ngIf="signupForm.get('officeId')?.touched && signupForm.get('officeId')?.invalid"
+      class="mt-1 text-xs text-red-500">
+      Office is required.
+    </p>
+  </div>
+
+  <!-- Password -->
+  <div>
+    <label class="block text-sm font-medium text-slate-700">Password</label>
+    <input type="password" formControlName="password"
+      class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md text-sm shadow-sm focus:ring-1 outline-none transition-all"
+      [class.border-red-500]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid"
+      [class.border-slate-300]="!(signupForm.get('password')?.touched && signupForm.get('password')?.invalid)"
+      [class.focus:ring-red-500]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid"
+      [class.focus:ring-indigo-500]="!(signupForm.get('password')?.touched && signupForm.get('password')?.invalid)">
+
+    <!-- Specific Password Strength Errors -->
+    <div *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.invalid"
+      class="mt-1 text-xs text-red-500 space-y-1">
+      <p *ngIf="signupForm.get('password')?.errors?.['required']">Password is required.</p>
+      <p *ngIf="signupForm.get('password')?.errors?.['pattern']">
+        Must be 8+ chars with uppercase, lowercase, number, and special character.
+      </p>
+    </div>
+  </div>
+
+  <!-- Confirm Password -->
+  <div>
+    <label class="block text-sm font-medium text-slate-700">Confirm Password</label>
+    <input type="password" formControlName="ConfirmPassword"
+      class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md text-sm shadow-sm focus:ring-1 outline-none transition-all"
+      [class.border-red-500]="signupForm.get('ConfirmPassword')?.touched && (signupForm.get('ConfirmPassword')?.invalid || signupForm.errors?.['mismatch'])"
+      [class.border-slate-300]="!(signupForm.get('ConfirmPassword')?.touched && (signupForm.get('ConfirmPassword')?.invalid || signupForm.errors?.['mismatch']))"
+      [class.focus:ring-red-500]="signupForm.get('ConfirmPassword')?.touched && (signupForm.get('ConfirmPassword')?.invalid || signupForm.errors?.['mismatch'])"
+      [class.focus:ring-indigo-500]="!(signupForm.get('ConfirmPassword')?.touched && (signupForm.get('ConfirmPassword')?.invalid || signupForm.errors?.['mismatch']))">
+
+    <!-- Match Error -->
+    <p *ngIf="signupForm.get('ConfirmPassword')?.touched && signupForm.errors?.['mismatch']"
+      class="mt-1 text-xs text-red-500">
+      Passwords do not match.
+    </p>
+  </div>
+
+  <button type="submit" [disabled]="signupForm.invalid" [class.opacity-50]="signupForm.invalid"
+    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+    Create Account
+  </button>
+</form>

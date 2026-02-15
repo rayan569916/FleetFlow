@@ -36,3 +36,11 @@ export interface TrendPoint {
   value: number;
   label: string;
 }
+
+export interface Entry {
+  id: number;
+  amount: number;
+  category: string;
+  description: string;
+  date: string;
+}

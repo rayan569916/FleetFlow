@@ -1,5 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { RecentActivityComponent } from '../../dashboard/recent-activity/recent-activity.component';
 import { IncomeCardComponent } from '../../dashboard/income-card/income-card.component';
@@ -10,6 +11,7 @@ import { UiStateService } from '../../services/ui-state.service';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TotalCargoCardComponent } from "../../dashboard/total-cargo-card.component/total-cargo-card.component";
+import { CardComponent } from '../../shared/ui/card/card.component';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -22,7 +24,8 @@ import { TotalCargoCardComponent } from "../../dashboard/total-cargo-card.compon
     IncomeCardComponent,
     TrendsChartComponent,
     DriversListComponent,
-    TotalCargoCardComponent
+    TotalCargoCardComponent,
+    CardComponent
 ],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.css',
@@ -31,6 +34,7 @@ import { TotalCargoCardComponent } from "../../dashboard/total-cargo-card.compon
 export class DashboardLayoutComponent {
   private uiStateService = inject(UiStateService);
   private dashboardDataService = inject(DashboardDataService);
+  private router: Router = inject(Router);
 
   readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
   readonly activity$ = this.dashboardDataService.getRecentActivity();
@@ -51,5 +55,20 @@ export class DashboardLayoutComponent {
 
   onPeriodChange(period: 'today' | 'week' | 'month' | 'year'): void {
     this.dashboardDataService.setIncomePeriod(period);
+  }
+
+  navigateToTransaction(type: string): void {
+    const categoryMap: { [key: string]: string[] } = {
+      'Payment': ['Salary', 'Bonus', 'Refund', 'Other Income'],
+      'Receipt': ['Fuel', 'Toll', 'Maintenance', 'Insurance', 'Registration'],
+      'Purchase': ['Computer', 'Smartphone', 'Vehicle', 'Equipment', 'Supplies']
+    };
+
+    this.router.navigate(['/transaction-layout'], { 
+      queryParams: { 
+        type,
+        categories: JSON.stringify(categoryMap[type] || [])
+      } 
+    });
   }
 }

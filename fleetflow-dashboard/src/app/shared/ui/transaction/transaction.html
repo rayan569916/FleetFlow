@@ -1,0 +1,120 @@
+<div class="space-y-6">
+  <!-- Add Entry Form Section -->
+  <app-card extraClass="rounded-2xl border border-slate-200 bg-white p-6">
+    <h2 class="mb-6 text-xl font-semibold text-slate-800">Add {{ title }}</h2>
+    <form [formGroup]="entryForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <!-- Amount Input -->
+        <div>
+          <label for="amount" class="block text-sm font-medium text-slate-700 mb-2">Amount</label>
+          <input 
+            id="amount" 
+            formControlName="amount" 
+            type="number"
+            placeholder="Enter amount"
+            class="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition">
+          <span *ngIf="entryForm.get('amount')?.invalid && entryForm.get('amount')?.touched" class="text-xs text-red-600 mt-1 block">
+            Please enter a valid amount
+          </span>
+        </div>
+
+        <!-- Category Select -->
+        <div>
+          <label for="category" class="block text-sm font-medium text-slate-700 mb-2">Category</label>
+          <select 
+            id="category" 
+            formControlName="category"
+            class="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition">
+            <option value="" disabled>Select a category</option>
+            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          </select>
+          <span *ngIf="entryForm.get('category')?.invalid && entryForm.get('category')?.touched" class="text-xs text-red-600 mt-1 block">
+            Please select a category
+          </span>
+        </div>
+
+        <!-- Description Input -->
+        <div>
+          <label for="description" class="block text-sm font-medium text-slate-700 mb-2">Description</label>
+          <input 
+            id="description" 
+            formControlName="description" 
+            type="text"
+            placeholder="Enter description"
+            class="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition">
+          <span *ngIf="entryForm.get('description')?.invalid && entryForm.get('description')?.touched" class="text-xs text-red-600 mt-1 block">
+            Please enter a description
+          </span>
+        </div>
+      </div>
+
+      <button 
+        type="submit"
+        class="w-full md:w-auto rounded-lg bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+        Add Entry
+      </button>
+    </form>
+  </app-card>
+
+  <!-- Entries List Section -->
+  <app-card extraClass="rounded-2xl border border-slate-200 bg-white p-6">
+    <div class="mb-6 flex items-center justify-between">
+      <h3 class="text-xl font-semibold text-slate-800">All Entries</h3>
+      <span class="rounded-lg bg-violet-100 px-4 py-2 text-sm font-semibold text-violet-700">{{ filteredEntries.length }} Total</span>
+    </div>
+
+    <div *ngIf="paginatedData.length > 0" class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-slate-200">
+            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Date</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Category</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Amount</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of paginatedData" class="border-b border-slate-100 hover:bg-slate-50 transition">
+            <td class="px-4 py-3 text-sm text-slate-600">{{ entry.date }}</td>
+            <td class="px-4 py-3 text-sm">
+              <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                [ngClass]="{
+                  'bg-blue-100 text-blue-700': entry.category === 'Payment',
+                  'bg-emerald-100 text-emerald-700': entry.category === 'Receipt',
+                  'bg-amber-100 text-amber-700': entry.category === 'Purchase',
+                  'bg-slate-100 text-slate-700': entry.category === 'Misc'
+                }">
+                {{ entry.category }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm font-semibold text-slate-900">${{ entry.amount }}</td>
+            <td class="px-4 py-3 text-sm text-slate-600">{{ entry.description }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="paginatedData.length === 0" class="py-12 text-center">
+      <p class="text-slate-500">No entries yet. Add one to get started!</p>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="mt-6 flex items-center justify-between">
+      <span class="text-xs text-slate-600">Page {{ currentPage }} of {{ totalPages }}</span>
+      <div class="flex gap-2">
+        <button 
+          (click)="setPage(currentPage - 1)" 
+          [disabled]="currentPage === 1"
+          class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+          Previous
+        </button>
+        <button 
+          (click)="setPage(currentPage + 1)" 
+          [disabled]="currentPage === totalPages"
+          class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+          Next
+        </button>
+      </div>
+    </div>
+  </app-card>
+</div>
