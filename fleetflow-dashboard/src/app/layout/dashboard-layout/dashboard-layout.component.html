@@ -79,12 +79,8 @@
 
     <section class="grid-row-1">
       <app-recent-activity [activity]="(activity$ | async) ?? []" />
-      <div class="flex flex-col gap-2">
-        <app-income-card [snapshot]="(income$ | async)" [selectedPeriod]="(period$ | async) ?? 'today'"
+      <app-total-cargo-card [snapshot]="(income$ | async)" [selectedPeriod]="(period$ | async) ?? 'today'"
           (periodChange)="onPeriodChange($event)" />
-        <app-total-cargo-card [snapshot]="(income$ | async)" [selectedPeriod]="(period$ | async) ?? 'today'"
-          (periodChange)="onPeriodChange($event)" />
-      </div>
       <app-trends-chart [trendPoints]="(trends$ | async) ?? []" />
     </section>
 

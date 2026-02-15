@@ -33,6 +33,10 @@
   margin-bottom: 1.5rem;
 }
 
+.grid-row-1 app-card {
+  height: 380px;
+}
+
 .grid-row-2 {
   display: grid;
   grid-template-columns: 1fr;
