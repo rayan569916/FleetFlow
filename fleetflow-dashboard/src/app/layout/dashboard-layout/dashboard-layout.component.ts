@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { RecentActivityComponent } from '../../dashboard/recent-activity/recent-activity.component';
-import { IncomeCardComponent } from '../../dashboard/income-card/income-card.component';
 import { TrendsChartComponent } from '../../dashboard/trends-chart/trends-chart.component';
 import { DriversListComponent } from '../../dashboard/drivers-list/drivers-list.component';
 import { DashboardDataService } from '../../services/dashboard-data.service';
@@ -21,7 +20,6 @@ import { CardComponent } from '../../shared/ui/card/card.component';
     SidebarComponent,
     HeaderComponent,
     RecentActivityComponent,
-    IncomeCardComponent,
     TrendsChartComponent,
     DriversListComponent,
     TotalCargoCardComponent,
@@ -70,5 +68,9 @@ export class DashboardLayoutComponent {
         categories: JSON.stringify(categoryMap[type] || [])
       } 
     });
+  }
+
+  navigateToBillingInvoice(): void {
+    this.router.navigate(['/dashboard/invoice']);
   }
 }

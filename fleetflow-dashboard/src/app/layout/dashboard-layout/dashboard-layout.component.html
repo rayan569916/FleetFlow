@@ -11,7 +11,8 @@
     <section id="reportSection" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
       <!-- Billing Invoice -->
       <app-card
-        extraClass="hover:shadow-md hover:border-slate-300 cursor-pointer flex flex-col items-center justify-center text-center py-6">
+        extraClass="hover:shadow-md hover:border-slate-300 cursor-pointer flex flex-col items-center justify-center text-center py-6"
+        (click)="navigateToBillingInvoice()">
         <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
             stroke-width="2">

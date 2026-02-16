@@ -1,0 +1,60 @@
+.app-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(252, 211, 77, 0.03) 0%, transparent 50%);
+}
+
+.content-shell {
+  position: relative;
+  z-index: 1;
+  margin-left: 80px;
+  max-width: 1600px;
+  padding: 2rem;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+.app-shell.sidebar-expanded .content-shell {
+  margin-left: 260px;
+}
+
+@media (max-width: 1200px) {
+  .content-shell {
+    margin-left: 80px;
+  }
+
+  .app-shell.sidebar-expanded .content-shell {
+    margin-left: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    background: rgba(15, 23, 42, 0.3);
+  }
+
+  .mobile-overlay.open {
+    display: block;
+  }
+
+  .content-shell {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .app-shell.sidebar-expanded .content-shell {
+    margin-left: 0;
+  }
+}

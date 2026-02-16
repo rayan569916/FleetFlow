@@ -18,7 +18,7 @@
   <nav class="flex flex-1 flex-col py-6 sidebar-nav" aria-label="Main navigation">
     @for (item of items; track trackById($index)) {
     <a class="nav-item flex items-center gap-4 px-6 py-4 text-white/80 transition-all duration-300"
-      [class.active]="item.active" href="#">
+      [class.active]="item.active" [routerLink]="item.route || '#'" [attr.href]="item.route === '#' ? '#' : null">
       <span class="h-6 w-6 shrink-0 text-amber-300 nav-icon">
         @switch (item.icon) {
         @case ('grid') {

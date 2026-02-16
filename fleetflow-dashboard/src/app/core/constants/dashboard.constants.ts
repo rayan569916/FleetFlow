@@ -1,12 +1,13 @@
 import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, NavItem, TrendPoint } from '../models/dashboard.models';
 
 export const SIDEBAR_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'grid', active: true },
-  { id: 'drivers', label: 'Drivers', icon: 'users' },
-  { id: 'reports', label: 'Reports', icon: 'file' },
-  { id: 'income', label: 'Income', icon: 'income' },
-  { id: 'settings', label: 'Settings', icon: 'settings' },
-  { id: 'logout', label: 'Logout', icon: 'logout' }
+  { id: 'dashboard', label: 'Dashboard', icon: 'grid', active: true, route: '/dashboard' },
+  { id: 'drivers', label: 'Drivers', icon: 'users', route: '#' },
+  { id: 'reports', label: 'Reports', icon: 'file', route: '#' },
+  { id: 'income', label: 'Income', icon: 'income', route: '#' },
+  { id: 'invoice', label: 'Billing Invoice', icon: 'file', route: '/dashboard/invoice' },
+  { id: 'settings', label: 'Settings', icon: 'settings', route: '#' },
+  { id: 'logout', label: 'Logout', icon: 'logout', route: '#' }
 ];
 
 export const RECENT_ACTIVITY: ActivityLog[] = [
@@ -60,4 +61,15 @@ export const offices = [
     { id: 101, name: 'Main Branch - Dubai' },
     { id: 102, name: 'Secondary Office - Abu Dhabi' },
     { id: 103, name: 'Logistics Hub - Riyadh' }
+  ];
+
+export const modeOfDeliveryOptions = [
+    { label: 'Air', value: 'air' },
+    { label: 'Water/Ship', value: 'water' }
+  ];
+
+export const  modeOfPaymentOptions = [
+    { label: 'Swipe', value: 'swipe' },
+    { label: 'Direct Bank Transfer', value: 'bank_transfer' },
+    { label: 'Direct Cash', value: 'cash' }
   ];

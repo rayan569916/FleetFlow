@@ -5,6 +5,7 @@ export interface NavItem {
   label: string;
   icon: string;
   active?: boolean;
+  route?: string;
 }
 
 export interface ActivityLog {
@@ -43,4 +44,12 @@ export interface Entry {
   category: string;
   description: string;
   date: string;
+}
+
+export interface InvoiceItem {
+  id: number;
+  description: string;
+  quantity: number;
+  price: number;
+  amount: number;
 }

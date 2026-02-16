@@ -15,5 +15,9 @@ export const routes: Routes = [
   {
     path: 'transaction-layout',
     loadComponent: () => import('./layout/transaction-layout/transaction-layout').then((c) => c.TransactionLayout)
+  },
+  {
+    path: 'dashboard/invoice',
+    loadComponent: () => import('./dashboard/invoice/invoice.component').then((c) => c.InvoiceComponent)
   }
 ];

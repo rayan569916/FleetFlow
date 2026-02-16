@@ -1,5 +1,15 @@
-<app-transaction
-  [title]="title"
-  [categories]="categories"
-  [transactionType]="transactionType">
-</app-transaction>
+<div class="min-h-screen bg-slate-50 app-shell" [class.sidebar-expanded]="(sidebarExpanded$ | async) ?? false">
+  <button class="mobile-overlay" [class.open]="(sidebarExpanded$ | async) ?? false" (click)="closeSidebar()"
+    aria-label="Close sidebar"></button>
+  <app-sidebar [expanded]="(sidebarExpanded$ | async) ?? false" />
+
+  <main class="content-shell">
+    <app-header (menuClicked)="toggleSidebar()" />
+
+    <app-transaction
+      [title]="title"
+      [categories]="categories"
+      [transactionType]="transactionType">
+    </app-transaction>
+  </main>
+</div>

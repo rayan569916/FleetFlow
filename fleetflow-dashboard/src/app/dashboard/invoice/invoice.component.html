@@ -1,0 +1,459 @@
+<div class="min-h-screen bg-slate-50 app-shell" [class.sidebar-expanded]="(sidebarExpanded$ | async) ?? false">
+  <button class="mobile-overlay" [class.open]="(sidebarExpanded$ | async) ?? false" (click)="closeSidebar()"
+    aria-label="Close sidebar"></button>
+  <app-sidebar [expanded]="(sidebarExpanded$ | async) ?? false" />
+
+  <main class="content-shell">
+    <app-header (menuClicked)="toggleSidebar()" />
+
+    <div class="invoice-wrapper">
+<div class="invoice-container">
+  <div class="invoice-header">
+    <h1>Billing Invoice</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="printInvoice()">Print</button>
+      <button class="btn btn-secondary" (click)="resetForm()">Reset</button>
+    </div>
+  </div>
+
+  <!-- USER INFORMATION SECTION -->
+  <div class="section user-info-section">
+    <h2>Invoice Information</h2>
+    <form [formGroup]="userInfoForm" class="user-info-form">
+      
+      <!-- Two-Column Layout: Sender and Consignee -->
+      <div class="form-two-columns">
+        <!-- SENDER/SHIPPER INFORMATION (LEFT) -->
+        <div class="form-column">
+          <h3 class="sub-heading">Sender / Shipper Information</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="customerName">Sender Name *</label>
+              <input 
+                type="text"
+                id="customerName"
+                formControlName="customerName"
+                placeholder="Enter sender name"
+                class="form-input"
+                [class.error]="userInfoForm.get('customerName')?.invalid && userInfoForm.get('customerName')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('customerName')?.invalid && userInfoForm.get('customerName')?.touched">
+                Please enter a valid sender name (min 2 characters)
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number *</label>
+              <input 
+                type="tel"
+                id="phone"
+                formControlName="phone"
+                placeholder="Enter phone number"
+                class="form-input"
+                [class.error]="userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched">
+                Please enter a valid phone number (min 10 digits)
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="address">Address *</label>
+              <input 
+                type="text"
+                id="address"
+                formControlName="address"
+                placeholder="Enter complete address"
+                class="form-input"
+                [class.error]="userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched">
+                Please enter a valid address (min 5 characters)
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City *</label>
+              <input 
+                type="text"
+                id="city"
+                formControlName="city"
+                placeholder="Enter city"
+                class="form-input"
+                [class.error]="userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched">
+                City is required
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="zipCode">Zip Code *</label>
+              <input 
+                type="text"
+                id="zipCode"
+                formControlName="zipCode"
+                placeholder="Enter zip code"
+                class="form-input"
+                [class.error]="userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched">
+                Zip code is required
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="email">Email *</label>
+              <input 
+                type="email"
+                id="email"
+                formControlName="email"
+                placeholder="Enter email address"
+                class="form-input"
+                [class.error]="userInfoForm.get('email')?.invalid && userInfoForm.get('email')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('email')?.invalid && userInfoForm.get('email')?.touched">
+                Please enter a valid email address
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONSIGNEE INFORMATION (RIGHT) -->
+        <div class="form-column">
+          <h3 class="sub-heading">Consignee Information</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="consigneeName">Consignee Name *</label>
+              <input 
+                type="text"
+                id="consigneeName"
+                formControlName="consigneeName"
+                placeholder="Enter consignee name"
+                class="form-input"
+                [class.error]="userInfoForm.get('consigneeName')?.invalid && userInfoForm.get('consigneeName')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('consigneeName')?.invalid && userInfoForm.get('consigneeName')?.touched">
+                Please enter a valid consignee name (min 2 characters)
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="consigneeMobile">Mobile Number *</label>
+              <input 
+                type="tel"
+                id="consigneeMobile"
+                formControlName="consigneeMobile"
+                placeholder="Enter mobile number"
+                class="form-input"
+                [class.error]="userInfoForm.get('consigneeMobile')?.invalid && userInfoForm.get('consigneeMobile')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('consigneeMobile')?.invalid && userInfoForm.get('consigneeMobile')?.touched">
+                Please enter a valid mobile number (min 10 digits)
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="consigneeAddress">Consignee Address *</label>
+              <input 
+                type="text"
+                id="consigneeAddress"
+                formControlName="consigneeAddress"
+                placeholder="Enter consignee complete address"
+                class="form-input"
+                [class.error]="userInfoForm.get('consigneeAddress')?.invalid && userInfoForm.get('consigneeAddress')?.touched">
+              <span class="error-text" *ngIf="userInfoForm.get('consigneeAddress')?.invalid && userInfoForm.get('consigneeAddress')?.touched">
+                Please enter a valid consignee address (min 5 characters)
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DELIVERY AND PAYMENT DETAILS -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="modeOfDelivery">Mode of Delivery *</label>
+          <select 
+            id="modeOfDelivery"
+            formControlName="modeOfDelivery"
+            class="form-input form-select"
+            [class.error]="userInfoForm.get('modeOfDelivery')?.invalid && userInfoForm.get('modeOfDelivery')?.touched">
+            <option value="" disabled>Select delivery mode</option>
+            <option *ngFor="let option of modeOfDeliveryOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <span class="error-text" *ngIf="userInfoForm.get('modeOfDelivery')?.invalid && userInfoForm.get('modeOfDelivery')?.touched">
+            Mode of delivery is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="modeOfPayment">Mode of Payment *</label>
+          <select 
+            id="modeOfPayment"
+            formControlName="modeOfPayment"
+            class="form-input form-select"
+            [class.error]="userInfoForm.get('modeOfPayment')?.invalid && userInfoForm.get('modeOfPayment')?.touched">
+            <option value="" disabled>Select payment mode</option>
+            <option *ngFor="let option of modeOfPaymentOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <span class="error-text" *ngIf="userInfoForm.get('modeOfPayment')?.invalid && userInfoForm.get('modeOfPayment')?.touched">
+            Mode of payment is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="numberOfCartons">Number of Cartons *</label>
+          <input 
+            type="number"
+            id="numberOfCartons"
+            formControlName="numberOfCartons"
+            min="1"
+            placeholder="0"
+            class="form-input"
+            [class.error]="userInfoForm.get('numberOfCartons')?.invalid && userInfoForm.get('numberOfCartons')?.touched">
+          <span class="error-text" *ngIf="userInfoForm.get('numberOfCartons')?.invalid && userInfoForm.get('numberOfCartons')?.touched">
+            Number of cartons must be at least 1
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="totalWeight">Total Weight (kg) *</label>
+          <input 
+            type="number"
+            id="totalWeight"
+            formControlName="totalWeight"
+            min="0.01"
+            step="0.01"
+            placeholder="0.00"
+            class="form-input"
+            [class.error]="userInfoForm.get('totalWeight')?.invalid && userInfoForm.get('totalWeight')?.touched">
+          <span class="error-text" *ngIf="userInfoForm.get('totalWeight')?.invalid && userInfoForm.get('totalWeight')?.touched">
+            Total weight is required and must be greater than 0
+          </span>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ITEMS SECTION -->
+  <div class="section items-section">
+    <h2>Add Items</h2>
+    <form [formGroup]="itemForm" class="item-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="description">Item Description *</label>
+          <input 
+            type="text"
+            id="description"
+            formControlName="description"
+            placeholder="Enter item description"
+            class="form-input"
+            [class.error]="itemForm.get('description')?.invalid && itemForm.get('description')?.touched">
+          <span class="error-text" *ngIf="itemForm.get('description')?.invalid && itemForm.get('description')?.touched">
+            Description is required (min 3 characters)
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="quantity">Quantity *</label>
+          <input 
+            type="number"
+            id="quantity"
+            formControlName="quantity"
+            min="1"
+            placeholder="0"
+            class="form-input"
+            [class.error]="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched">
+          <span class="error-text" *ngIf="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched">
+            Quantity must be at least 1
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="price">Price per Unit *</label>
+          <input 
+            type="number"
+            id="price"
+            formControlName="price"
+            min="0.01"
+            step="0.01"
+            placeholder="0.00"
+            class="form-input"
+            [class.error]="itemForm.get('price')?.invalid && itemForm.get('price')?.touched">
+          <span class="error-text" *ngIf="itemForm.get('price')?.invalid && itemForm.get('price')?.touched">
+            Price is required and must be greater than 0
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button 
+            type="button"
+            class="btn btn-success"
+            (click)="addItem()">
+            Add Item
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- ITEMS TABLE -->
+    <div class="items-table-wrapper" *ngIf="items.length > 0">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Amount</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items" class="item-row">
+            <td>{{ item.description }}</td>
+            <td>
+              <input 
+                type="number"
+                min="1"
+                [(ngModel)]="item.quantity"
+                (ngModelChange)="updateItemAmount(item)"
+                class="table-input">
+            </td>
+            <td>
+              <input 
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="item.price"
+                (ngModelChange)="updateItemAmount(item)"
+                class="table-input">
+            </td>
+            <td class="amount-cell">₹{{ item.amount.toFixed(2) }}</td>
+            <td>
+              <button 
+                type="button"
+                class="btn btn-danger btn-sm"
+                (click)="removeItem(item.id)">
+                Remove
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="no-items-message" *ngIf="items.length === 0">
+      <p>No items added yet. Add items to create the invoice.</p>
+    </div>
+  </div>
+
+  <!-- CHARGES SECTION -->
+  <div class="section charges-section">
+    <h2>Additional Charges & Discount</h2>
+    <form [formGroup]="chargesForm" class="charges-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="customsCharge">Customs Charge</label>
+          <input 
+            type="number"
+            id="customsCharge"
+            formControlName="customsCharge"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="billCharge">Bill Charge</label>
+          <input 
+            type="number"
+            id="billCharge"
+            formControlName="billCharge"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="packingCharge">Packing Charge</label>
+          <input 
+            type="number"
+            id="packingCharge"
+            formControlName="packingCharge"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="discount">Discount</label>
+          <input 
+            type="number"
+            id="discount"
+            formControlName="discount"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="form-input">
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- TOTALS SECTION -->
+  <div class="section totals-section">
+    <h2>Invoice Summary</h2>
+    <div class="totals-grid">
+      <div class="total-item">
+        <span class="label">Subtotal:</span>
+        <span class="value">₹{{ subtotal.toFixed(2) }}</span>
+      </div>
+      <div class="total-item" *ngIf="customsCharge > 0">
+        <span class="label">Customs Charge:</span>
+        <span class="value positive">+₹{{ customsCharge.toFixed(2) }}</span>
+      </div>
+      <div class="total-item" *ngIf="billCharge > 0">
+        <span class="label">Bill Charge:</span>
+        <span class="value positive">+₹{{ billCharge.toFixed(2) }}</span>
+      </div>
+      <div class="total-item" *ngIf="packingCharge > 0">
+        <span class="label">Packing Charge:</span>
+        <span class="value positive">+₹{{ packingCharge.toFixed(2) }}</span>
+      </div>
+      <div class="total-item" *ngIf="discount > 0">
+        <span class="label">Discount:</span>
+        <span class="value negative">-₹{{ discount.toFixed(2) }}</span>
+      </div>
+      <div class="grand-total">
+        <span class="label">Grand Total:</span>
+        <span class="value">₹{{ grandTotal.toFixed(2) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="section action-buttons">
+    <button 
+      type="button"
+      class="btn btn-primary btn-large"
+      (click)="submitInvoice()"
+      [disabled]="items.length === 0">
+      Create Invoice
+    </button>
+  </div>
+</div>
+    </div>
+  </main>
+</div>
