@@ -1,15 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
-import { TrendPoint } from '../../core/models/dashboard.models';
+import { TrendPoint, ChartPointMapped } from '../../core/models/dashboard.models';
 import { CardComponent } from '../../shared/ui/card/card.component';
-
-interface ChartPoint {
-  month: string;
-  value: number;
-  label: string;
-  x: number;
-  y: number;
-}
 
 @Component({
   selector: 'app-trends-chart',
@@ -25,9 +17,9 @@ export class TrendsChartComponent {
   readonly width = 600;
   readonly height = 250;
   readonly padding = 20;
-  readonly hoveredPoint = signal<ChartPoint | null>(null);
+  readonly hoveredPoint = signal<ChartPointMapped | null>(null);
 
-  readonly mappedPoints = computed<ChartPoint[]>(() => {
+  readonly mappedPoints = computed<ChartPointMapped[]>(() => {
     const points = this.trendPoints();
     if (!points.length) {
       return [];
@@ -46,7 +38,7 @@ export class TrendsChartComponent {
   readonly linePath = computed(() => this.generatePath(this.mappedPoints(), false));
   readonly areaPath = computed(() => this.generatePath(this.mappedPoints(), true));
 
-  onPointEnter(point: ChartPoint): void {
+  onPointEnter(point: ChartPointMapped): void {
     this.hoveredPoint.set(point);
   }
 
@@ -58,7 +50,7 @@ export class TrendsChartComponent {
     return index;
   }
 
-  private generatePath(points: ChartPoint[], area: boolean): string {
+  private generatePath(points: ChartPointMapped[], area: boolean): string {
     if (!points.length) {
       return '';
     }

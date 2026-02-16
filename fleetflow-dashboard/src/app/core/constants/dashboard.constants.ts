@@ -1,4 +1,16 @@
-import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, NavItem, TrendPoint } from '../models/dashboard.models';
+import { 
+  ActivityLog, 
+  Driver, 
+  IncomePeriod, 
+  IncomeSnapshot, 
+  NavItem, 
+  TrendPoint,
+  Designation,
+  Office,
+  SelectOption,
+  DeliveryOption,
+  PaymentOption
+} from '../models/dashboard.models';
 
 export const SIDEBAR_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'grid', active: true, route: '/dashboard' },
@@ -52,24 +64,40 @@ export const TREND_DATA_2024: TrendPoint[] = [
   { month: 'DEC', value: 54300, label: '€54.3K' }
 ];
 
-export const designations = [
+export const designations: ReadonlyArray<Designation> = [
     { id: 1, name: 'Cashier' },
     { id: 2, name: 'Manager' }
   ];
 
-export const offices = [
+export const offices: ReadonlyArray<Office> = [
     { id: 101, name: 'Main Branch - Dubai' },
     { id: 102, name: 'Secondary Office - Abu Dhabi' },
     { id: 103, name: 'Logistics Hub - Riyadh' }
   ];
 
-export const modeOfDeliveryOptions = [
+export const modeOfDeliveryOptions: ReadonlyArray<DeliveryOption> = [
     { label: 'Air', value: 'air' },
     { label: 'Water/Ship', value: 'water' }
   ];
 
-export const  modeOfPaymentOptions = [
+export const modeOfPaymentOptions = [
     { label: 'Swipe', value: 'swipe' },
     { label: 'Direct Bank Transfer', value: 'bank_transfer' },
     { label: 'Direct Cash', value: 'cash' }
-  ];
+  ] as const satisfies ReadonlyArray<PaymentOption>;
+
+// Income Period Options (used in IncomeCard and TotalCargoCard)
+export const INCOME_PERIOD_OPTIONS: ReadonlyArray<SelectOption<IncomePeriod>> = [
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'week' },
+  { label: 'This Month', value: 'month' },
+  { label: 'This Year', value: 'year' }
+];
+
+// Transaction Categories (used in Transaction component)
+export const TRANSACTION_CATEGORIES: ReadonlyArray<string> = [
+  'Fuel',
+  'Maintenance',
+  'Salary',
+  'Misc'
+];

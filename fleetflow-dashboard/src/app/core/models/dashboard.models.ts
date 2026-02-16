@@ -53,3 +53,33 @@ export interface InvoiceItem {
   price: number;
   amount: number;
 }
+
+export interface ChartPoint {
+  month: string;
+  value: number;
+  label: string;
+}
+
+export interface ChartPointMapped extends ChartPoint {
+  x: number;
+  y: number;
+}
+
+export interface Designation {
+  id: number;
+  name: string;
+}
+
+export interface Office {
+  id: number;
+  name: string;
+}
+
+export interface SelectOption<T = string> {
+  label: string;
+  value: T;
+}
+
+export interface DeliveryOption extends SelectOption<'air' | 'water'> {}
+
+export interface PaymentOption extends SelectOption<'swipe' | 'bank_transfer' | 'cash'> {}

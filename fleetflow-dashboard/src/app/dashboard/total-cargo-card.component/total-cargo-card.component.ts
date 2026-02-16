@@ -1,5 +1,6 @@
-import { Component, input,output} from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { IncomePeriod, IncomeSnapshot } from '../../core/models/dashboard.models';
+import { INCOME_PERIOD_OPTIONS } from '../../core/constants/dashboard.constants';
 import { CardComponent } from '../../shared/ui/card/card.component';
 
 @Component({
@@ -12,6 +13,7 @@ export class TotalCargoCardComponent {
   readonly snapshot = input<IncomeSnapshot | null>(null);
   readonly selectedPeriod = input<IncomePeriod>('today');
   readonly periodChange = output<IncomePeriod>();
+  readonly options = INCOME_PERIOD_OPTIONS;
   get budgetUsedPercent(): number {
     const current = this.snapshot();
     if (!current || current.budget <= 0) {
@@ -37,12 +39,4 @@ export class TotalCargoCardComponent {
     const target = event.target as HTMLSelectElement;
     this.periodChange.emit(target.value as IncomePeriod);
   }
-
-  readonly options: ReadonlyArray<{ label: string; value: IncomePeriod }> = [
-    { label: 'Today', value: 'today' },
-    { label: 'This Week', value: 'week' },
-    { label: 'This Month', value: 'month' },
-    { label: 'This Year', value: 'year' }
-  ];
-
 }

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { IncomePeriod, IncomeSnapshot } from '../../core/models/dashboard.models';
+import { INCOME_PERIOD_OPTIONS } from '../../core/constants/dashboard.constants';
 import { CardComponent } from '../../shared/ui/card/card.component';
 
 @Component({
@@ -16,12 +17,7 @@ export class IncomeCardComponent {
   readonly selectedPeriod = input<IncomePeriod>('today');
   readonly periodChange = output<IncomePeriod>();
 
-  readonly options: ReadonlyArray<{ label: string; value: IncomePeriod }> = [
-    { label: 'Today', value: 'today' },
-    { label: 'This Week', value: 'week' },
-    { label: 'This Month', value: 'month' },
-    { label: 'This Year', value: 'year' }
-  ];
+  readonly options = INCOME_PERIOD_OPTIONS;
 
   onSelectChange(event: Event): void {
     const target = event.target as HTMLSelectElement;

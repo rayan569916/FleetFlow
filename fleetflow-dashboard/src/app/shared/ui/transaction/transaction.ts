@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Entry } from '../../../core/models/dashboard.models';
+import { TRANSACTION_CATEGORIES } from '../../../core/constants/dashboard.constants';
 import { CardComponent } from '../card/card.component';
 
 @Component({
@@ -12,7 +13,7 @@ import { CardComponent } from '../card/card.component';
 })
 export class Transaction implements OnInit, OnChanges {
   @Input() title: string = 'Entry';
-  @Input() categories: string[] = ['Fuel', 'Maintenance', 'Salary', 'Misc'];
+  @Input() categories: string[] = Array.from(TRANSACTION_CATEGORIES);
   @Input() transactionType: string = '';
 
   entryForm!: FormGroup;
