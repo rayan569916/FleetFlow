@@ -8,11 +8,14 @@ import { InvoiceService, Invoice } from '../../services/invoice.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
+import { UiStateService } from '../../services/ui-state.service';
+import { HeaderComponent } from '../../layout/header/header.component';
+import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-invoice',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, HeaderComponent, SidebarComponent],
   templateUrl: './invoice.component.html',
   styleUrl: './invoice.component.css'
 })
@@ -20,6 +23,7 @@ export class InvoiceComponent implements OnInit {
   // Forms
   userInfoForm!: FormGroup;
   itemForm!: FormGroup;
+  financialForm!: FormGroup;
   chargesForm!: FormGroup;
 
   // Invoice data
@@ -47,11 +51,14 @@ export class InvoiceComponent implements OnInit {
   modeOfDeliveryOptions = modeOfDeliveryOptions;
   modeOfPaymentOptions = modeOfPaymentOptions;
 
+  private uiStateService = inject(UiStateService);
   private invoiceService = inject(InvoiceService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   settingsService = inject(SettingsService);
+
+  readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
 
   constructor(private fb: FormBuilder) {
     this.currentUserRole = this.authService.currentUserRole();
@@ -66,7 +73,7 @@ export class InvoiceComponent implements OnInit {
     // User Information Form
     this.userInfoForm = this.fb.group({
       // Sender/Shipper Information
-      trackingNumber: [''],
+      trackingNumber: [{ value: '', disabled: true }],
       customerName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{10,}$/)]],
@@ -77,8 +84,6 @@ export class InvoiceComponent implements OnInit {
       // Delivery and Payment Details
       modeOfDelivery: ['', Validators.required],
       modeOfPayment: ['', Validators.required],
-      numberOfCartons: [1, [Validators.required, Validators.min(1)]],
-      totalWeight: [0, [Validators.required, Validators.min(0.01)]],
 
       // Consignee Information
       consigneeName: ['', [Validators.required, Validators.minLength(2)]],
@@ -90,7 +95,14 @@ export class InvoiceComponent implements OnInit {
     this.itemForm = this.fb.group({
       description: ['', [Validators.required, Validators.minLength(3)]],
       quantity: [1, [Validators.required, Validators.min(1)]],
-      price: [0, [Validators.required, Validators.min(0.01)]]
+      unitWeight: [null] // Optional
+    });
+
+    // Financial Details Form (New)
+    this.financialForm = this.fb.group({
+      totalCartons: [1, [Validators.required, Validators.min(1)]],
+      totalWeight: [0, [Validators.required, Validators.min(0.01)]],
+      pricePerKg: [0, [Validators.required, Validators.min(0.01)]]
     });
 
     // Charges Form
@@ -101,15 +113,29 @@ export class InvoiceComponent implements OnInit {
       discount: [0, [Validators.required, Validators.min(0)]]
     });
 
-    // Listen to charges changes for auto-calculation
+    // Listen to changes for auto-calculation
+    this.financialForm.valueChanges.subscribe(() => {
+      this.calculateTotals();
+    });
+
     this.chargesForm.valueChanges.subscribe(() => {
       this.updateChargesAndTotal();
     });
   }
 
+  generateTrackingNumber(): string {
+    const prefix = 'TRK';
+    const random = Math.floor(100000 + Math.random() * 900000);
+    const timestamp = Date.now().toString().slice(-4);
+    return `${prefix}-${random}-${timestamp}`;
+  }
+
   // View Switching
   switchToCreate(): void {
     this.resetForm();
+    this.userInfoForm.patchValue({
+      trackingNumber: this.generateTrackingNumber()
+    });
     this.viewMode = 'create';
     this.errorMessage = null;
     this.successMessage = null;
@@ -222,16 +248,13 @@ export class InvoiceComponent implements OnInit {
         id: this.itemIdCounter++,
         description: this.itemForm.value.description,
         quantity: this.itemForm.value.quantity,
-        price: this.itemForm.value.price,
-        amount: 0
+        price: 0, // No longer used for subtotal logic
+        amount: 0,
+        unitWeight: this.itemForm.value.unitWeight
       };
-
-      // Calculate item amount
-      newItem.amount = newItem.quantity * newItem.price;
-
       this.items.push(newItem);
-      this.itemForm.reset({ quantity: 1, price: 0, description: '' });
-      this.calculateTotals();
+      this.itemForm.reset({ quantity: 1, description: '', unitWeight: null });
+      // Total calculation is now triggered by financialForm
     } else {
       this.itemForm.markAllAsTouched();
     }
@@ -248,8 +271,9 @@ export class InvoiceComponent implements OnInit {
   }
 
   calculateTotals(): void {
-    // Calculate subtotal
-    this.subtotal = this.items.reduce((sum, item) => sum + item.amount, 0);
+    const weight = this.financialForm.get('totalWeight')?.value || 0;
+    const rate = this.financialForm.get('pricePerKg')?.value || 0;
+    this.subtotal = weight * rate;
     this.calculateGrandTotal();
   }
 
@@ -272,9 +296,10 @@ export class InvoiceComponent implements OnInit {
     this.errorMessage = null;
     this.successMessage = null;
 
-    if (this.userInfoForm.invalid) {
+    if (this.userInfoForm.invalid || this.financialForm.invalid) {
       this.userInfoForm.markAllAsTouched();
-      this.toastService.show('Please fill in all required user information.', 'error');
+      this.financialForm.markAllAsTouched();
+      this.toastService.show('Please fill in all required information.', 'error');
       this.cdr.detectChanges();
       return;
     }
@@ -285,16 +310,33 @@ export class InvoiceComponent implements OnInit {
       return;
     }
 
-    const formVal = this.userInfoForm.value;
+    if (this.items.length === 0) {
+      this.toastService.show('Please add at least one item to the invoice.', 'error');
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const formVal = this.userInfoForm.getRawValue(); // Use getRawValue because trackingNumber is disabled
+    const finVal = this.financialForm.value;
     const description = `To: ${formVal.consigneeName}, By: ${formVal.modeOfDelivery}`;
 
     const invoiceData = {
+      ...formVal,
+      ...finVal,
+      ...this.chargesForm.value,
       invoice_number: 'INV-' + Date.now(),
       amount: this.grandTotal,
       date: new Date().toISOString().split('T')[0],
       status: 'Pending',
       description: description,
-      tracking_number: formVal.trackingNumber
+      tracking_number: formVal.trackingNumber,
+      items: this.items.map(i => ({
+        description: i.description,
+        quantity: i.quantity,
+        unitWeight: i.unitWeight
+      })),
+      subtotal: this.subtotal,
+      grandTotal: this.grandTotal
     };
 
     this.isLoading = true;
@@ -318,7 +360,8 @@ export class InvoiceComponent implements OnInit {
 
   resetForm(): void {
     this.userInfoForm.reset();
-    this.itemForm.reset({ quantity: 1, price: 0, description: '' });
+    this.financialForm.reset({ totalCartons: 1, totalWeight: 0, pricePerKg: 0 });
+    this.itemForm.reset({ quantity: 1, description: '', unitWeight: null });
     this.chargesForm.reset({ customsCharge: 0, billCharge: 0, packingCharge: 0, discount: 0 });
     this.items = [];
     this.itemIdCounter = 1;

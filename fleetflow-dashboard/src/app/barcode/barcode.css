@@ -1,0 +1,8 @@
+.scanner-container {
+  text-align: center;
+}
+
+video {
+  border: 2px solid #333;
+  border-radius: 8px;
+}

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, map, Observable, switchMap, shareReplay } from 'rxjs';
 
-import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, TrendPoint, LiveTrackingParams } from '../core/models/dashboard.models';
+import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, TrendPoint, LiveTrackingParams, Category } from '../core/models/dashboard.models';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -39,48 +39,59 @@ export class DashboardDataService {
   }
 
   getLiveTrackingLocations(): Observable<any[]> {
-    return this.http.get<any[]>('http://localhost:5000/live-tracking');
+    return this.http.get<any[]>(`${this.rootUrl}/fleet/live-tracking`);
   }
 
-  private get rootUrl() { return 'http://localhost:5000'; }
+  private get rootUrl() { return 'http://localhost:5000/api'; }
 
   // --- Purchases ---
-  getPurchases(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.rootUrl}/purchases`);
+  getPurchases(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/finance/purchases`, { params });
   }
   createPurchase(data: any): Observable<any> {
-    return this.http.post(`${this.rootUrl}/purchases`, data);
+    return this.http.post(`${this.rootUrl}/finance/purchases`, data);
   }
   deletePurchase(id: number): Observable<any> {
-    return this.http.delete(`${this.rootUrl}/purchases/${id}`);
+    return this.http.delete(`${this.rootUrl}/finance/purchases/${id}`);
   }
 
   // --- Receipts ---
-  getReceipts(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.rootUrl}/receipts`);
+  getReceipts(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/finance/receipts`, { params });
   }
   createReceipt(data: any): Observable<any> {
-    return this.http.post(`${this.rootUrl}/receipts`, data);
+    return this.http.post(`${this.rootUrl}/finance/receipts`, data);
   }
   deleteReceipt(id: number): Observable<any> {
-    return this.http.delete(`${this.rootUrl}/receipts/${id}`);
+    return this.http.delete(`${this.rootUrl}/finance/receipts/${id}`);
   }
 
   // --- Payments ---
-  getPayments(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.rootUrl}/payments`);
+  getPayments(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/finance/payments`, { params });
   }
   createPayment(data: any): Observable<any> {
-    return this.http.post(`${this.rootUrl}/payments`, data);
+    return this.http.post(`${this.rootUrl}/finance/payments`, data);
   }
   deletePayment(id: number): Observable<any> {
-    return this.http.delete(`${this.rootUrl}/payments/${id}`);
+    return this.http.delete(`${this.rootUrl}/finance/payments/${id}`);
+  }
+
+  // --- Categories ---
+  getPurchaseCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.rootUrl}/finance/purchase-categories`);
+  }
+  getReceiptCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.rootUrl}/finance/receipt-categories`);
+  }
+  getPaymentCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.rootUrl}/finance/payment-categories`);
   }
 
   // --- Drivers ---
   // Replaces previous hardcoded method
   getDrivers(): Observable<Driver[]> {
-    return this.http.get<any[]>(`${this.rootUrl}/drivers`).pipe(
+    return this.http.get<any[]>(`${this.rootUrl}/fleet/drivers`).pipe(
       map(drivers => drivers.map(d => ({
         id: d.id.toString(),
         name: d.name,
@@ -92,12 +103,12 @@ export class DashboardDataService {
     );
   }
   createDriver(data: any): Observable<any> {
-    return this.http.post(`${this.rootUrl}/drivers`, data);
+    return this.http.post(`${this.rootUrl}/fleet/drivers`, data);
   }
 
   // --- Tracking ---
   getTrackingInfo(trackingNumber: string): Observable<any> {
-    return this.http.get<any>(`${this.rootUrl}/tracking/${trackingNumber}`);
+    return this.http.get<any>(`${this.rootUrl}/shipments/tracking/${trackingNumber}`);
   }
 
   setIncomePeriod(period: IncomePeriod): void {

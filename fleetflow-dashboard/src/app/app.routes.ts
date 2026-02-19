@@ -2,16 +2,8 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
+    path: '', redirectTo: 'login', pathMatch: 'full'
   },
-  {
-    path: 'login',
-    loadComponent: () => import('./layout/login-sign-up-layout.component/login-sign-up-layout.component').then((c) => c.LoginSignUpLayoutComponent)
-  },
-
-
   {
     path: 'dashboard',
     loadComponent: () => import('./layout/dashboard-layout/dashboard-layout.component').then((c) => c.DashboardLayoutComponent),
@@ -89,11 +81,27 @@ export const routes: Routes = [
         path: 'users',
         loadComponent: () => import('./dashboard/users/users.component').then(m => m.UsersComponent)
       },
+      {
+        path: 'daily-report',
+        loadComponent: () => import('./dashboard/daily-report/daily-report').then((c) => c.DailyReport)
+      },
       // Placeholders for expanded items
       { path: 'vehicles', redirectTo: 'overview' },
       { path: 'maintenance', redirectTo: 'overview' },
       { path: 'routes', redirectTo: 'overview' }
     ]
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./layout/login-sign-up-layout.component/login-sign-up-layout.component').then((c) => c.LoginSignUpLayoutComponent)
+  },
+  {
+    path: 'transaction-layout',
+    loadComponent: () => import('./layout/transaction-layout/transaction-layout').then((c) => c.TransactionLayout)
+  },
+  {
+    path: 'barcode',
+    loadComponent: () => import('./barcode/barcode').then((c) => c.ScannerComponent)
   }
 ];
 

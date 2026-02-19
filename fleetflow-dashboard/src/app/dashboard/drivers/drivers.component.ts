@@ -7,46 +7,8 @@ import { DashboardDataService } from '../../services/dashboard-data.service';
   selector: 'app-drivers',
   standalone: true,
   imports: [CommonModule, AsyncPipe],
-  template: `
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-      <div>
-          <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Drivers Management</h1>
-          <p class="text-slate-500 mt-1">Manage your fleet drivers and their assignments.</p>
-      </div>
-      <button class="btn bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95 flex items-center gap-2 font-medium" (click)="onAddDriver()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Add New Driver
-      </button>
-    </div>
-
-    <!-- Drivers List -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <div *ngFor="let driver of drivers$ | async" class="group bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 flex flex-col items-center text-center hover:shadow-xl hover:shadow-slate-200/50 hover:border-indigo-100 transition-all duration-300 relative overflow-hidden">
-        
-        <!-- Decorative background accent -->
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-        <div class="h-24 w-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center text-2xl font-bold mb-5 shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform duration-300">
-          {{ driver.initials }}
-        </div>
-        
-        <h3 class="text-lg font-bold text-slate-800 mb-1">{{ driver.name }}</h3>
-        <p class="text-slate-500 text-sm mb-4 font-medium">{{ driver.contact }}</p>
-        
-        <div class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-6" 
-              [ngClass]="{'bg-emerald-100 text-emerald-700': driver.status === 'active', 'bg-slate-100 text-slate-600': driver.status === 'inactive'}">
-          {{ driver.status }}
-        </div>
-        
-        <div class="mt-auto grid grid-cols-2 gap-3 w-full">
-          <button (click)="onViewProfile(driver)" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 font-medium hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-sm">Profile</button>
-          <button (click)="onViewRoute(driver)" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 font-medium hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-sm">Route</button>
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './drivers.component.html',
+  styleUrl: './drivers.component.css'
 })
 export class DriversComponent {
   private router = inject(Router);

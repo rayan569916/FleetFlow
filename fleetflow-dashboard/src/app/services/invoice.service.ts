@@ -18,7 +18,7 @@ export interface Invoice {
     providedIn: 'root'
 })
 export class InvoiceService {
-    private apiUrl = 'http://127.0.0.1:5000/invoices';
+    private apiUrl = 'http://127.0.0.1:5000/api/invoices';
     private http = inject(HttpClient);
 
     getInvoices(): Observable<any> {

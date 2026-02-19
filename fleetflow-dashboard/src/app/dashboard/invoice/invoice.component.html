@@ -123,6 +123,10 @@
       <div class="mb-8" *ngIf="selectedInvoice.invoice_details as d">
         <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
           <div>
+            <span class="text-gray-500">Tracking Number:</span>
+            <span class="font-semibold ml-2">{{ selectedInvoice.tracking_number || '-' }}</span>
+          </div>
+          <div>
             <span class="text-gray-500">Mode of Delivery:</span>
             <span class="font-semibold ml-2">{{ d.modeOfDelivery || 'N/A' }}</span>
           </div>
@@ -131,12 +135,16 @@
             <span class="font-semibold ml-2">{{ d.modeOfPayment || 'N/A' }}</span>
           </div>
           <div>
-            <span class="text-gray-500">Cartons:</span>
-            <span class="font-semibold ml-2">{{ d.numberOfCartons || 0 }}</span>
+            <span class="text-gray-500">Total Cartons:</span>
+            <span class="font-semibold ml-2">{{ d.totalCartons || d.numberOfCartons || 0 }}</span>
           </div>
           <div>
             <span class="text-gray-500">Total Weight:</span>
             <span class="font-semibold ml-2">{{ d.totalWeight || 0 }} kg</span>
+          </div>
+          <div *ngIf="d.pricePerKg">
+            <span class="text-gray-500">Price per kg:</span>
+            <span class="font-semibold ml-2">{{ settingsService.currencySymbol() }}{{ d.pricePerKg }}</span>
           </div>
         </div>
       </div>
@@ -147,8 +155,7 @@
           <tr class="border-b-2 border-gray-200">
             <th class="text-left py-3 text-sm font-semibold text-gray-600">Description</th>
             <th class="text-right py-3 text-sm font-semibold text-gray-600">Qty</th>
-            <th class="text-right py-3 text-sm font-semibold text-gray-600">Price</th>
-            <th class="text-right py-3 text-sm font-semibold text-gray-600">Total</th>
+            <th class="text-right py-3 text-sm font-semibold text-gray-600">Unit Weight (kg)</th>
           </tr>
         </thead>
         <tbody>
@@ -157,16 +164,13 @@
             <tr *ngFor="let item of selectedInvoice.invoice_details.items" class="border-b border-gray-100">
               <td class="py-3 text-sm text-gray-800">{{ item.description }}</td>
               <td class="py-3 text-sm text-gray-800 text-right">{{ item.quantity }}</td>
-              <td class="py-3 text-sm text-gray-800 text-right">{{ settingsService.currencySymbol() }}{{ item.price }}
-              </td>
-              <td class="py-3 text-sm text-gray-800 text-right">{{ settingsService.currencySymbol() }}{{
-                item.amount?.toFixed(2) }}</td>
+              <td class="py-3 text-sm text-gray-800 text-right">{{ item.unitWeight || '-' }}</td>
             </tr>
           </ng-container>
           <ng-template #noItemDetails>
             <!-- Fallback if old invoice format -->
             <tr>
-              <td colspan="4" class="py-4 text-center text-gray-500 italic">Item details not available for this
+              <td colspan="3" class="py-4 text-center text-gray-500 italic">Item details not available for this
                 invoice.</td>
             </tr>
           </ng-template>
@@ -384,27 +388,6 @@
             </span>
           </div>
 
-          <div class="form-group">
-            <label for="numberOfCartons">Number of Cartons *</label>
-            <input type="number" id="numberOfCartons" formControlName="numberOfCartons" min="1" placeholder="0"
-              class="form-input"
-              [class.error]="userInfoForm.get('numberOfCartons')?.invalid && userInfoForm.get('numberOfCartons')?.touched">
-            <span class="error-text"
-              *ngIf="userInfoForm.get('numberOfCartons')?.invalid && userInfoForm.get('numberOfCartons')?.touched">
-              Number of cartons must be at least 1
-            </span>
-          </div>
-
-          <div class="form-group">
-            <label for="totalWeight">Total Weight (kg) *</label>
-            <input type="number" id="totalWeight" formControlName="totalWeight" min="0.01" step="0.01"
-              placeholder="0.00" class="form-input"
-              [class.error]="userInfoForm.get('totalWeight')?.invalid && userInfoForm.get('totalWeight')?.touched">
-            <span class="error-text"
-              *ngIf="userInfoForm.get('totalWeight')?.invalid && userInfoForm.get('totalWeight')?.touched">
-              Total weight is required and must be greater than 0
-            </span>
-          </div>
         </div>
 
       </form>
@@ -430,18 +413,12 @@
             <label for="quantity">Quantity *</label>
             <input type="number" id="quantity" formControlName="quantity" min="1" placeholder="0" class="form-input"
               [class.error]="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched">
-            <span class="error-text" *ngIf="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched">
-              Quantity must be at least 1
-            </span>
           </div>
 
           <div class="form-group">
-            <label for="price">Price per Unit *</label>
-            <input type="number" id="price" formControlName="price" min="0.01" step="0.01" placeholder="0.00"
-              class="form-input" [class.error]="itemForm.get('price')?.invalid && itemForm.get('price')?.touched">
-            <span class="error-text" *ngIf="itemForm.get('price')?.invalid && itemForm.get('price')?.touched">
-              Price is required and must be greater than 0
-            </span>
+            <label for="unitWeight">Unit Weight (kg)</label>
+            <input type="number" id="unitWeight" formControlName="unitWeight" min="0" step="0.01" placeholder="0.00"
+              class="form-input">
           </div>
 
           <div class="form-group">
@@ -460,23 +437,15 @@
             <tr>
               <th>Description</th>
               <th>Quantity</th>
-              <th>Price</th>
-              <th>Amount</th>
+              <th>Unit Weight (kg)</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of items" class="item-row">
               <td>{{ item.description }}</td>
-              <td>
-                <input type="number" min="1" [(ngModel)]="item.quantity" (ngModelChange)="updateItemAmount(item)"
-                  class="table-input">
-              </td>
-              <td>
-                <input type="number" min="0" step="0.01" [(ngModel)]="item.price"
-                  (ngModelChange)="updateItemAmount(item)" class="table-input">
-              </td>
-              <td class="amount-cell">{{ settingsService.currencySymbol() }}{{ item.amount.toFixed(2) }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.unitWeight || '-' }}</td>
               <td>
                 <button type="button" class="btn btn-danger btn-sm" (click)="removeItem(item.id)">
                   Remove
@@ -485,6 +454,32 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- FINANCIAL DETAILS SECTION below Items -->
+      <div class="financial-details-section">
+        <h3 class="sub-heading">Billing Details</h3>
+        <form [formGroup]="financialForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="totalCartons">Total Cartons *</label>
+              <input type="number" id="totalCartons" formControlName="totalCartons" placeholder="0" class="form-input"
+                [class.error]="financialForm.get('totalCartons')?.invalid && financialForm.get('totalCartons')?.touched">
+            </div>
+            <div class="form-group">
+              <label for="totalWeight">Total Weight (kg) *</label>
+              <input type="number" id="totalWeight" formControlName="totalWeight" step="0.01" placeholder="0.00"
+                class="form-input"
+                [class.error]="financialForm.get('totalWeight')?.invalid && financialForm.get('totalWeight')?.touched">
+            </div>
+            <div class="form-group">
+              <label for="pricePerKg">Price per kg *</label>
+              <input type="number" id="pricePerKg" formControlName="pricePerKg" step="0.01" placeholder="0.00"
+                class="form-input"
+                [class.error]="financialForm.get('pricePerKg')?.invalid && financialForm.get('pricePerKg')?.touched">
+            </div>
+          </div>
+        </form>
       </div>
 
       <div class="no-items-message" *ngIf="items.length === 0">

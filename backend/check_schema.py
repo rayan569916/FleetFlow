@@ -1,5 +1,6 @@
 
-from app import app, db
+from app import app
+from extensions import db
 from sqlalchemy import inspect
 
 def check_schema():
@@ -15,7 +16,7 @@ def check_schema():
 
         # Try a query
         try:
-            from app import Invoice
+            from models.invoice import Invoice
             invs = Invoice.query.all()
             print(f"Query successful. Found {len(invs)} invoices.")
         except Exception as e:

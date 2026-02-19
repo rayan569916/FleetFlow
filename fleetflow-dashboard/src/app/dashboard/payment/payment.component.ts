@@ -1,119 +1,110 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../services/settings.service';
 import { DashboardDataService } from '../../services/dashboard-data.service';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Category } from '../../core/models/dashboard.models';
 
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-           <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Payments</h1>
-           <p class="text-slate-500 mt-1">Monitor outgoing payments and status.</p>
-        </div>
-        <button class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            New Payment
-        </button>
-      </div>
-
-      <!-- Filters -->
-      <div class="flex flex-col sm:flex-row gap-4">
-        <div class="relative flex-1">
-             <input type="text" class="block w-full pl-3 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all hover:bg-white" placeholder="Search payments...">
-        </div>
-        <div class="flex gap-2">
-            <select class="px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:bg-white transition-colors">
-                <option>All Methods</option>
-                <option>Credit Card</option>
-                <option>Bank Transfer</option>
-                <option>Cash</option>
-            </select>
-        </div>
-      </div>
-
-      <!-- Payments Table -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px]">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead>
-              <tr class="bg-slate-50 border-b border-slate-200">
-                <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Method</th>
-                <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Ref ID</th>
-                <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Date</th>
-                <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">Amount</th>
-                <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              @for (item of payments(); track item.id) {
-                <tr class="hover:bg-slate-50/50 transition-colors group">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                            <span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                            </span>
-                            <span class="font-medium text-slate-800">{{ item.payment_method }}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="font-mono text-xs text-slate-500">{{ item.reference_id || 'N/A' }}</span>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-slate-600">
-                        {{ item.date | date:'mediumDate' }}
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold capitalize"
-                              [ngClass]="{
-                                'bg-green-100 text-green-700': item.status === 'Processed',
-                                'bg-blue-100 text-blue-700': item.status === 'Processing',
-                                'bg-red-100 text-red-700': item.status === 'Failed'
-                              }">
-                            {{ item.status }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right text-sm font-bold text-slate-800">
-                        {{ settingsService.currencySymbol() }} {{ item.amount | number:'1.2-2' }}
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button (click)="deletePayment(item.id)" class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg" title="Delete Payment">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </td>
-                </tr>
-              } @empty {
-                <tr>
-                    <td colspan="6" class="py-20 text-center">
-                        <div class="flex flex-col items-center justify-center text-slate-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                            <h3 class="text-lg font-bold text-slate-700">No payments found</h3>
-                            <p class="text-slate-500 max-w-xs mx-auto mt-1">There are no payment records in the database yet.</p>
-                        </div>
-                    </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: ``
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  templateUrl: './payment.component.html',
+  styleUrl: './payment.component.css'
 })
 export class PaymentComponent implements OnInit {
+  private fb = inject(FormBuilder);
   settingsService = inject(SettingsService);
   dashboardDataService = inject(DashboardDataService);
+
   payments = signal<any[]>([]);
+  categories = signal<Category[]>([]);
+  showForm = signal(false);
+
+  // Pagination & Filtering Signals
+  searchTerm = signal('');
+  selectedCategory = signal<number | null>(null);
+  selectedDate = signal<string>('');
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalItems = signal(0);
+  totalPages = signal(0);
+
+  paymentForm = this.fb.group({
+    amount: [null, [Validators.required, Validators.min(0.01)]],
+    description: ['', [Validators.required]],
+    category_id: [null, [Validators.required]]
+  });
+
+  constructor() {
+    effect(() => {
+      this.fetchData();
+    }, { allowSignalWrites: true });
+  }
 
   ngOnInit() {
-    this.dashboardDataService.getPayments().subscribe(data => {
-      this.payments.set(data);
+    this.fetchCategories();
+  }
+
+  fetchData() {
+    const params = {
+      page: this.currentPage(),
+      per_page: this.pageSize(),
+      search: this.searchTerm(),
+      category_id: this.selectedCategory(),
+      date: this.selectedDate()
+    };
+
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    );
+
+    this.dashboardDataService.getPayments(cleanParams).subscribe(data => {
+      this.payments.set(data.items);
+      this.totalItems.set(data.total);
+      this.totalPages.set(data.pages);
     });
+  }
+
+  onFilterChange() {
+    this.currentPage.set(1);
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+    }
+  }
+
+  fetchCategories() {
+    this.dashboardDataService.getPaymentCategories().subscribe(data => {
+      this.categories.set(data);
+    });
+  }
+
+  toggleForm() {
+    this.showForm.update(v => !v);
+    if (!this.showForm()) {
+      this.paymentForm.reset();
+    }
+  }
+
+  onSubmit() {
+    if (this.paymentForm.valid) {
+      this.dashboardDataService.createPayment(this.paymentForm.value).subscribe({
+        next: () => {
+          this.fetchData();
+          this.toggleForm();
+        },
+        error: (err: any) => console.error('Failed to create payment', err)
+      });
+    }
   }
 
   deletePayment(id: number) {

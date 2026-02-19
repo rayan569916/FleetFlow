@@ -8,7 +8,7 @@ def seed_users():
         existing_users = User.query.all()
         print(f"Existing users count: {len(existing_users)}")
         for u in existing_users:
-            print(f"- {u.username} ({u.role})")
+            print(f"- {u.username} ({u.role.name if u.role else 'No Role'})")
 
         users_to_add = [
             {"username": "admin", "password": "password123", "role": "super_admin", "full_name": "Super Admin"},
@@ -20,10 +20,18 @@ def seed_users():
             {"username": "staff_tom", "password": "password123", "role": "staff", "full_name": "Tom Staff"}
         ]
 
+        # Categories
+        from models import Role
+        roles_map = {r.name: r.id for r in Role.query.all()}
+
         added_count = 0
         for u_data in users_to_add:
             if not User.query.filter_by(username=u_data['username']).first():
-                user = User(username=u_data['username'], role=u_data['role'], full_name=u_data['full_name'])
+                rid = roles_map.get(u_data['role'])
+                if not rid:
+                    print(f"Skipping {u_data['username']}: role {u_data['role']} not found.")
+                    continue
+                user = User(username=u_data['username'], role_id=rid, full_name=u_data['full_name'])
                 user.set_password(u_data['password'])
                 db.session.add(user)
                 added_count += 1

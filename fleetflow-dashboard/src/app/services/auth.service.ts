@@ -14,7 +14,7 @@ interface LoginResponse {
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://127.0.0.1:5000'; // Flask backend URL
+    private apiUrl = 'http://127.0.0.1:5000/api/auth'; // Flask backend URL
 
     // Signal to hold the current user's role
     currentUserRole = signal<string | null>(localStorage.getItem('user_role'));
@@ -39,6 +39,10 @@ export class AuthService {
 
     register(userData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/register`, userData);
+    }
+
+    getRoles(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/roles`);
     }
 
     logout() {

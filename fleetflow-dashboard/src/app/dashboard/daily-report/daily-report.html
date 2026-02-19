@@ -1,0 +1,141 @@
+<div class="min-h-screen bg-slate-50 app-shell" [class.sidebar-expanded]="(sidebarExpanded$ | async) ?? false">
+    <button class="mobile-overlay" [class.open]="(sidebarExpanded$ | async) ?? false" (click)="closeSidebar()"
+        aria-label="Close sidebar"></button>
+    <app-sidebar [expanded]="(sidebarExpanded$ | async) ?? false" />
+
+    <main class="content-shell">
+        <app-header (menuClicked)="toggleSidebar()" />
+
+        <div class="dr-wrapper">
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- BUSINESS LOGIC SUMMARY                                              -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <div class="biz-summary-container">
+                <div class="biz-summary-header">
+                    <div>
+                        <h1 class="biz-page-title">Daily Report</h1>
+                        <p class="biz-page-subtitle">Business logic summary for today's transactions</p>
+                    </div>
+                    <span class="biz-badge">{{ totalNumberOfBills }} Invoice{{ totalNumberOfBills !== 1 ? 's' : '' }}
+                        Today</span>
+                </div>
+
+                <div class="biz-grid">
+
+                    <!-- ── SECTION 1-3: Invoice Totals ── -->
+                    <div class="biz-card biz-card--blue">
+                        <h3 class="biz-card-title">Invoice Totals</h3>
+                        <div class="biz-row">
+                            <span class="biz-label">Total Invoice Amount</span>
+                            <span class="biz-value">₹{{ totalInvoiceAmount.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-row">
+                            <span class="biz-label">Total Number of Bills</span>
+                            <span class="biz-value">{{ totalNumberOfBills }}</span>
+                        </div>
+                        <div class="biz-row">
+                            <span class="biz-label">Total Weight (kg)</span>
+                            <span class="biz-value">{{ totalWeightKg.toFixed(2) }} kg</span>
+                        </div>
+                    </div>
+
+                    <!-- ── SECTION 4: Payment Method Breakdown ── -->
+                    <div class="biz-card biz-card--purple">
+                        <h3 class="biz-card-title">Payment Breakdown</h3>
+                        <div class="biz-row">
+                            <span class="biz-label">Swipe</span>
+                            <span class="biz-value">₹{{ totalSwipeAmount.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-row">
+                            <span class="biz-label">Direct Bank Transfer</span>
+                            <span class="biz-value">₹{{ totalBankTransferAmount.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-row">
+                            <span class="biz-label">Direct Cash</span>
+                            <span class="biz-value">₹{{ totalCashAmount.toFixed(2) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- ── SECTION 5: Adjusted Invoice ── -->
+                    <div class="biz-card biz-card--teal">
+                        <h3 class="biz-card-title">Adjusted Invoice</h3>
+                        <div class="biz-row biz-row--sub">
+                            <span class="biz-label">Total Invoice</span>
+                            <span class="biz-value">₹{{ totalInvoiceAmount.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-row biz-row--sub">
+                            <span class="biz-label">− Swipe</span>
+                            <span class="biz-value biz-negative">₹{{ totalSwipeAmount.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-row biz-row--sub">
+                            <span class="biz-label">− Bank Transfer</span>
+                            <span class="biz-value biz-negative">₹{{ totalBankTransferAmount.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-divider"></div>
+                        <div class="biz-row biz-row--total">
+                            <span class="biz-label">Adjusted Invoice</span>
+                            <span class="biz-value biz-highlight">₹{{ adjustedInvoiceAmount.toFixed(2) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- ── SECTION 6-7: Expenses & Receipts ── -->
+                    <div class="biz-card biz-card--amber">
+                        <h3 class="biz-card-title">Expenses & Receipts</h3>
+                        <div class="biz-row">
+                            <span class="biz-label">Total Payments</span>
+                            <span class="biz-value biz-negative">₹{{ totalPayments.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-row">
+                            <span class="biz-label">Total Purchases</span>
+                            <span class="biz-value biz-negative">₹{{ totalPurchases.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-divider"></div>
+                        <div class="biz-row">
+                            <span class="biz-label">Total Receipts</span>
+                            <span class="biz-value biz-positive">₹{{ totalReceipts.toFixed(2) }}</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── SECTION 8-9: Final Calculation ── -->
+                <div class="biz-final-card">
+                    <h3 class="biz-final-title">Final Calculation</h3>
+                    <div class="biz-final-breakdown">
+                        <div class="biz-final-row">
+                            <span class="biz-final-label">Adjusted Invoice</span>
+                            <span class="biz-final-value">₹{{ adjustedInvoiceAmount.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-final-row biz-final-row--sub">
+                            <span class="biz-final-label">− Total Payments</span>
+                            <span class="biz-final-value biz-negative">₹{{ totalPayments.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-final-row biz-final-row--sub">
+                            <span class="biz-final-label">− Total Purchases</span>
+                            <span class="biz-final-value biz-negative">₹{{ totalPurchases.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-final-row biz-final-row--sub">
+                            <span class="biz-final-label">+ Total Receipts</span>
+                            <span class="biz-final-value biz-positive">₹{{ totalReceipts.toFixed(2) }}</span>
+                        </div>
+                        <div class="biz-final-row biz-final-row--sub">
+                            <span class="biz-final-label">+ Previous Balance</span>
+                            <span class="biz-final-value biz-positive">₹{{ previousBalance.toFixed(2) }}</span>
+                        </div>
+                    </div>
+                    <div class="biz-final-result">
+                        <span class="biz-final-result-label">Final Amount</span>
+                        <span class="biz-final-result-value" [class.biz-negative]="finalAmount < 0"
+                            [class.biz-positive]="finalAmount >= 0">
+                            ₹{{ finalAmount.toFixed(2) }}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+            <!-- END BUSINESS LOGIC SUMMARY -->
+
+        </div>
+    </main>
+</div>

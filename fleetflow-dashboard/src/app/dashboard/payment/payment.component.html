@@ -1,0 +1,149 @@
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Payments</h1>
+            <p class="text-slate-500 mt-1">Monitor outgoing payments and status.</p>
+        </div>
+        <button (click)="toggleForm()"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            {{ showForm() ? 'Cancel' : 'New Payment' }}
+        </button>
+    </div>
+
+    <!-- New Payment Form -->
+    <div *ngIf="showForm()" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-800 mb-4">Add New Payment</h2>
+        <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                <input type="number" formControlName="amount"
+                    class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    placeholder="0.00">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                <select formControlName="category_id"
+                    class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option [ngValue]="null">Select Category</option>
+                    <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <input type="text" formControlName="description"
+                    class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    placeholder="e.g. Utility Bill">
+            </div>
+            <div class="md:col-span-3 flex justify-end">
+                <button type="submit" [disabled]="paymentForm.invalid"
+                    class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 transition">
+                    Save Payment
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-col sm:flex-row gap-4">
+        <div class="relative flex-1">
+            <input type="text" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); onFilterChange()"
+                class="block w-full pl-3 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all hover:bg-white"
+                placeholder="Search payments...">
+        </div>
+        <div class="flex gap-2">
+            <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event); onFilterChange()"
+                class="px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:bg-white transition-colors">
+                <option [ngValue]="null">All Categories</option>
+                <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+            <input type="date" [ngModel]="selectedDate()" (ngModelChange)="selectedDate.set($event); onFilterChange()"
+                class="px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:bg-white transition-colors">
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px]">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">
+                            Amount</th>
+                        <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @for (item of payments(); track item.id) {
+                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                        <td class="px-6 py-4 text-sm text-slate-800 font-medium">
+                            {{ item.description }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                                {{ item.category_name }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600">
+                            {{ item.created_at | date:'mediumDate' }}
+                        </td>
+                        <td class="px-6 py-4 text-right text-sm font-bold text-slate-800">
+                            {{ settingsService.currencySymbol() }} {{ item.amount | number:'1.2-2' }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button (click)="deletePayment(item.id)"
+                                class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
+                                title="Delete Payment">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M3 6h18"></path>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="5" class="py-20 text-center">
+                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                                <h3 class="text-lg font-bold text-slate-700">No payments found</h3>
+                                <p class="text-slate-500 max-w-xs mx-auto mt-1">There are no payment records in the
+                                    database yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <span class="text-xs text-slate-500 font-medium">
+                Showing {{ payments().length }} of {{ totalItems() }} results
+                (Page {{ currentPage() }} of {{ totalPages() }})
+            </span>
+            <div class="flex gap-2">
+                <button (click)="prevPage()" [disabled]="currentPage() === 1"
+                    class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50">Previous</button>
+                <button (click)="nextPage()" [disabled]="currentPage() === totalPages() || totalPages() === 0"
+                    class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50">Next</button>
+            </div>
+        </div>
+    </div>
+</div>

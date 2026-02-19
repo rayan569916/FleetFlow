@@ -53,6 +53,7 @@ export interface InvoiceItem {
   quantity: number;
   price: number;
   amount: number;
+  unitWeight?: number;
 }
 
 export interface ChartPoint {
@@ -94,3 +95,14 @@ export interface LiveTrackingParams {
 }
 
 export interface PaymentOption extends SelectOption<'swipe' | 'bank_transfer' | 'cash'> { }
+
+export interface InvoiceRecord {
+  grandTotal: number;
+  modeOfPayment: 'swipe' | 'bank_transfer' | 'cash';
+  totalWeight: number;
+  date: string;
+}
+export interface Category {
+  id: number;
+  name: string;
+}

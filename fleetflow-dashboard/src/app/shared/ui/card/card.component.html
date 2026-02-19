@@ -1,5 +1,5 @@
-<section
-  class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 card"
-  [class]="'relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 card ' + extraClass()">
-  <ng-content />
-</section>
+<div
+  class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 h-full transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/50 hover:border-indigo-100"
+  [class]="extraClass()">
+  <ng-content></ng-content>
+</div>

@@ -78,12 +78,7 @@
               class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-slate-300 placeholder-slate-400 text-slate-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors duration-200 cursor-pointer"
               [class.border-red-300]="signupForm.get('role')?.touched && signupForm.get('role')?.invalid">
               <option value="" disabled selected>Select a role...</option>
-              <option value="super_admin">Super Admin</option>
-              <option value="ceo">CEO</option>
-              <option value="hr">HR</option>
-              <option value="accountant">Accountant</option>
-              <option value="driver">Driver</option>
-              <option value="staff">Staff</option>
+              <option *ngFor="let role of roles" [value]="role.id">{{role.displayName}}</option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
               <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

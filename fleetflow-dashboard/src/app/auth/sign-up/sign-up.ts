@@ -18,9 +18,10 @@ import { UiStateService } from '../../services/ui-state.service';
 })
 export class SignUpComponent implements OnInit {
   signupForm!: FormGroup;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
   isLoading = false;
+  successMessage: string | null = null;
+  errorMessage: string | null = null;
+  roles: any[] = [];
 
   private uiStateService = inject(UiStateService);
   sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
@@ -36,6 +37,19 @@ export class SignUpComponent implements OnInit {
 
   ngOnInit(): void {
     this.buildForm();
+    this.fetchRoles();
+  }
+
+  private fetchRoles(): void {
+    this.authService.getRoles().subscribe({
+      next: (data) => {
+        this.roles = data.map(role => ({
+          ...role,
+          displayName: role.name.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+        }));
+      },
+      error: (err) => console.error('Failed to fetch roles', err)
+    });
   }
 
   private buildForm(): void {
@@ -61,7 +75,7 @@ export class SignUpComponent implements OnInit {
     const registerData = {
       username: formData.email, // Mapping email to username
       full_name: formData.fullName,
-      role: formData.role,
+      role_id: formData.role, // This will now be the numeric ID from the select
       password: formData.password
     };
 
@@ -69,15 +83,17 @@ export class SignUpComponent implements OnInit {
     this.authService.register(registerData).subscribe({
       next: (response: any) => {
         console.log('Registration successful', response);
-        this.toastService.show('User registered successfully!', 'success');
+        this.successMessage = 'User registered successfully!';
+        this.errorMessage = null;
+        this.toastService.show(this.successMessage || '', 'success');
         this.signupForm.reset();
         this.isLoading = false;
-        // Optional: navigating away or staying on page for more registrations
       },
       error: (error: any) => {
         console.error('Registration failed', error);
-        const msg = error.error?.message || 'Registration failed.';
-        this.toastService.show(msg, 'error');
+        this.errorMessage = error.error?.message || 'Registration failed.';
+        this.successMessage = null;
+        this.toastService.show(this.errorMessage || '', 'error');
         this.isLoading = false;
       }
     });

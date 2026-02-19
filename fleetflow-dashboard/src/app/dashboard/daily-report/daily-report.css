@@ -1,0 +1,316 @@
+/* ─── Shell Layout (mirrors invoice component) ─────────────────────────── */
+
+.app-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(252, 211, 77, 0.03) 0%, transparent 50%);
+}
+
+.content-shell {
+    position: relative;
+    z-index: 1;
+    margin-left: 80px;
+    max-width: 1600px;
+    padding: 2rem;
+    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-overlay {
+    display: none;
+}
+
+.app-shell.sidebar-expanded .content-shell {
+    margin-left: 260px;
+}
+
+.dr-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+/* ─── Business Logic Summary ─────────────────────────────────────────────── */
+
+.biz-summary-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+    width: 100%;
+}
+
+.biz-summary-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid #7c3aed;
+}
+
+.biz-page-title {
+    font-size: 30px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 4px 0;
+}
+
+.biz-page-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+}
+
+.biz-badge {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 999px;
+    white-space: nowrap;
+    margin-top: 4px;
+}
+
+/* 4-column grid */
+.biz-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+/* Base card */
+.biz-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    border-top: 4px solid transparent;
+}
+
+.biz-card--blue {
+    border-top-color: #3b82f6;
+}
+
+.biz-card--purple {
+    border-top-color: #7c3aed;
+}
+
+.biz-card--teal {
+    border-top-color: #0d9488;
+}
+
+.biz-card--amber {
+    border-top-color: #d97706;
+}
+
+.biz-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin: 0 0 14px 0;
+}
+
+.biz-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13.5px;
+}
+
+.biz-row:last-child {
+    border-bottom: none;
+}
+
+.biz-row--sub {
+    opacity: 0.85;
+}
+
+.biz-row--total {
+    padding-top: 10px;
+    font-weight: 700;
+}
+
+.biz-label {
+    color: #475569;
+    font-weight: 500;
+}
+
+.biz-value {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.biz-positive {
+    color: #16a34a !important;
+}
+
+.biz-negative {
+    color: #dc2626 !important;
+}
+
+.biz-highlight {
+    color: #7c3aed !important;
+    font-size: 15px;
+}
+
+.biz-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 10px 0;
+}
+
+/* Final Calculation Card */
+.biz-final-card {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    border-radius: 12px;
+    padding: 28px 32px;
+    color: white;
+    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.25);
+}
+
+.biz-final-title {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a5b4fc;
+    margin: 0 0 20px 0;
+}
+
+.biz-final-breakdown {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 20px;
+}
+
+.biz-final-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.biz-final-row--sub {
+    padding-left: 16px;
+    opacity: 0.85;
+}
+
+.biz-final-label {
+    color: #c7d2fe;
+    font-weight: 500;
+}
+
+.biz-final-value {
+    font-weight: 700;
+    color: white;
+}
+
+.biz-final-value.biz-positive {
+    color: #86efac !important;
+}
+
+.biz-final-value.biz-negative {
+    color: #fca5a5 !important;
+}
+
+.biz-final-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.biz-final-result-label {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e0e7ff;
+}
+
+.biz-final-result-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fcd34d;
+}
+
+.biz-final-result-value.biz-negative {
+    color: #fca5a5 !important;
+}
+
+.biz-final-result-value.biz-positive {
+    color: #fcd34d !important;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 1200px) {
+    .content-shell {
+        margin-left: 80px;
+    }
+
+    .app-shell.sidebar-expanded .content-shell {
+        margin-left: 260px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .biz-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .mobile-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        border: 0;
+        background: rgba(15, 23, 42, 0.3);
+    }
+
+    .mobile-overlay.open {
+        display: block;
+    }
+
+    .content-shell {
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    .app-shell.sidebar-expanded .content-shell {
+        margin-left: 0;
+    }
+
+    .biz-summary-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .biz-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .biz-final-card {
+        padding: 20px;
+    }
+
+    .biz-final-result-value {
+        font-size: 24px;
+    }
+}
