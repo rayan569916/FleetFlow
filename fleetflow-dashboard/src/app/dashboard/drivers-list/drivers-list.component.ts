@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 import { Driver } from '../../core/models/dashboard.models';
 import { CardComponent } from '../../shared/ui/card/card.component';
@@ -6,7 +7,7 @@ import { CardComponent } from '../../shared/ui/card/card.component';
 @Component({
   selector: 'app-drivers-list',
   standalone: true,
-  imports: [CardComponent],
+  imports: [CardComponent, CommonModule],
   templateUrl: './drivers-list.component.html',
   styleUrl: './drivers-list.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

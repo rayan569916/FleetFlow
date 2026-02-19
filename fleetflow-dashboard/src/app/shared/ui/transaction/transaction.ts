@@ -1,9 +1,12 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Entry } from '../../../core/models/dashboard.models';
 import { TRANSACTION_CATEGORIES } from '../../../core/constants/dashboard.constants';
 import { CardComponent } from '../card/card.component';
+import { AuthService } from '../../../services/auth.service';
+import { SettingsService } from '../../../services/settings.service';
+import { TransactionService } from '../../../services/transaction.service';
 
 @Component({
   selector: 'app-transaction',
@@ -19,70 +22,74 @@ export class Transaction implements OnInit, OnChanges {
   entryForm!: FormGroup;
   allEntries: Entry[] = [];
   filteredEntries: Entry[] = [];
-  
+
   // Pagination
   currentPage = 1;
   pageSize = 5;
   totalPages = 1;
 
+  authService = inject(AuthService);
+  settingsService = inject(SettingsService);
+  transactionService = inject(TransactionService);
+
   constructor(private fb: FormBuilder) {
     this.entryForm = this.fb.group({
       amount: ['', [Validators.required, Validators.min(1)]],
       category: ['', Validators.required],
+      date: [new Date().toISOString().split('T')[0], Validators.required],
       description: ['', Validators.required]
     });
   }
 
   ngOnInit() {
-    this.generateDummyData();
-    this.calculatePages();
+    this.loadEntries();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['transactionType'] || changes['categories']) {
-      this.allEntries = [];
-      this.generateDummyData();
-      this.calculatePages();
+    if (changes['transactionType']) {
+      this.loadEntries();
     }
   }
 
-  generateDummyData() {
-    if (this.categories.length === 0) {
-      console.warn('Categories are empty. Using default categories.');
-      this.categories = ['Misc'];
-    }
+  loadEntries() {
+    if (!this.transactionType) return;
 
-    for (let i = 1; i <= 25; i++) {
-      this.allEntries.push({
-        id: i,
-        amount: Math.floor(Math.random() * 1000) + 100,
-        category: this.categories[i % this.categories.length],
-        description: `${this.transactionType} #${1000 + i}`,
-        date: new Date().toLocaleDateString(),
-      });
-    }
-    this.filteredEntries = [...this.allEntries];
-    this.calculatePages();
+    this.transactionService.getTransactions(this.transactionType).subscribe({
+      next: (data: Entry[]) => {
+        this.allEntries = data;
+        this.applyFilter('');
+      },
+      error: (err: any) => console.error('Failed to load transactions', err)
+    });
   }
 
   onSubmit(): void {
     if (this.entryForm.valid) {
-      const newEntry: Entry = {
-        id: Date.now(),
+      const newEntry: Omit<Entry, 'id'> = {
         ...this.entryForm.value,
-        date: new Date().toLocaleDateString(),
+        transactionType: this.transactionType // Ensure backend knows the type if needed, or handled by endpoint
       };
-      this.allEntries.unshift(newEntry);
-      this.applyFilter(''); // Reset filter on add
-      this.entryForm.reset({ category: '', description: '', amount: '' });
+
+      this.transactionService.addTransaction(newEntry).subscribe({
+        next: (savedEntry: Entry) => {
+          this.allEntries.unshift(savedEntry);
+          this.applyFilter(this.entryForm.get('category')?.value || '');
+          this.entryForm.reset({
+            category: '',
+            description: '',
+            amount: '',
+            date: new Date().toISOString().split('T')[0]
+          });
+        },
+        error: (err: any) => console.error('Failed to save transaction', err)
+      });
     } else {
-      // Highlight invalid fields
       this.entryForm.markAllAsTouched();
     }
   }
 
   applyFilter(category: string) {
-    this.filteredEntries = category 
+    this.filteredEntries = category
       ? this.allEntries.filter(e => e.category === category)
       : [...this.allEntries];
     this.currentPage = 1;
@@ -102,5 +109,22 @@ export class Transaction implements OnInit, OnChanges {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+
+  deleteEntry(id: number): void {
+    if (!confirm('Are you sure you want to delete this entry?')) {
+      return;
+    }
+
+    this.transactionService.deleteTransaction(id).subscribe({
+      next: () => {
+        this.allEntries = this.allEntries.filter(e => e.id !== id);
+        this.applyFilter(this.entryForm.get('category')?.value || '');
+        if (this.currentPage > this.totalPages && this.currentPage > 1) {
+          this.currentPage--;
+        }
+      },
+      error: (err: any) => console.error('Failed to delete transaction', err)
+    });
   }
 }

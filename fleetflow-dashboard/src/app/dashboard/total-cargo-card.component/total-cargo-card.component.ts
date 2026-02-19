@@ -1,7 +1,8 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, inject } from '@angular/core';
 import { IncomePeriod, IncomeSnapshot } from '../../core/models/dashboard.models';
 import { INCOME_PERIOD_OPTIONS } from '../../core/constants/dashboard.constants';
 import { CardComponent } from '../../shared/ui/card/card.component';
+import { SettingsService } from '../../services/settings.service';
 
 @Component({
   selector: 'app-total-cargo-card',
@@ -14,6 +15,8 @@ export class TotalCargoCardComponent {
   readonly selectedPeriod = input<IncomePeriod>('today');
   readonly periodChange = output<IncomePeriod>();
   readonly options = INCOME_PERIOD_OPTIONS;
+  private settingsService = inject(SettingsService);
+
   get budgetUsedPercent(): number {
     const current = this.snapshot();
     if (!current || current.budget <= 0) {
@@ -25,12 +28,13 @@ export class TotalCargoCardComponent {
 
   formatIncome(value: number | undefined): string {
     if (value == null) {
-      return '€0';
+      return `${this.settingsService.currencySymbol()}0`;
     }
 
+    // Use specific locale/currency formatting
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'EUR',
+      currency: this.settingsService.settings().currency, // Assumes settings() returns { currency:string, ... }
       maximumFractionDigits: 0
     }).format(value);
   }

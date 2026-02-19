@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal, inject } from '@angular/core';
 
 import { TrendPoint, ChartPointMapped } from '../../core/models/dashboard.models';
 import { CardComponent } from '../../shared/ui/card/card.component';
+import { SettingsService } from '../../services/settings.service';
 
 @Component({
   selector: 'app-trends-chart',
@@ -13,6 +14,7 @@ import { CardComponent } from '../../shared/ui/card/card.component';
 })
 export class TrendsChartComponent {
   readonly trendPoints = input.required<TrendPoint[]>();
+  settingsService = inject(SettingsService);
 
   readonly width = 600;
   readonly height = 250;

@@ -14,6 +14,7 @@ export interface ActivityLog {
   meta: string;
   icon: string;
   timestamp: string;
+  amount?: number;
 }
 
 export interface Driver {
@@ -80,6 +81,16 @@ export interface SelectOption<T = string> {
   value: T;
 }
 
-export interface DeliveryOption extends SelectOption<'air' | 'water'> {}
+export interface DeliveryOption extends SelectOption<'air' | 'water'> { }
 
-export interface PaymentOption extends SelectOption<'swipe' | 'bank_transfer' | 'cash'> {}
+export interface LiveTrackingParams {
+  driver_id: number;
+  latitude: number;
+  longitude: number;
+  last_updated?: string;
+  speed?: number;
+  heading?: number;
+  driver_name?: string;
+}
+
+export interface PaymentOption extends SelectOption<'swipe' | 'bank_transfer' | 'cash'> { }

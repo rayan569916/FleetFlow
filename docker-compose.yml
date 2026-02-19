@@ -1,0 +1,42 @@
+services:
+  # MySQL Database Service
+  db:
+    image: mysql:8.0
+    container_name: captain_cargo_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: fleetflow_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # Backend Service (Flask)
+  backend:
+    build: .
+    container_name: captain_cargo_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      SQLALCHEMY_DATABASE_URI: mysql+mysqlconnector://admin:admin@db/fleetflow_db
+      FLASK_APP: app.py
+      FLASK_ENV: production
+    depends_on:
+      - db
+
+  # Frontend Service (Angular + Nginx)
+  frontend:
+    build: ./fleetflow-dashboard
+    container_name: captain_cargo_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

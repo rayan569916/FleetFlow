@@ -33,7 +33,7 @@
 }
 
 .invoice-container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 20px;
   background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
@@ -572,4 +572,15 @@
   .invoice-header {
     border-bottom: 2px solid #333;
   }
+}
+
+/* Added Status Select Styles */
+.status-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
 }

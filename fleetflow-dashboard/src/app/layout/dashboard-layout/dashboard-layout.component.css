@@ -1,3 +1,9 @@
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .app-shell::before {
   content: '';
   position: fixed;
@@ -12,19 +18,20 @@
 .content-shell {
   position: relative;
   z-index: 1;
-  margin-left: 80px;
-  max-width: 1600px;
-  padding: 2rem;
-  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  width: 100%;
 }
 
 .mobile-overlay {
   display: none;
 }
 
-.app-shell.sidebar-expanded .content-shell {
-  margin-left: 260px;
-}
+
 
 .grid-row-1 {
   display: grid;
@@ -43,14 +50,6 @@
 }
 
 @media (max-width: 1200px) {
-  .content-shell {
-    margin-left: 80px;
-  }
-
-  .app-shell.sidebar-expanded .content-shell {
-    margin-left: 260px;
-  }
-
   .grid-row-1 {
     grid-template-columns: 1fr;
   }
@@ -71,10 +70,18 @@
 
   .content-shell {
     margin-left: 0;
-    padding: 1rem;
+    padding: 1.5rem;
+    /* Increased padding slightly for better touch targets */
+  }
+
+  /* Ensure header remains visible and fixed/sticky if needed, or just accessible */
+  app-header {
+    display: block;
+    width: 100%;
   }
 
   .app-shell.sidebar-expanded .content-shell {
     margin-left: 0;
+    /* Sidebar covers content on mobile */
   }
 }

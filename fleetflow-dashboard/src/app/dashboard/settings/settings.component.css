@@ -1,0 +1,32 @@
+    .app-shell.sidebar-expanded .content-shell {
+        margin-left: 260px;
+    }
+
+    .content-shell {
+        margin-left: 80px;
+        padding: 2rem;
+        transition: margin-left 0.3s ease;
+    }
+
+    .mobile-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 40;
+    }
+
+    .mobile-overlay.open {
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .content-shell {
+            margin-left: 0;
+            padding: 1rem;
+        }
+
+        .app-shell.sidebar-expanded .content-shell {
+            margin-left: 0;
+        }
+    }

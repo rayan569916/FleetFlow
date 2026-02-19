@@ -1,33 +1,39 @@
 <app-card>
-  <div class="mb-6 flex items-center justify-between card-header">
-    <h2 class="text-lg font-semibold tracking-tight text-slate-800 card-title">Active Drivers</h2>
-    <span class="rounded-lg bg-amber-300/20 px-4 py-2 text-sm font-semibold text-amber-600 online-pill">{{ activeCount
-      }} Online</span>
+  <div class="mb-6 flex items-center justify-between">
+    <h2 class="text-lg font-semibold tracking-tight text-slate-800">Active Drivers</h2>
+    <span
+      class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+      {{ activeCount }} Online
+    </span>
   </div>
 
-  <div class="mt-4 grid gap-4 drivers-grid">
+  <div class="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
     @for (driver of drivers(); track trackById($index)) {
     <article
-      class="flex items-center gap-4 rounded-2xl border border-slate-200 p-5 transition-all duration-300 driver-card">
+      class="group flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-3 transition-all duration-200 hover:border-indigo-100 hover:bg-white hover:shadow-md cursor-pointer">
       <div
-        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-violet-600 to-violet-400 text-lg font-semibold text-white driver-avatar">
+        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-bold text-white shadow-sm ring-2 ring-white">
         @if (driver.avatarUrl) {
-        <img [src]="driver.avatarUrl" [alt]="driver.name" class="h-full w-full rounded-full object-cover" />
+        <img [src]="driver.avatarUrl" [alt]="driver.name" class="h-full w-full rounded-xl object-cover" />
         } @else {
         {{ driver.initials }}
         }
       </div>
 
-      <div class="flex-1 driver-info">
-        <h3 class="text-base font-semibold text-slate-800 driver-name">{{ driver.name }}</h3>
-        <p class="font-mono text-sm text-slate-500 driver-contact">{{ driver.contact }}</p>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{{
+          driver.name }}</h3>
+        <p class="text-xs text-slate-500 truncate">{{ driver.contact }}</p>
       </div>
 
-      <div class="ml-auto flex items-center gap-2 driver-status">
-        <span class="h-2.5 w-2.5 rounded-full status-dot" [class.active]="driver.status === 'active'"
-          [class.inactive]="driver.status === 'inactive'"></span>
-        <span class="text-xs font-medium text-slate-500 status-text">{{ driver.status === 'active' ? 'Active' :
-          'Offline' }}</span>
+      <div class="flex shrink-0 items-center gap-1.5">
+        <span class="relative flex h-2.5 w-2.5">
+          <span *ngIf="driver.status === 'active'"
+            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+            [class.bg-emerald-500]="driver.status === 'active'"
+            [class.bg-slate-300]="driver.status !== 'active'"></span>
+        </span>
       </div>
     </article>
     }

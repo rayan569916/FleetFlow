@@ -1,5 +1,5 @@
-<app-card extraClass="relative rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--primary-purple),var(--deep-purple))] p-8 text-white"
->
+<app-card
+  extraClass="relative rounded-3xl border border-white/10 bg-gradient-to-br from-violet-600 to-indigo-700 p-8 text-white shadow-xl shadow-indigo-900/20">
   <div class="mb-2 flex items-center justify-between">
     <h2 class="text-lg font-medium tracking-tight text-white/90">Total Income</h2>
   </div>
@@ -12,19 +12,14 @@
   </div>
 
   <div class="mb-4 h-2 w-full overflow-hidden rounded-full bg-white/20">
-    <div
-      class="h-full rounded-full bg-amber-300 transition-all duration-300"
-      [style.width.%]="budgetUsedPercent"
-    ></div>
+    <div class="h-full rounded-full bg-amber-300 transition-all duration-300" [style.width.%]="budgetUsedPercent"></div>
   </div>
 
   <select
     class="w-full rounded-xl border border-white/20 bg-white/15 px-4 py-3 text-sm font-medium text-white backdrop-blur transition duration-200"
-    [value]="selectedPeriod()"
-    (change)="onSelectChange($event)"
-  >
+    [value]="selectedPeriod()" (change)="onSelectChange($event)">
     @for (option of options; track option.value) {
-      <option class="bg-[#5B21B6] text-white" [value]="option.value">{{ option.label }}</option>
+    <option class="bg-[#5B21B6] text-white" [value]="option.value">{{ option.label }}</option>
     }
   </select>
 </app-card>

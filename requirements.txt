@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Flask-Cors
+mysql-connector-python
+werkzeug
+python-dotenv
+cryptography
+PyJWT
+gunicorn
