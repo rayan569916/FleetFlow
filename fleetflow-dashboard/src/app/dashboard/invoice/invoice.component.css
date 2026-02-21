@@ -88,12 +88,12 @@
 }
 
 /* FORM STYLING */
-.form-row {
+/* .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   margin-bottom: 20px;
-}
+} */
 
 .form-group {
   display: flex;
@@ -162,7 +162,7 @@
 .form-two-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  margin: 0 !important;
   margin-bottom: 30px;
 }
 
@@ -479,6 +479,10 @@
     grid-template-columns: 1fr;
   }
 
+  .compact-create .form-row {
+    grid-template-columns: 1fr;
+  }
+
   .form-two-columns {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -584,3 +588,166 @@
   cursor: pointer;
   outline: none;
 }
+
+/* Compact create-mode layout to reduce vertical scrolling */
+.compact-create .invoice-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+}
+
+.compact-create .section {
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.compact-create .section h2 {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+}
+
+.compact-create .user-info-form,
+.compact-create .item-form,
+.compact-create .charges-form {
+  padding: 10px;
+}
+
+.compact-create .form-two-columns {
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.compact-create .sub-heading {
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+}
+
+.compact-create .form-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.compact-create .form-column .form-row {
+  margin-bottom: 10px;
+}
+
+.compact-create .form-group {
+  position: relative;
+}
+
+.compact-create .form-group label {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  z-index: 1;
+  margin: 0;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5b21b6;
+  letter-spacing: 0.02em;
+  background: #f3f0ff;
+  pointer-events: none;
+}
+
+.compact-create .form-input,
+.compact-create .table-input,
+.compact-create .form-select {
+  min-height: 38px;
+  padding: 12px 10px 8px;
+}
+
+.compact-create .form-input::placeholder,
+.compact-create .table-input::placeholder {
+  color: transparent;
+}
+
+.compact-create .error-text {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* .compact-create .action-group {
+  justify-content: end;
+} */
+
+.compact-create .action-group label {
+  display: none;
+}
+
+.compact-create .action-group .btn {
+  width: 100%;
+  min-height: 38px;
+}
+
+.compact-create .totals-grid {
+  gap: 8px;
+}
+
+.compact-create .total-item {
+  padding: 8px 12px;
+}
+
+@media (max-width: 1024px) {
+  .compact-create .form-two-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FLOATING INPUT */
+.floating-group {
+  position: relative;
+  width: 100%;
+}
+
+.floating-input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.4rem 0.75rem 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: white;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.floating-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 1px #6366f1;
+}
+
+/* LABEL */
+.floating-label {
+  position: absolute;
+  left: 0.75rem;
+  top: 1rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+/* FLOAT */
+.floating-input:focus + .floating-label,
+.floating-input:not(:placeholder-shown) + .floating-label,
+select.floating-input:not([value=""]) + .floating-label {
+  top: 0.3rem;
+  font-size: 0.65rem;
+  color: #6366f1;
+}
+
+/* ERROR */
+.floating-input.error {
+  border-color: #ef4444;
+}
+
+.floating-input.error + .floating-label {
+  color: #ef4444;
+}
+
+/* TEXTAREA FIX */
+textarea.floating-input {
+  padding-top: 1.5rem;
+}
+

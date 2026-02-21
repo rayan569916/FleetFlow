@@ -4,12 +4,13 @@ import { BehaviorSubject, map, Observable, switchMap, shareReplay } from 'rxjs';
 
 import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, TrendPoint, LiveTrackingParams, Category } from '../core/models/dashboard.models';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardDataService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = 'http://localhost:5000/api/dashboard'; // Adjust base URL as needed
+  private apiUrl = `${environment.apiBaseUrl}/api/dashboard`;
 
   private readonly incomePeriodSubject = new BehaviorSubject<IncomePeriod>('today');
   readonly incomePeriod$ = this.incomePeriodSubject.asObservable();
@@ -42,7 +43,7 @@ export class DashboardDataService {
     return this.http.get<any[]>(`${this.rootUrl}/fleet/live-tracking`);
   }
 
-  private get rootUrl() { return 'http://localhost:5000/api'; }
+  private get rootUrl() { return `${environment.apiBaseUrl}/api`; }
 
   // --- Purchases ---
   getPurchases(params: any = {}): Observable<any> {

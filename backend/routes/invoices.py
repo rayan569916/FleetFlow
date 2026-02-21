@@ -4,6 +4,7 @@ import json
 from extensions import db
 from models.invoice import InvoiceHeader, InvoiceCustomerDetail, InvoiceItem, InvoiceAmountDetail
 from utils.auth import role_required
+from utils.reports_util import update_daily_report
 
 invoices_bp = Blueprint('invoices', __name__)
 
@@ -151,6 +152,8 @@ def create_invoice(current_user):
         db.session.add(amount)
 
         db.session.commit()
+        # Update daily report in real-time
+        update_daily_report(header.date)
     except Exception as e:
         db.session.rollback()
         print(f"Error creating invoice: {str(e)}")
@@ -180,6 +183,9 @@ def delete_invoice(current_user, id):
     if not inv:
         return jsonify({'message': 'Invoice not found'}), 404
     
+    invoice_date = inv.date
     db.session.delete(inv)
     db.session.commit()
+    # Update daily report in real-time
+    update_daily_report(invoice_date)
     return jsonify({'message': 'Invoice deleted!'})

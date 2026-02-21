@@ -4,5 +4,6 @@
         "${workspaceFolder}/backend"
     ],
     "python-envs.defaultEnvManager": "ms-python.python:system",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "editor.inlineSuggest.edits.allowCodeShifting": "never"
 }

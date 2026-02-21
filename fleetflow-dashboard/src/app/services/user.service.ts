@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface User {
     id: number;
@@ -17,7 +18,7 @@ export interface User {
 export class UserService {
     private http = inject(HttpClient);
     private authService = inject(AuthService);
-    private apiUrl = 'http://localhost:5000';
+    private apiUrl = environment.apiBaseUrl;
 
     constructor() { }
 

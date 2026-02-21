@@ -71,7 +71,7 @@
 
 <section class="grid-row-1">
     <app-recent-activity [activity]="(activity$ | async) ?? []" />
-    <app-total-cargo-card [snapshot]="(income$ | async)" [selectedPeriod]="(period$ | async) ?? 'today'"
+    <app-total-cargo-card [selectedPeriod]="(period$ | async) ?? 'today'"
         (periodChange)="onPeriodChange($event)" />
     <app-trends-chart [trendPoints]="(trends$ | async) ?? []" />
 </section>

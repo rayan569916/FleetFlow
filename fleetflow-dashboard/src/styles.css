@@ -1,12 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 :root {
-  --primary-purple: #7c3aed;
-  --deep-purple: #5b21b6;
-  --accent-yellow: #facc15;
-  --bg-main: #fafafa;
-  --text-primary: #1f2937;
+  --brand-purple-950: #26013f;
+  --brand-purple-900: #3d0a66;
+  --brand-purple-800: #551181;
+  --brand-purple-700: #6f1a9f;
+  --brand-yellow-500: #f2d21b;
+  --brand-yellow-400: #ffe35a;
+  --brand-text: #f7f3ff;
+  --brand-muted: #d3c2ee;
+  --surface-glass: rgba(58, 10, 95, 0.78);
+  --surface-card: rgba(70, 16, 112, 0.64);
+  --surface-border: rgba(242, 210, 27, 0.28);
+  --shadow-strong: 0 18px 44px rgba(20, 0, 36, 0.42);
 }
 
 * {
@@ -22,8 +29,11 @@ body {
 
 body {
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg-main);
-  color: var(--text-primary);
+  background:
+    linear-gradient(155deg, rgba(38, 1, 63, 0.96), rgba(61, 10, 102, 0.94) 48%, rgba(85, 17, 129, 0.93)),
+    radial-gradient(circle at 8% 12%, rgba(242, 210, 27, 0.2), transparent 38%),
+    radial-gradient(circle at 84% 18%, rgba(255, 227, 90, 0.16), transparent 30%);
+  color: var(--brand-text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -40,18 +50,18 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(242, 210, 27, 0.6);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(255, 227, 90, 0.78);
 }
 
 /* Custom Selection Color */
 ::selection {
-  background: var(--primary-purple);
-  color: white;
+  background: var(--brand-yellow-500);
+  color: #2b1248;
 }
 
 a {
@@ -60,14 +70,36 @@ a {
 }
 
 /* Global App Shell Styles that were duplicated across components */
-.app-shell.sidebar-expanded .content-shell {
-  margin-left: 260px;
-}
-
 .content-shell {
-  margin-left: 80px;
   padding: 2rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(180deg, rgba(57, 9, 92, 0.35), rgba(44, 6, 73, 0.35));
+}
+
+/* Dashboard-wide recolor for existing Tailwind utility-heavy templates */
+.app-shell .bg-white {
+  background-color: rgba(255, 248, 223, 0.97) !important;
+}
+
+.app-shell .text-slate-900,
+.app-shell .text-slate-800,
+.app-shell .text-gray-800 {
+  color: #341f4f !important;
+}
+
+.app-shell .text-slate-700 {
+  color: #4f326d !important;
+}
+
+.app-shell .text-slate-600,
+.app-shell .text-slate-500 {
+  color: #6d4d8f !important;
+}
+
+.app-shell .border-slate-200,
+.app-shell .border-slate-300,
+.app-shell .border-slate-100 {
+  border-color: rgba(242, 210, 27, 0.35) !important;
 }
 
 .mobile-overlay {
@@ -87,12 +119,7 @@ a {
   }
 
   .content-shell {
-    margin-left: 0;
     padding: 1rem;
-  }
-
-  .app-shell.sidebar-expanded .content-shell {
-    margin-left: 0;
   }
 }
 

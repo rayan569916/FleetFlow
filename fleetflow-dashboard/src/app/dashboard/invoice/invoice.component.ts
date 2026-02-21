@@ -369,6 +369,21 @@ export class InvoiceComponent implements OnInit {
     this.grandTotal = 0;
   }
 
+  resetFormBasedOnButton(): void {
+    const tracking = this.userInfoForm.get('trackingNumber')?.value;
+    this.userInfoForm.reset();
+    this.userInfoForm.patchValue({
+      trackingNumber: tracking
+    });
+    this.financialForm.reset({ totalCartons: 1, totalWeight: 0, pricePerKg: 0 });
+    this.itemForm.reset({ quantity: 1, description: '', unitWeight: null });
+    this.chargesForm.reset({ customsCharge: 0, billCharge: 0, packingCharge: 0, discount: 0 });
+    this.items = [];
+    this.itemIdCounter = 1;
+    this.subtotal = 0;
+    this.grandTotal = 0;
+  }
+
   printInvoice(): void {
     window.print();
   }

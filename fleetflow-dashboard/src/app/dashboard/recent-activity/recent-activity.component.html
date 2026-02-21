@@ -1,4 +1,4 @@
-<app-card extraClass="h-auto">
+<app-card extraClass="h-full">
   <div class="mb-6 flex items-center justify-between">
     <h2 class="text-lg font-semibold tracking-tight text-slate-800">Recent Activity</h2>
     <app-status-badge text="Live" />
@@ -11,17 +11,17 @@
       <div class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-100 group-last:hidden"></div>
 
       <div
-        class="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white border-2 border-slate-100 shadow-sm transition-colors group-hover:border-indigo-100 group-hover:shadow-md activity-icon">
+        class="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white border-2 border-slate-100 shadow-sm transition-colors group-hover:border-indigo-100 group-hover:shadow-md activity-type">
         <div class="h-6 w-6 rounded-full flex items-center justify-center" [ngClass]="{
-                'bg-blue-100 text-blue-600': item.icon === 'package',
-                'bg-amber-100 text-amber-600': item.icon === 'clock',
-                'bg-emerald-100 text-emerald-600': item.icon === 'check',
-                'bg-indigo-100 text-indigo-600': item.icon === 'user',
-                'bg-purple-100 text-purple-600': item.icon === 'star',
-                'bg-rose-100 text-rose-600': item.icon === 'x' || !item.icon
+                'bg-blue-100 text-blue-600': item.type === 'package',
+                'bg-amber-100 text-amber-600': item.type === 'clock',
+                'bg-emerald-100 text-emerald-600': item.type === 'check',
+                'bg-indigo-100 text-indigo-600': item.type === 'user',
+                'bg-purple-100 text-purple-600': item.type === 'star',
+                'bg-rose-100 text-rose-600': item.type === 'x' || !item.type
             }">
-          @switch (item.icon) {
-          @case ('package') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24"
+          @switch (item.type){
+          @case ('invoice') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" stroke-width="2.5">
             <path
               d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
@@ -29,16 +29,16 @@
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
             <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg> }
-          @case ('clock') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+          @case ('payment') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg> }
-          @case ('check') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+          @case ('purchase') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg> }
-          @case ('user') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+          @case ('receipt') { <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>

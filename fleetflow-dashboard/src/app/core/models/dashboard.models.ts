@@ -12,7 +12,7 @@ export interface ActivityLog {
   id: string;
   title: string;
   meta: string;
-  icon: string;
+  type: string;
   timestamp: string;
   amount?: number;
 }

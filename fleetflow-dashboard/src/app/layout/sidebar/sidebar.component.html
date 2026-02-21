@@ -1,13 +1,11 @@
-<aside
-  class="sidebar bg-slate-900 text-white transition-all duration-300 flex flex-col h-full shadow-2xl shadow-indigo-900/20 relative z-20 border-r border-slate-800"
-  [class.expanded]="expanded()">
+<aside class="sidebar" [class.expanded]="expanded()">
   <!-- Sidebar Header -->
-  <div class="h-20 flex items-center px-6 border-b border-slate-800/50 bg-slate-900/80 backend-blur-md sidebar-header">
-    <div class="flex items-center gap-3 w-full overflow-hidden">
+  <div class="sidebar-header">
+    <div class="sidebar-header-inner">
       <!-- Toggle Button (Desktop) -->
       <div class="hidden md:flex shrink-0">
         <button type="button"
-          class="p-2 rounded-xl hover:bg-slate-800 transition-colors text-slate-400 hover:text-white"
+          class="sidebar-toggle"
           (click)="toggleSidebar()" aria-label="Toggle sidebar">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
@@ -17,11 +15,10 @@
 
       <!-- Logo Area -->
       <div class="flex items-center gap-3 transition-opacity duration-300 sidebar-logo whitespace-nowrap">
-        <div
-          class="h-9 w-9 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
-          <span class="text-white font-bold text-xl font-mono">C</span>
-        </div>
-        <span class="text-lg font-bold tracking-tight text-white font-display">Captain Cargo</span>
+        <!-- <div class="brand-mark">
+          <span class="font-bold text-xl font-mono">C</span>
+        </div> -->
+        <span class="brand-title">Captain Cargo</span>
       </div>
     </div>
   </div>
@@ -33,28 +30,26 @@
     <div class="nav-group">
       <!-- Group Label (Only visible if expanded) -->
       <div
-        class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-3 transition-opacity duration-300 whitespace-nowrap overflow-hidden"
+        class="nav-group-label"
         [class.opacity-0]="!expanded()" [class.h-0]="!expanded()" [class.mb-0]="!expanded()">
         {{ group.label }}
       </div>
 
       <div class="space-y-1">
         @for (item of group.items; track trackById($index, item)) {
-        <a class="nav-item group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden"
-          [class.bg-indigo-600/10]="item.active" [class.text-indigo-400]="item.active"
-          [class.text-slate-400]="!item.active" [class.hover:bg-slate-800]="!item.active"
-          [class.hover:text-slate-200]="!item.active"
+        <a class="nav-item group"
+          [class.nav-item-active]="item.active" [class.nav-item-inactive]="!item.active"
           [routerLink]="item.route && item.route !== '#' ? item.route : null"
           [attr.href]="!item.route || item.route === '#' ? 'javascript:void(0)' : null"
           [class.cursor-pointer]="!item.route || item.route === '#'" (click)="handleItemClick(item)">
 
           <!-- Active Indicator Bar -->
           <div
-            class="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-indigo-500 rounded-r-full transition-all duration-300"
+            class="active-indicator"
             [class.opacity-100]="item.active" [class.opacity-0]="!item.active"></div>
 
           <!-- Icon -->
-          <span class="shrink-0 transition-colors relative z-10" [class.text-indigo-400]="item.active">
+          <span class="nav-icon" [class.nav-icon-active]="item.active">
             @switch (item.icon) {
             @case ('grid') { <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -180,7 +175,7 @@
             }
           </span>
 
-          <span class="font-medium text-sm tracking-wide nav-text whitespace-nowrap relative z-10">{{ item.label
+          <span class="nav-text">{{ item.label
             }}</span>
         </a>
         }
@@ -190,25 +185,24 @@
   </nav>
 
   <!-- User Profile Footer -->
-  <div class="p-4 border-t border-slate-800 bg-slate-900/50 sidebar-profile mt-auto">
-    <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer group">
+  <div class="sidebar-profile mt-auto">
+    <div class="profile-row group">
       <div class="relative">
-        <div
-          class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20 ring-2 ring-slate-800 group-hover:ring-indigo-500/50 transition-all">
+        <div class="profile-avatar">
           <span>U</span>
         </div>
-        <div class="absolute bottom-0 right-0 h-3 w-3 bg-emerald-500 rounded-full border-2 border-slate-900"></div>
+        <div class="status-dot"></div>
       </div>
 
       <div class="flex flex-col overflow-hidden transition-all duration-300" [class.opacity-0]="!expanded()"
         [class.w-0]="!expanded()">
-        <span class="text-sm font-semibold text-white truncate group-hover:text-indigo-400 transition-colors">Admin
+        <span class="profile-name">Admin
           User</span>
-        <span class="text-xs text-slate-500 truncate">admin&#64;captaincargo.com</span>
+        <span class="profile-email">admin&#64;captaincargo.com</span>
       </div>
 
       <div class="ml-auto" [class.hidden]="!expanded()">
-        <button class="p-1.5 text-slate-400 hover:text-red-400 transition-colors rounded-lg hover:bg-slate-800"
+        <button class="logout-btn"
           (click)="handleItemClick(logoutItem())" title="Logout">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

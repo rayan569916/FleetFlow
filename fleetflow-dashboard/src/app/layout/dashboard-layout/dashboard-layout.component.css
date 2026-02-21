@@ -2,6 +2,9 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
+  background:
+    linear-gradient(165deg, rgba(35, 2, 58, 0.96), rgba(81, 18, 124, 0.9)),
+    radial-gradient(circle at 76% 0%, rgba(242, 210, 27, 0.14), transparent 34%);
 }
 
 .app-shell::before {
@@ -11,8 +14,8 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(252, 211, 77, 0.03) 0%, transparent 50%);
+    radial-gradient(circle at 20% 20%, rgba(242, 210, 27, 0.05) 0%, transparent 42%),
+    radial-gradient(circle at 80% 80%, rgba(132, 40, 196, 0.08) 0%, transparent 56%);
 }
 
 .content-shell {
@@ -25,6 +28,7 @@
   overflow-x: hidden;
   height: 100%;
   width: 100%;
+  color: var(--brand-text);
 }
 
 .mobile-overlay {
@@ -61,7 +65,7 @@
     inset: 0;
     z-index: 20;
     border: 0;
-    background: rgba(15, 23, 42, 0.3);
+    background: rgba(20, 4, 34, 0.62);
   }
 
   .mobile-overlay.open {

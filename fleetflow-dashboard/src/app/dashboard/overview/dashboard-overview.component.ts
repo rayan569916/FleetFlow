@@ -28,7 +28,7 @@ export class DashboardOverviewComponent {
 
   readonly activity$ = this.dashboardDataService.getRecentActivity();
   readonly drivers$ = this.dashboardDataService.getDrivers();
-  readonly income$ = this.dashboardDataService.getSelectedIncome();
+  // readonly income$ = this.dashboardDataService.getSelectedIncome();
   readonly trends$ = this.dashboardDataService.getYearlyTrends();
   readonly period$ = this.dashboardDataService.incomePeriod$;
 

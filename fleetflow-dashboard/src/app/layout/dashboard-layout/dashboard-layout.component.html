@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-slate-50 app-shell" [class.sidebar-expanded]="(sidebarExpanded$ | async) ?? false">
+<div class="min-h-screen app-shell" [class.sidebar-expanded]="(sidebarExpanded$ | async) ?? false">
   <button class="mobile-overlay" [class.open]="(sidebarExpanded$ | async) ?? false" (click)="closeSidebar()"
     aria-label="Close sidebar"></button>
   <app-sidebar [expanded]="(sidebarExpanded$ | async) ?? false" />

@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Entry } from '../core/models/dashboard.models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class TransactionService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5000/api/transactions';
+    private apiUrl = `${environment.apiBaseUrl}/api/transactions`;
 
     getTransactions(type: string): Observable<Entry[]> {
         return this.http.get<Entry[]>(`${this.apiUrl}`, {

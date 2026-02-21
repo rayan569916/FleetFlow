@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, request
 from extensions import db
 from models.invoice import InvoiceHeader, InvoiceAmountDetail
+from models.finance import Payment, Receipt, Purchase
 from models.shipment import Shipment
 from models.fleet import Driver
+from services.dashboard_services import DashboardService
 from utils.auth import role_required
 import datetime
 from sqlalchemy import func
@@ -35,6 +37,9 @@ def get_stats(current_user):
 def get_recent_activity(current_user):
     # Fetch recent invoices and shipments as activity
     recent_invoices = InvoiceHeader.query.order_by(InvoiceHeader.created_at.desc()).limit(5).all()
+    recent_payment = Payment.query.order_by(Payment.created_at.desc()).limit(5).all()
+    recent_purchase = Purchase.query.order_by(Purchase.created_at.desc()).limit(5).all()
+    recent_receipt = Receipt.query.order_by(Receipt.created_at.desc()).limit(5).all()
     
     activity = []
     for inv in recent_invoices:
@@ -46,7 +51,38 @@ def get_recent_activity(current_user):
             'user': inv.creator.full_name if inv.creator else 'System',
             'status': inv.status
         })
-    
+
+    for pay in recent_payment:
+        activity.append({
+            'id': pay.id,
+            'type': 'payment',
+            'title': f'Payment {DashboardService.det_category_name(pay.category_id,"payments")} generated',
+            'timestamp': pay.created_at.isoformat(),
+            'user': 'System',
+            'status': "completed"
+        })
+
+    for pur in recent_purchase:
+        activity.append({
+            'id': pur.id,
+            'type': 'purchase',
+            'title': f'Purchase {DashboardService.det_category_name(pur.category_id,"purchases")} generated',
+            'timestamp': pur.created_at.isoformat(),
+            'user': 'System',
+            'status': "completed"
+        })
+
+    for rec in recent_receipt:
+        activity.append({
+            'id': rec.id,
+            'type': 'receipt',
+            'title': f'Receipt {DashboardService.det_category_name(rec.category_id,"receipts")} generated',
+            'timestamp': rec.created_at.isoformat(),
+            'user': 'System',
+            'status': "completed"
+        })
+
+    activity.sort(key=lambda x: x['timestamp'], reverse=True) 
     return jsonify(activity)
 
 @dashboard_bp.route('/trends', methods=['GET'])

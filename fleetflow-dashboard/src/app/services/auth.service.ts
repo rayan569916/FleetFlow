@@ -2,6 +2,7 @@ import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 interface LoginResponse {
     token: string;
@@ -14,7 +15,7 @@ interface LoginResponse {
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://127.0.0.1:5000/api/auth'; // Flask backend URL
+    private apiUrl = `${environment.apiBaseUrl}/api/auth`;
 
     // Signal to hold the current user's role
     currentUserRole = signal<string | null>(localStorage.getItem('user_role'));

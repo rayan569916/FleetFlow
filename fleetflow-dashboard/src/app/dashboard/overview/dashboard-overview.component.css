@@ -1,0 +1,6 @@
+.grid-row-1 {
+  display: grid;
+  grid-template-columns: 3fr 1fr 4fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}

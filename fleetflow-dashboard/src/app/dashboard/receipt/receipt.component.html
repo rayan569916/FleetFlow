@@ -1,8 +1,8 @@
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Receipts</h1>
-            <p class="text-slate-500 mt-1">Manage and track incoming receipts.</p>
+            <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Receipts</h1>
+            <p class="text-slate-100 mt-1">Manage and track incoming receipts.</p>
         </div>
         <button (click)="toggleForm()"
             class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center gap-2">
@@ -92,7 +92,15 @@
                     @for (item of receipts(); track item.id) {
                     <tr class="hover:bg-slate-50/50 transition-colors group">
                         <td class="px-6 py-4 text-sm text-slate-800 font-medium">
-                            {{ item.description }}
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="h-10 w-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                                    {{ item.category_name?.charAt(0) || 'P' }}
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-800">{{ item.description }}</div>
+                                </div>
+                            </div>
                         </td>
                         <td class="px-6 py-4">
                             <span

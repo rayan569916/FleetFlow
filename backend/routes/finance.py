@@ -3,6 +3,7 @@ import datetime
 from extensions import db
 from models.finance import Purchase, Receipt, Payment
 from utils.auth import role_required
+from utils.reports_util import update_daily_report
 
 finance_bp = Blueprint('finance', __name__)
 
@@ -41,8 +42,11 @@ def get_paginated_list(model, serializer):
 def delete_item(model, id):
     item = model.query.get(id)
     if not item: return jsonify({'message': 'Item not found'}), 404
+    item_date = item.created_at
     db.session.delete(item)
     db.session.commit()
+    # Update daily report in real-time
+    update_daily_report(item_date)
     return jsonify({'message': 'Item deleted'})
 
 def serialize_purchase(p):
@@ -107,6 +111,8 @@ def create_purchase(current_user):
     )
     db.session.add(new_purchase)
     db.session.commit()
+    # Update daily report in real-time
+    update_daily_report(datetime.date.today())
     return jsonify({'message': 'Purchase created'}), 201
 
 @finance_bp.route('/purchases/<int:id>', methods=['DELETE'])
@@ -128,6 +134,8 @@ def create_receipt(current_user):
     )
     db.session.add(new_receipt)
     db.session.commit()
+    # Update daily report in real-time
+    update_daily_report(datetime.date.today())
     return jsonify({'message': 'Receipt created'}), 201
 
 @finance_bp.route('/receipts/<int:id>', methods=['DELETE'])
@@ -149,6 +157,8 @@ def create_payment(current_user):
     )
     db.session.add(new_payment)
     db.session.commit()
+    # Update daily report in real-time
+    update_daily_report(datetime.date.today())
     return jsonify({'message': 'Payment created'}), 201
 
 @finance_bp.route('/payments/<int:id>', methods=['DELETE'])

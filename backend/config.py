@@ -8,4 +8,4 @@ class Config:
         'pool_recycle': 280,
         'pool_pre_ping': True,
     }
-    CORS_ORIGINS = ["http://localhost:4200"]
+    CORS_ORIGINS = ["http://localhost:4200","http://192.168.1.87:4200"]

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Shipment {
     id?: number;
@@ -17,7 +18,7 @@ export interface Shipment {
     providedIn: 'root'
 })
 export class ShipmentService {
-    private apiUrl = 'http://localhost:5000/shipments';
+    private apiUrl = `${environment.apiBaseUrl}/shipments`;
     private http = inject(HttpClient);
 
     getShipments(): Observable<Shipment[]> {
