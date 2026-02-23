@@ -143,46 +143,6 @@
                 <span>Jan</span><span>Dec</span>
             </div>
         </div>
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col"
-            *ngIf="efficiencyStats() as eff">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-lg font-bold text-slate-800">Fleet Efficiency</h2>
-                <select
-                    class="text-xs bg-slate-50 border-none rounded-lg text-slate-600 focus:ring-0 py-1.5 px-3 cursor-pointer no-print">
-                    <option>This Month</option>
-                </select>
-            </div>
-
-            <div class="flex items-center justify-center py-6 relative">
-                <div
-                    class="h-48 w-48 rounded-full border-[1.5rem] border-indigo-500 border-r-indigo-200 border-b-indigo-300 relative flex items-center justify-center shadow-lg shadow-indigo-100">
-                    <div class="text-center">
-                        <span class="block text-3xl font-bold text-slate-800">{{ eff.overall }}%</span>
-                        <span class="text-xs text-slate-500 font-medium uppercase">Efficiency</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-8">
-                <div class="p-4 bg-slate-50 rounded-xl">
-                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Fuel Usage</p>
-                    <p class="text-xl font-bold text-slate-800">{{ eff.fuelUsage | number }} L</p>
-                    <p class="text-xs mt-1 flex items-center gap-1 font-medium"
-                        [ngClass]="eff.fuelTrend > 0 ? 'text-red-500' : 'text-green-500'">
-                        <span *ngIf="eff.fuelTrend > 0">+</span>{{ eff.fuelTrend }}%
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
-                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Maintenance</p>
-                    <p class="text-xl font-bold text-slate-800">{{ settingsService.currencySymbol() }} {{
-                        eff.maintenanceCost | number }}</p>
-                    <p class="text-xs mt-1 flex items-center gap-1 font-medium"
-                        [ngClass]="eff.maintenanceTrend <= 0 ? 'text-green-500' : 'text-red-500'">
-                        <span *ngIf="eff.maintenanceTrend > 0">+</span>{{ eff.maintenanceTrend }}%
-                    </p>
-                </div>
-            </div>
-        </div>
     </div>
     
 
@@ -190,24 +150,10 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden break-inside-avoid">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-lg font-bold text-slate-800">Generated Reports</h2>
-            <button class="text-sm font-medium text-indigo-600 hover:text-indigo-700 no-print">View All</button>
+            <span class="text-sm text-slate-500">No stored files API yet</span>
         </div>
         <div class="p-0">
-            <!-- Static data for now, but in a real app these would be historic files -->
-            <div
-                class="flex items-center p-4 hover:bg-slate-50 transition border-b border-slate-50 last:border-0 cursor-pointer">
-                <div class="h-10 w-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center shrink-0">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <div class="ml-4 flex-1">
-                    <h4 class="text-sm font-bold text-slate-800">Q3 Financial Statement.pdf</h4>
-                    <p class="text-xs text-slate-500 mt-0.5">Generated on Oct 1, 2023</p>
-                </div>
-                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">PDF</span>
-            </div>
+            <div class="p-6 text-sm text-slate-500">Reports can be exported from the current data above.</div>
         </div>
     </div>
 </div>

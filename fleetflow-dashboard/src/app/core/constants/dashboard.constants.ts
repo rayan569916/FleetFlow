@@ -27,7 +27,8 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { id: 'income', label: 'Income', icon: 'income', route: '/dashboard/income' },
   { id: 'invoice', label: 'Billing Invoice', icon: 'file', route: '/dashboard/invoice' },
   { id: 'settings', label: 'Settings', icon: 'settings', route: '/dashboard/settings' },
-  { id: 'register', label: 'Register User', icon: 'users', route: '/dashboard/register' }, // Visible only to Admin/CEO
+  { id: 'register', label: 'Register User', icon: 'users', route: '/dashboard/register' },
+  { id: 'unit-price', label: 'Unit Price', icon: 'dollar-sign', route: '/dashboard/unit-price' },
   { id: 'logout', label: 'Logout', icon: 'logout', route: '' }
 ];
 
@@ -75,32 +76,4 @@ export const TRANSACTION_CATEGORIES: ReadonlyArray<string> = [
   'Maintenance',
   'Salary',
   'Misc'
-];
-
-
-export const submittedInvoices: InvoiceRecord[] = [
-  { grandTotal: 3500, modeOfPayment: 'swipe', totalWeight: 12.5, date: new Date().toLocaleDateString() },
-  { grandTotal: 2200, modeOfPayment: 'bank_transfer', totalWeight: 8.0, date: new Date().toLocaleDateString() },
-  { grandTotal: 1800, modeOfPayment: 'cash', totalWeight: 5.5, date: new Date().toLocaleDateString() },
-  { grandTotal: 4100, modeOfPayment: 'swipe', totalWeight: 15.0, date: new Date().toLocaleDateString() },
-  { grandTotal: 900, modeOfPayment: 'cash', totalWeight: 3.0, date: new Date().toLocaleDateString() },
-];
-
-// ─── DUMMY TRANSACTION DATA ──────────────────────────────────────────────────
-export const payments: Entry[] = [
-  { id: 1, amount: 500, category: 'Payment', description: 'Payment #1001', date: new Date().toLocaleDateString() },
-  { id: 2, amount: 750, category: 'Payment', description: 'Payment #1002', date: new Date().toLocaleDateString() },
-  { id: 3, amount: 300, category: 'Payment', description: 'Payment #1003', date: new Date().toLocaleDateString() },
-];
-
-export const purchases: Entry[] = [
-  { id: 1, amount: 1200, category: 'Purchase', description: 'Purchase #2001', date: new Date().toLocaleDateString() },
-  { id: 2, amount: 850, category: 'Purchase', description: 'Purchase #2002', date: new Date().toLocaleDateString() },
-  { id: 3, amount: 450, category: 'Purchase', description: 'Purchase #2003', date: new Date().toLocaleDateString() },
-];
-
-export const receipts: Entry[] = [
-  { id: 1, amount: 2000, category: 'Receipt', description: 'Receipt #3001', date: new Date().toLocaleDateString() },
-  { id: 2, amount: 1500, category: 'Receipt', description: 'Receipt #3002', date: new Date().toLocaleDateString() },
-  { id: 3, amount: 600, category: 'Receipt', description: 'Receipt #3003', date: new Date().toLocaleDateString() },
 ];

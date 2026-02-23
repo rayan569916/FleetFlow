@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, AsyncPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { finalize, timeout } from 'rxjs';
+import { finalize, timeout, Observable } from 'rxjs';
 import { InvoiceItem } from '../../core/models/dashboard.models';
 import { modeOfDeliveryOptions, modeOfPaymentOptions } from '../../core/constants/dashboard.constants';
 import { InvoiceService, Invoice } from '../../services/invoice.service';
@@ -9,13 +9,13 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { UiStateService } from '../../services/ui-state.service';
-import { HeaderComponent } from '../../layout/header/header.component';
-import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
+import { UnitPriceService } from '../../services/unit-price.service';
+
 
 @Component({
   selector: 'app-invoice',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, HeaderComponent, SidebarComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe],
   templateUrl: './invoice.component.html',
   styleUrl: './invoice.component.css'
 })
@@ -50,15 +50,68 @@ export class InvoiceComponent implements OnInit {
   // Dropdown options
   modeOfDeliveryOptions = modeOfDeliveryOptions;
   modeOfPaymentOptions = modeOfPaymentOptions;
+  saudiMajorCities: string[] = [
+    'Riyadh',
+    'Jeddah',
+    'Mecca',
+    'Medina',
+    'Dammam',
+    'Khobar',
+    'Dhahran',
+    'Taif',
+    'Tabuk',
+    'Abha',
+    'Buraidah',
+    'Hail',
+    'Najran',
+    'Jizan',
+    'Yanbu',
+    'Al Jubail',
+    'Al Ahsa',
+    'Qatif',
+    'Khamis Mushait',
+    'Al Qunfudhah'
+  ];
+  countryOptions: string[] = [
+    'Saudi Arabia',
+    'United Arab Emirates',
+    'Qatar',
+    'Kuwait',
+    'Bahrain',
+    'Oman',
+    'Jordan',
+    'Egypt',
+    'India',
+    'Pakistan',
+    'Bangladesh',
+    'Philippines',
+    'United Kingdom',
+    'United States'
+  ];
+  countryCodeOptions: Array<{ code: string; label: string }> = [
+    { code: '+966', label: 'Saudi Arabia (+966)' },
+    { code: '+971', label: 'UAE (+971)' },
+    { code: '+974', label: 'Qatar (+974)' },
+    { code: '+965', label: 'Kuwait (+965)' },
+    { code: '+973', label: 'Bahrain (+973)' },
+    { code: '+968', label: 'Oman (+968)' },
+    { code: '+91', label: 'India (+91)' },
+    { code: '+92', label: 'Pakistan (+92)' },
+    { code: '+880', label: 'Bangladesh (+880)' },
+    { code: '+63', label: 'Philippines (+63)' },
+    { code: '+44', label: 'UK (+44)' },
+    { code: '+1', label: 'USA (+1)' }
+  ];
 
   private uiStateService = inject(UiStateService);
   private invoiceService = inject(InvoiceService);
+  private unitPriceService = inject(UnitPriceService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   settingsService = inject(SettingsService);
 
-  readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
+  readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$ as Observable<boolean>;
 
   constructor(private fb: FormBuilder) {
     this.currentUserRole = this.authService.currentUserRole();
@@ -67,6 +120,20 @@ export class InvoiceComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForms();
     this.loadInvoices();
+    this.loadCountries();
+  }
+
+  loadCountries(): void {
+    this.unitPriceService.getCountries().subscribe({
+      next: (countries) => {
+        if (countries && countries.length > 0) {
+          this.countryOptions = countries;
+        }
+      },
+      error: (err) => {
+        console.error('Error loading countries:', err);
+      }
+    });
   }
 
   initializeForms(): void {
@@ -76,10 +143,12 @@ export class InvoiceComponent implements OnInit {
       trackingNumber: [{ value: '', disabled: true }],
       customerName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern(/^\d{10,}$/)]],
+      senderCountryCode: ['+966', Validators.required],
+      phone: ['', [Validators.required, Validators.pattern(/^\d{6,14}$/)]],
       address: ['', [Validators.required, Validators.minLength(5)]],
       city: ['', Validators.required],
       zipCode: ['', Validators.required],
+      locationLink: [''],
 
       // Delivery and Payment Details
       modeOfDelivery: ['', Validators.required],
@@ -87,8 +156,11 @@ export class InvoiceComponent implements OnInit {
 
       // Consignee Information
       consigneeName: ['', [Validators.required, Validators.minLength(2)]],
-      consigneeMobile: ['', [Validators.required, Validators.pattern(/^\d{10,}$/)]],
-      consigneeAddress: ['', [Validators.required, Validators.minLength(5)]]
+      consigneeCountryCode: ['+966', Validators.required],
+      consigneeMobile: ['', [Validators.required, Validators.pattern(/^\d{6,14}$/)]],
+      consigneeAddress: ['', [Validators.required, Validators.minLength(5)]],
+      consigneeCountry: ['', Validators.required],
+      consigneeCity: ['', Validators.required]
     });
 
     // Item Form
@@ -199,7 +271,7 @@ export class InvoiceComponent implements OnInit {
   viewInvoice(id: number): void {
     this.isLoading = true;
     this.invoiceService.getInvoiceById(id).subscribe({
-      next: (data) => {
+      next: (data: any) => {
         this.selectedInvoice = data;
         // Parse details if string, though backend handles it
         if (typeof this.selectedInvoice.invoice_details === 'string') {
@@ -360,6 +432,10 @@ export class InvoiceComponent implements OnInit {
 
   resetForm(): void {
     this.userInfoForm.reset();
+    this.userInfoForm.patchValue({
+      senderCountryCode: '+966',
+      consigneeCountryCode: '+966'
+    });
     this.financialForm.reset({ totalCartons: 1, totalWeight: 0, pricePerKg: 0 });
     this.itemForm.reset({ quantity: 1, description: '', unitWeight: null });
     this.chargesForm.reset({ customsCharge: 0, billCharge: 0, packingCharge: 0, discount: 0 });
@@ -373,7 +449,9 @@ export class InvoiceComponent implements OnInit {
     const tracking = this.userInfoForm.get('trackingNumber')?.value;
     this.userInfoForm.reset();
     this.userInfoForm.patchValue({
-      trackingNumber: tracking
+      trackingNumber: tracking,
+      senderCountryCode: '+966',
+      consigneeCountryCode: '+966'
     });
     this.financialForm.reset({ totalCartons: 1, totalWeight: 0, pricePerKg: 0 });
     this.itemForm.reset({ quantity: 1, description: '', unitWeight: null });

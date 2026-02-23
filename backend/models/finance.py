@@ -1,5 +1,6 @@
 from extensions import db
 import datetime
+from sqlalchemy import UniqueConstraint
 
 class PurchaseCategory(db.Model):
     __tablename__ = 'purchase_categories'
@@ -22,8 +23,10 @@ class Purchase(db.Model):
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('purchase_categories.id'), nullable=False)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     category = db.relationship('PurchaseCategory', backref=db.backref('purchases', lazy=True))
+    office = db.relationship('Office', backref=db.backref('purchases', lazy=True))
 
 class Receipt(db.Model):
     __tablename__ = 'receipts'
@@ -31,8 +34,10 @@ class Receipt(db.Model):
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('receipt_categories.id'), nullable=False)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     category = db.relationship('ReceiptCategory', backref=db.backref('receipts', lazy=True))
+    office = db.relationship('Office', backref=db.backref('receipts', lazy=True))
 
 class Payment(db.Model):
     __tablename__ = 'payments'
@@ -40,13 +45,20 @@ class Payment(db.Model):
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('payment_categories.id'), nullable=False)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     category = db.relationship('PaymentCategory', backref=db.backref('payments', lazy=True))
+    office = db.relationship('Office', backref=db.backref('payments', lazy=True))
 
 class DailyReport(db.Model):
     __tablename__ = 'daily_reports'
+    __table_args__ = (
+        UniqueConstraint('date', 'office_id', name='uq_daily_reports_date_office'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, unique=True, nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     # Calculation elements:
     total_invoice_grand = db.Column(db.Float, default=0.0)      # Sum of all grand_total
     bank_transfer_swipe_sum = db.Column(db.Float, default=0.0)  # Sum of grand_total for 'bank_transfer' & 'swipe'
@@ -58,3 +70,4 @@ class DailyReport(db.Model):
     # Final Result: (total_invoice_grand - bank_transfer_swipe_sum - total_payment - total_purchase + total_receipt + previous_total)
     daily_total = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    office = db.relationship('Office', backref=db.backref('daily_reports', lazy=True))

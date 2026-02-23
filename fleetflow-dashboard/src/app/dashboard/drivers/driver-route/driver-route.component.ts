@@ -32,23 +32,9 @@ export class DriverRouteComponent implements OnInit {
     if (id) {
       this.dashboardDataService.getDrivers().subscribe(drivers => {
         this.driver = drivers.find(d => d.id === id);
-        // Simulate loading existing route
-        if (this.driver) {
-          this.loadMockRoute();
-        }
+        this.calculateMetrics();
       });
     }
-  }
-
-  loadMockRoute() {
-    // Initial "Random" Route
-    this.stops = [
-      { x: 20, y: 30, name: 'Warehouse A' },
-      { x: 50, y: 60, name: 'Client Zone B' },
-      { x: 80, y: 40, name: 'Final Drop' }
-    ];
-    this.updateVehiclePos();
-    this.calculateMetrics();
   }
 
   updateVehiclePos() {
@@ -73,8 +59,7 @@ export class DriverRouteComponent implements OnInit {
     this.isEditing = false;
     this.calculateMetrics();
     this.updateVehiclePos();
-    // In a real app, we'd save this to backend
-    alert('Route updated successfully!');
+    alert('Route updated locally.');
   }
 
   cancelEdit() {
@@ -133,8 +118,10 @@ export class DriverRouteComponent implements OnInit {
   }
 
   calculateMetrics() {
-    // Mock distance calculation based on num stops
     this.totalDistance = Math.floor(this.stops.length * 42.5);
-    this.eta = `${Math.floor(this.stops.length * 0.8)}h ${Math.floor(Math.random() * 60)}m`;
+    const etaMinutes = Math.round((this.totalDistance / 40) * 60); // 40 km/h average
+    const hours = Math.floor(etaMinutes / 60);
+    const minutes = etaMinutes % 60;
+    this.eta = `${hours}h ${minutes}m`;
   }
 }

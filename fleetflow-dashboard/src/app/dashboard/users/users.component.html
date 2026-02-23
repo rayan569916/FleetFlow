@@ -26,6 +26,7 @@
                     <th class="py-4 px-6 font-semibold text-slate-700">Username</th>
                     <th class="py-4 px-6 font-semibold text-slate-700">Full Name</th>
                     <th class="py-4 px-6 font-semibold text-slate-700">Role</th>
+                    <th class="py-4 px-6 font-semibold text-slate-700">Office</th>
                     <th class="py-4 px-6 font-semibold text-slate-700">Joined</th>
                     <th class="py-4 px-6 font-semibold text-slate-700 text-right">Actions</th>
                 </tr>
@@ -45,6 +46,7 @@
                             {{ user.role }}
                         </span>
                     </td>
+                    <td class="py-4 px-6 text-slate-600">{{ user.office_name || 'N/A' }}</td>
                     <td class="py-4 px-6 text-slate-500 text-sm">{{ user.created_at | date }}</td>
                     <td class="py-4 px-6 text-right">
                         <button class="text-slate-400 hover:text-blue-600 transition" title="Edit User">
@@ -57,7 +59,7 @@
                     </td>
                 </tr>
                 <tr *ngIf="users.length === 0 && !errorMessage">
-                    <td colspan="5" class="py-8 text-center text-slate-500 italic">No users found. (Loading or Empty)
+                    <td colspan="6" class="py-8 text-center text-slate-500 italic">No users found. (Loading or Empty)
                     </td>
                 </tr>
             </tbody>

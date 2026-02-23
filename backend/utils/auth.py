@@ -1,7 +1,9 @@
 from functools import wraps
 from flask import request, jsonify, current_app
 import jwt
-from models.user import User
+from models.user import User, Office
+
+SUPER_ROLE = 'super_admin'
 
 def role_required(allowed_roles):
     def decorator(f):
@@ -32,3 +34,36 @@ def role_required(allowed_roles):
             return f(current_user, *args, **kwargs)
         return decorated_function
     return decorator
+
+def is_super_user(user):
+    return bool(user and user.role and user.role.name == SUPER_ROLE)
+
+def get_effective_read_office_id(current_user, requested_office_id=None):
+    """
+    Returns office scope for read operations:
+    - super_admin: requested office if provided, else None (all offices)
+    - others: always their assigned office
+    """
+    if is_super_user(current_user):
+        return requested_office_id
+    return current_user.office_id
+
+def get_effective_write_office_id(current_user, payload_office_id=None):
+    """
+    Returns office_id for write operations:
+    - super_admin: payload office if provided, otherwise current user's office
+    - others: always their assigned office (payload ignored)
+    """
+    if is_super_user(current_user):
+        return payload_office_id or current_user.office_id
+    return current_user.office_id
+
+def can_access_office(current_user, office_id):
+    if is_super_user(current_user):
+        return True
+    return current_user.office_id is not None and current_user.office_id == office_id
+
+def validate_office_id(office_id):
+    if office_id is None:
+        return False
+    return Office.query.get(office_id) is not None

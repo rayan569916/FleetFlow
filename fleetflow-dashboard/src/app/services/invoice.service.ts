@@ -22,8 +22,10 @@ export class InvoiceService {
     private apiUrl = `${environment.apiBaseUrl}/api/invoices`;
     private http = inject(HttpClient);
 
-    getInvoices(): Observable<any> {
-        return this.http.get<any>(this.apiUrl);
+    getInvoices(officeId?: number): Observable<any> {
+        const params: Record<string, string | number | boolean> = {};
+        if (officeId) params['office_id'] = officeId;
+        return this.http.get<any>(this.apiUrl, { params });
     }
 
     createInvoice(invoiceData: any): Observable<any> {

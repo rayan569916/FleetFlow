@@ -1,4 +1,6 @@
-from app import app, db, User
+from app import app
+from extensions import db
+from models import User, Office
 
 def seed_users():
     with app.app_context():
@@ -23,6 +25,7 @@ def seed_users():
         # Categories
         from models import Role
         roles_map = {r.name: r.id for r in Role.query.all()}
+        default_office = Office.query.order_by(Office.id.asc()).first()
 
         added_count = 0
         for u_data in users_to_add:
@@ -31,7 +34,12 @@ def seed_users():
                 if not rid:
                     print(f"Skipping {u_data['username']}: role {u_data['role']} not found.")
                     continue
-                user = User(username=u_data['username'], role_id=rid, full_name=u_data['full_name'])
+                user = User(
+                    username=u_data['username'],
+                    role_id=rid,
+                    office_id=default_office.id if default_office else None,
+                    full_name=u_data['full_name']
+                )
                 user.set_password(u_data['password'])
                 db.session.add(user)
                 added_count += 1

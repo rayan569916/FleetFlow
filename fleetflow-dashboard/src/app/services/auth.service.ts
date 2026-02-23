@@ -9,6 +9,8 @@ interface LoginResponse {
     role: string;
     username: string;
     full_name: string;
+    office_id: number | null;
+    office_name: string | null;
 }
 
 @Injectable({
@@ -29,6 +31,8 @@ export class AuthService {
                 localStorage.setItem('user_role', response.role);
                 localStorage.setItem('user_name', response.username);
                 localStorage.setItem('user_full_name', response.full_name || response.username);
+                localStorage.setItem('user_office_id', response.office_id !== null ? String(response.office_id) : '');
+                localStorage.setItem('user_office_name', response.office_name || '');
                 // Update the signal
                 this.currentUserRole.set(response.role);
             })
@@ -46,11 +50,17 @@ export class AuthService {
         return this.http.get<any[]>(`${this.apiUrl}/roles`);
     }
 
+    getOffices(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/offices`);
+    }
+
     logout() {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_role');
         localStorage.removeItem('user_name');
         localStorage.removeItem('user_full_name');
+        localStorage.removeItem('user_office_id');
+        localStorage.removeItem('user_office_name');
         this.currentUserRole.set(null);
         this.currentUserName.set(null);
         this.currentUserFullName.set(null);

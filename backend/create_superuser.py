@@ -1,6 +1,6 @@
 from app import create_app
 from extensions import db
-from models import User, Role
+from models import User, Role, Office
 import os
 from dotenv import load_dotenv
 
@@ -16,16 +16,20 @@ def create_superuser(username, password, full_name):
             return
 
         user = User.query.filter_by(username=username).first()
+        default_office = Office.query.order_by(Office.id.asc()).first()
         if user:
             print(f"User '{username}' already exists. Updating password...")
             user.set_password(password)
             user.role_id = admin_role.id
             user.full_name = full_name
+            if default_office and not user.office_id:
+                user.office_id = default_office.id
         else:
             print(f"Creating new superuser '{username}'...")
             user = User(
                 username=username,
                 role_id=admin_role.id,
+                office_id=default_office.id if default_office else None,
                 full_name=full_name
             )
             user.set_password(password)

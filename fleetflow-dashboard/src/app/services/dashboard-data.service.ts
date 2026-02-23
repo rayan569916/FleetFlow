@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, map, Observable, switchMap, shareReplay } from 'rxjs';
+import { BehaviorSubject, map, Observable, switchMap, shareReplay, forkJoin } from 'rxjs';
 
 import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, TrendPoint, LiveTrackingParams, Category } from '../core/models/dashboard.models';
 import { AuthService } from './auth.service';
@@ -117,36 +117,33 @@ export class DashboardDataService {
   }
 
   getFinancialStats(period: string): Observable<any> {
-    // In a real app, this would fetch from an endpoint like /api/reports/financial
-    // For now, we'll return a mock observable that simulates an API call
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next({
-          revenue: 125000,
-          expenses: 85000,
-          profit: 40000,
-          growth: 12.5,
-          history: [65, 59, 80, 81, 56, 55, 40, 70, 90, 100, 110, 120]
-        });
-        observer.complete();
-      }, 500);
-    });
+    return forkJoin({
+      stats: this.http.get<any>(`${this.apiUrl}/stats`, { params: { period } }),
+      trends: this.http.get<any[]>(`${this.apiUrl}/trends`)
+    }).pipe(
+      map(({ stats, trends }) => ({
+        revenue: stats?.revenue ?? 0,
+        expenses: stats?.expenses ?? 0,
+        profit: stats?.profit ?? 0,
+        growth: stats?.growth ?? 0,
+        history: (trends ?? []).map(t => Number((t?.value ?? 0) / 1000))
+      }))
+    );
   }
 
   getEfficiencyStats(): Observable<any> {
-    // Mock for efficiency stats
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next({
-          overall: 89,
-          fuelUsage: 12450,
-          fuelTrend: 2.4, // +2.4%
-          maintenanceCost: 3200,
-          maintenanceTrend: -0.8 // -0.8%
-        });
-        observer.complete();
-      }, 500);
-    });
+    return this.http.get<any>(`${this.apiUrl}/stats`, { params: { period: 'today' } }).pipe(
+      map(stats => {
+        const revenue = Number(stats?.revenue ?? 0);
+        const profit = Number(stats?.profit ?? 0);
+        const expenses = Number(stats?.expenses ?? 0);
+        const overall = revenue > 0 ? Math.max(0, Math.min(100, Math.round((profit / revenue) * 100))) : 0;
+        return {
+          overall,
+          maintenanceCost: expenses
+        };
+      })
+    );
   }
 
   private formatCurrencyShort(value: number): string {

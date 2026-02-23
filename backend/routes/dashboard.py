@@ -5,7 +5,7 @@ from models.finance import Payment, Receipt, Purchase
 from models.shipment import Shipment
 from models.fleet import Driver
 from services.dashboard_services import DashboardService
-from utils.auth import role_required
+from utils.auth import role_required, get_effective_read_office_id, validate_office_id
 import datetime
 from sqlalchemy import func
 
@@ -15,12 +15,29 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @role_required(['super_admin', 'ceo', 'accountant', 'staff'])
 def get_stats(current_user):
     period = request.args.get('period', 'today')
+    requested_office_id = request.args.get('office_id', type=int)
+    office_id = get_effective_read_office_id(current_user, requested_office_id)
+    if office_id is not None and not validate_office_id(office_id):
+        return jsonify({'message': 'Invalid office ID'}), 400
+    if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+        return jsonify({'message': 'User is not assigned to an office'}), 403
     
     # Calculated stats based on real models
-    total_invoices = InvoiceHeader.query.count()
-    total_revenue = db.session.query(func.sum(InvoiceAmountDetail.grand_total)).scalar() or 0
-    active_drivers = Driver.query.filter_by(status='Active').count()
-    pending_shipments = Shipment.query.filter(Shipment.status != 'Delivered').count()
+    invoices_query = InvoiceHeader.query
+    revenue_query = db.session.query(func.sum(InvoiceAmountDetail.grand_total)).join(InvoiceHeader)
+    drivers_query = Driver.query.filter_by(status='Active')
+    shipments_query = Shipment.query.filter(Shipment.status != 'Delivered')
+
+    if office_id is not None:
+        invoices_query = invoices_query.filter(InvoiceHeader.office_id == office_id)
+        revenue_query = revenue_query.filter(InvoiceHeader.office_id == office_id)
+        drivers_query = drivers_query.filter(Driver.office_id == office_id)
+        shipments_query = shipments_query.filter(Shipment.office_id == office_id)
+
+    total_invoices = invoices_query.count()
+    total_revenue = revenue_query.scalar() or 0
+    active_drivers = drivers_query.count()
+    pending_shipments = shipments_query.count()
 
     return jsonify({
         'revenue': float(total_revenue),
@@ -35,11 +52,29 @@ def get_stats(current_user):
 @dashboard_bp.route('/recent-activity', methods=['GET'])
 @role_required(['super_admin', 'ceo', 'accountant', 'staff'])
 def get_recent_activity(current_user):
+    requested_office_id = request.args.get('office_id', type=int)
+    office_id = get_effective_read_office_id(current_user, requested_office_id)
+    if office_id is not None and not validate_office_id(office_id):
+        return jsonify({'message': 'Invalid office ID'}), 400
+    if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+        return jsonify({'message': 'User is not assigned to an office'}), 403
+
     # Fetch recent invoices and shipments as activity
-    recent_invoices = InvoiceHeader.query.order_by(InvoiceHeader.created_at.desc()).limit(5).all()
-    recent_payment = Payment.query.order_by(Payment.created_at.desc()).limit(5).all()
-    recent_purchase = Purchase.query.order_by(Purchase.created_at.desc()).limit(5).all()
-    recent_receipt = Receipt.query.order_by(Receipt.created_at.desc()).limit(5).all()
+    invoices_query = InvoiceHeader.query
+    payment_query = Payment.query
+    purchase_query = Purchase.query
+    receipt_query = Receipt.query
+
+    if office_id is not None:
+        invoices_query = invoices_query.filter(InvoiceHeader.office_id == office_id)
+        payment_query = payment_query.filter(Payment.office_id == office_id)
+        purchase_query = purchase_query.filter(Purchase.office_id == office_id)
+        receipt_query = receipt_query.filter(Receipt.office_id == office_id)
+
+    recent_invoices = invoices_query.order_by(InvoiceHeader.created_at.desc()).limit(5).all()
+    recent_payment = payment_query.order_by(Payment.created_at.desc()).limit(5).all()
+    recent_purchase = purchase_query.order_by(Purchase.created_at.desc()).limit(5).all()
+    recent_receipt = receipt_query.order_by(Receipt.created_at.desc()).limit(5).all()
     
     activity = []
     for inv in recent_invoices:

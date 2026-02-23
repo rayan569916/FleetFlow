@@ -11,6 +11,7 @@ class InvoiceHeader(db.Model):
     mode_of_delivery = db.Column(db.String(50))
     mode_of_payment = db.Column(db.String(50))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     
     # Relationships
@@ -18,6 +19,7 @@ class InvoiceHeader(db.Model):
     items = db.relationship('InvoiceItem', backref='header', cascade="all, delete-orphan")
     amount_detail = db.relationship('InvoiceAmountDetail', backref='header', uselist=False, cascade="all, delete-orphan")
     creator = db.relationship('User', backref='invoices_created')
+    office = db.relationship('Office', backref=db.backref('invoice_headers', lazy=True))
 
 class InvoiceCustomerDetail(db.Model):
     __tablename__ = 'invoice_customers'
@@ -27,15 +29,20 @@ class InvoiceCustomerDetail(db.Model):
     # Sender Information
     sender_name = db.Column(db.String(100), nullable=False)
     sender_email = db.Column(db.String(100))
+    sender_country_code = db.Column(db.String(10))
     sender_phone = db.Column(db.String(50))
     sender_address = db.Column(db.String(200))
     sender_city = db.Column(db.String(100))
     sender_zip = db.Column(db.String(20))
+    sender_location_link = db.Column(db.String(500))
     
     # Consignee Information
     consignee_name = db.Column(db.String(100), nullable=False)
+    consignee_country_code = db.Column(db.String(10))
     consignee_mobile = db.Column(db.String(50))
     consignee_address = db.Column(db.String(200))
+    consignee_country = db.Column(db.String(100))
+    consignee_city = db.Column(db.String(100))
 
 class InvoiceItem(db.Model):
     __tablename__ = 'invoice_items'

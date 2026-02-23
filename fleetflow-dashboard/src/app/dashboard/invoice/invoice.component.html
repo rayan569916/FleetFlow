@@ -2,87 +2,190 @@
   <!-- MESSAGES REMOVED (Replaced by Toast) -->
 
   <!-- LIST VIEW -->
-  <div *ngIf="viewMode === 'list'" class="invoice-container">
-    <div class="invoice-header">
-      <h1>Invoices</h1>
-      <button class="btn btn-primary" (click)="switchToCreate()">Create New Invoice</button>
+  <div *ngIf="viewMode === 'list'" class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Invoices</h1>
+        <p class="text-slate-100 mt-1">Manage and track billing records.</p>
+      </div>
+      <button
+        (click)="switchToCreate()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center gap-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New Invoice
+      </button>
     </div>
 
-    <div class="items-table-wrapper" *ngIf="invoices.length > 0; else noInvoices">
-      <table class="items-table">
-        <thead>
-          <tr>
-            <th>Invoice #</th>
-            <th>Tracking #</th>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Created By</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let inv of invoices">
-            <td>{{ inv.invoice_number }}</td>
-            <td class="font-mono text-xs">{{ inv.tracking_number || '-' }}</td>
-            <td>{{ inv.date | date }}</td>
-            <td>{{ settingsService.currencySymbol() }}{{ inv.amount.toFixed(2) }}</td>
-            <td>{{ inv.description }}</td>
-            <td>
-              <!-- Status Dropdown (only for admins/accountants) -->
-              <select
-                *ngIf="
-                  currentUserRole === 'super_admin' ||
-                    currentUserRole === 'ceo' ||
-                    currentUserRole === 'accountant';
-                  else statusBadge
-                "
-                [value]="inv.status"
-                (change)="updateInvoiceStatus(inv.id!, $event)"
-                class="status-select"
-                [ngClass]="{
-                  'bg-yellow-100 text-yellow-800': inv.status === 'Pending',
-                  'bg-green-100 text-green-800': inv.status === 'Paid',
-                  'bg-red-100 text-red-800': inv.status === 'Canceled',
-                }"
+    <!-- Invoices Table Container -->
+    <div
+      class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px]"
+      *ngIf="invoices.length > 0; else noInvoices"
+    >
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Invoice #
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Tracking #
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Amount
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Description
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Created By
+              </th>
+              <th
+                class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right"
               >
-                <option value="Pending">Pending</option>
-                <option value="Paid">Paid</option>
-                <option value="Canceled">Canceled</option>
-              </select>
-              <ng-template #statusBadge>
-                <span
-                  class="px-2 py-1 rounded text-xs font-semibold"
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr *ngFor="let inv of invoices" class="hover:bg-slate-50/50 transition-colors group">
+              <td class="px-6 py-4 text-sm text-slate-800 font-semibold">
+                {{ inv.invoice_number }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600 font-mono">
+                {{ inv.tracking_number || '-' }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">{{ inv.date | date }}</td>
+              <td class="px-6 py-4 text-sm text-slate-800 font-bold">
+                {{ settingsService.currencySymbol() }}{{ inv.amount.toFixed(2) }}
+              </td>
+              <td
+                class="px-6 py-4 text-sm text-slate-600 truncate max-w-[200px]"
+                [title]="inv.description"
+              >
+                {{ inv.description }}
+              </td>
+              <td class="px-6 py-4">
+                <!-- Status Dropdown (only for admins/accountants) -->
+                <select
+                  *ngIf="
+                    currentUserRole === 'super_admin' ||
+                      currentUserRole === 'ceo' ||
+                      currentUserRole === 'accountant';
+                    else statusBadge
+                  "
+                  [value]="inv.status"
+                  (change)="updateInvoiceStatus(inv.id!, $event)"
+                  class="px-3 py-1 rounded-full text-xs font-bold border transition-colors outline-none cursor-pointer"
                   [ngClass]="{
-                    'bg-yellow-100 text-yellow-800': inv.status === 'Pending',
-                    'bg-green-100 text-green-800': inv.status === 'Paid',
-                    'bg-red-100 text-red-800': inv.status === 'Canceled',
+                    'bg-yellow-100 text-yellow-700 border-yellow-200': inv.status === 'Pending',
+                    'bg-green-100 text-green-700 border-green-200': inv.status === 'Paid',
+                    'bg-red-100 text-red-700 border-red-200': inv.status === 'Canceled',
                   }"
                 >
-                  {{ inv.status }}
-                </span>
-              </ng-template>
-            </td>
-            <td>{{ inv.full_name || 'N/A' }}</td>
-            <td class="flex gap-2">
-              <button class="btn btn-secondary btn-sm" (click)="viewInvoice(inv.id!)">View</button>
-              <button
-                *ngIf="currentUserRole === 'super_admin' || currentUserRole === 'ceo'"
-                class="btn btn-danger btn-sm"
-                (click)="deleteInvoice(inv.id!)"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                  <option value="Pending">Pending</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Canceled">Canceled</option>
+                </select>
+                <ng-template #statusBadge>
+                  <span
+                    class="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    [ngClass]="{
+                      'bg-yellow-100 text-yellow-700': inv.status === 'Pending',
+                      'bg-green-100 text-green-700': inv.status === 'Paid',
+                      'bg-red-100 text-red-700': inv.status === 'Canceled',
+                    }"
+                  >
+                    {{ inv.status }}
+                  </span>
+                </ng-template>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">{{ inv.full_name || 'N/A' }}</td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex justify-end gap-2">
+                  <button
+                    class="p-2 text-slate-400 hover:text-indigo-600 transition-colors hover:bg-indigo-50 rounded-lg"
+                    (click)="viewInvoice(inv.id!)"
+                    title="View Invoice"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button
+                    *ngIf="currentUserRole === 'super_admin' || currentUserRole === 'ceo'"
+                    class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
+                    (click)="deleteInvoice(inv.id!)"
+                    title="Delete Invoice"
+                  >
+                    <svg
+                      class="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M3 6h18"></path>
+                      <path
+                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <ng-template #noInvoices>
-      <div class="no-items-message">
-        <p *ngIf="!isLoading">No invoices found.</p>
-        <p *ngIf="isLoading">Loading invoices...</p>
+      <div class="py-20 text-center bg-white rounded-2xl border border-slate-200">
+        <div class="flex flex-col items-center justify-center text-slate-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-16 w-16 mb-4 opacity-50"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <h3 class="text-lg font-bold text-slate-700">No invoices found</h3>
+          <p class="text-slate-500 max-w-xs mx-auto mt-1" *ngIf="!isLoading">
+            Start by creating a new invoice billing record.
+          </p>
+          <p class="text-slate-500 max-w-xs mx-auto mt-1" *ngIf="isLoading">Loading invoices...</p>
+        </div>
       </div>
     </ng-template>
   </div>
@@ -128,7 +231,8 @@
           <div class="text-sm text-gray-800" *ngIf="selectedInvoice.invoice_details as d">
             <p class="font-bold text-lg">{{ d.consigneeName }}</p>
             <p>{{ d.consigneeAddress }}</p>
-            <p>Tel: {{ d.consigneeMobile }}</p>
+            <p>{{ d.consigneeCity }}{{ d.consigneeCountry ? ', ' + d.consigneeCountry : '' }}</p>
+            <p>Tel: {{ d.consigneeCountryCode || '' }} {{ d.consigneeMobile }}</p>
           </div>
         </div>
         <div class="text-right">
@@ -139,8 +243,9 @@
             <p class="font-bold text-lg">{{ d.customerName }}</p>
             <p>{{ d.address }}</p>
             <p>{{ d.city }} - {{ d.zipCode }}</p>
-            <p>Tel: {{ d.phone }}</p>
+            <p>Tel: {{ d.senderCountryCode || '' }} {{ d.phone }}</p>
             <p>{{ d.email }}</p>
+            <p *ngIf="d.locationLink">Location: {{ d.locationLink }}</p>
           </div>
         </div>
       </div>
@@ -260,7 +365,13 @@
 
     <!-- USER INFORMATION SECTION -->
     <div class="section user-info-section">
-      <h2>Invoice Information</h2>
+      <div class="section-header-row">
+        <h2>Invoice Information</h2>
+        <div class="tracking-display" *ngIf="userInfoForm.get('trackingNumber')?.value">
+          <span class="label">Tracking #:</span>
+          <span class="value">{{ userInfoForm.get('trackingNumber')?.value }}</span>
+        </div>
+      </div>
       <form [formGroup]="userInfoForm" class="user-info-form">
         <div class="form-two-columns m-0 gap-1">
           <!-- LEFT COLUMN -->
@@ -268,17 +379,6 @@
             <h3 class="sub-heading">Sender / Shipper</h3>
 
             <div class="flex gap-1 mb-1">
-              <!-- Tracking -->
-              <div class="floating-group">
-                <input
-                  type="text"
-                  formControlName="trackingNumber"
-                  placeholder=" "
-                  class="floating-input text-black"
-                />
-                <label class="floating-label">Tracking Number</label>
-              </div>
-
               <!-- Sender Name -->
               <div class="floating-group">
                 <input
@@ -294,6 +394,23 @@
                 <label class="floating-label">Sender Name *</label>
               </div>
 
+              <!-- Sender Country Code -->
+              <div class="floating-group">
+                <select
+                  formControlName="senderCountryCode"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('senderCountryCode')?.invalid &&
+                    userInfoForm.get('senderCountryCode')?.touched
+                  "
+                >
+                  <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Sender Code *</label>
+              </div>
+
               <!-- Phone -->
               <div class="floating-group">
                 <input
@@ -305,11 +422,11 @@
                     userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched
                   "
                 />
-                <label class="floating-label">Phone *</label>
+                <label class="floating-label">Sender Mobile *</label>
               </div>
             </div>
 
-            <!-- Address -->
+            <!-- City / Zip -->
             <div class="flex gap-1 mb-1">
               <div class="floating-group full-width">
                 <input
@@ -321,23 +438,20 @@
                     userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched
                   "
                 />
-                <label class="floating-label">Address *</label>
+                <label class="floating-label">Sender Address *</label>
               </div>
-            </div>
-
-            <!-- City / Zip -->
-            <div class="flex gap-1 mb-1">
               <div class="floating-group">
                 <input
                   type="text"
                   formControlName="city"
+                  list="saudi-cities-list"
                   placeholder=" "
                   class="floating-input text-black"
                   [class.error]="
                     userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched
                   "
                 />
-                <label class="floating-label">City *</label>
+                <label class="floating-label">Sender City *</label>
               </div>
 
               <div class="floating-group">
@@ -350,7 +464,7 @@
                     userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched
                   "
                 />
-                <label class="floating-label">Zip Code *</label>
+                <label class="floating-label">Sender Zip Code *</label>
               </div>
             </div>
 
@@ -366,7 +480,16 @@
                     userInfoForm.get('email')?.invalid && userInfoForm.get('email')?.touched
                   "
                 />
-                <label class="floating-label">Email *</label>
+                <label class="floating-label">Sender Email *</label>
+              </div>
+              <div class="floating-group full-width">
+                <input
+                  type="url"
+                  formControlName="locationLink"
+                  placeholder=" "
+                  class="floating-input text-black"
+                />
+                <label class="floating-label">Google Map Location Link</label>
               </div>
             </div>
           </div>
@@ -391,6 +514,22 @@
               </div>
 
               <div class="floating-group">
+                <select
+                  formControlName="consigneeCountryCode"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeCountryCode')?.invalid &&
+                    userInfoForm.get('consigneeCountryCode')?.touched
+                  "
+                >
+                  <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Consignee Code *</label>
+              </div>
+
+              <div class="floating-group">
                 <input
                   type="tel"
                   formControlName="consigneeMobile"
@@ -401,7 +540,7 @@
                     userInfoForm.get('consigneeMobile')?.touched
                   "
                 />
-                <label class="floating-label">Mobile *</label>
+                <label class="floating-label">Consignee Mobile *</label>
               </div>
             </div>
 
@@ -419,46 +558,84 @@
                 />
                 <label class="floating-label">Consignee Address *</label>
               </div>
+              <div class="floating-group">
+                <input
+                  type="text"
+                  formControlName="consigneeCountry"
+                  list="country-list"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeCountry')?.invalid &&
+                    userInfoForm.get('consigneeCountry')?.touched
+                  "
+                />
+                <label class="floating-label">Consignee Country *</label>
+              </div>
+
+              <div class="floating-group">
+                <input
+                  type="text"
+                  formControlName="consigneeCity"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeCity')?.invalid &&
+                    userInfoForm.get('consigneeCity')?.touched
+                  "
+                />
+                <label class="floating-label">Consignee City *</label>
+              </div>
+            </div>
+            <div class="flex gap-1 mt-1">
+              <div class="floating-group">
+                <select
+                  formControlName="modeOfDelivery"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('modeOfDelivery')?.invalid &&
+                    userInfoForm.get('modeOfDelivery')?.touched
+                  "
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let option of modeOfDeliveryOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Mode of Delivery *</label>
+              </div>
+
+              <div class="floating-group">
+                <select
+                  formControlName="modeOfPayment"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('modeOfPayment')?.invalid &&
+                    userInfoForm.get('modeOfPayment')?.touched
+                  "
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let option of modeOfPaymentOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Mode of Payment *</label>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- DELIVERY / PAYMENT -->
-        <div class="flex gap-3 m-0">
-          <div class="floating-group">
-            <select
-              formControlName="modeOfDelivery"
-              class="floating-input text-black"
-              [class.error]="
-                userInfoForm.get('modeOfDelivery')?.invalid &&
-                userInfoForm.get('modeOfDelivery')?.touched
-              "
-            >
-              <option value="" disabled selected hidden></option>
-              <option *ngFor="let option of modeOfDeliveryOptions" [value]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <label class="floating-label">Mode of Delivery *</label>
-          </div>
+        <datalist id="saudi-cities-list">
+          <option *ngFor="let city of saudiMajorCities" [value]="city"></option>
+        </datalist>
 
-          <div class="floating-group">
-            <select
-              formControlName="modeOfPayment"
-              class="floating-input text-black"
-              [class.error]="
-                userInfoForm.get('modeOfPayment')?.invalid &&
-                userInfoForm.get('modeOfPayment')?.touched
-              "
-            >
-              <option value="" disabled selected hidden></option>
-              <option *ngFor="let option of modeOfPaymentOptions" [value]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <label class="floating-label">Mode of Payment *</label>
-          </div>
-        </div>
+        <datalist id="country-city-list">
+          <option *ngFor="let city of saudiMajorCities" [value]="city"></option>
+        </datalist>
+
+        <datalist id="country-list">
+          <option *ngFor="let country of countryOptions" [value]="country"></option>
+        </datalist>
       </form>
     </div>
 
@@ -473,7 +650,9 @@
               formControlName="description"
               placeholder=" "
               class="floating-input text-black"
-              [class.error]="itemForm.get('description')?.invalid && itemForm.get('description')?.touched"
+              [class.error]="
+                itemForm.get('description')?.invalid && itemForm.get('description')?.touched
+              "
             />
             <label class="floating-label">Item Description *</label>
           </div>
@@ -522,8 +701,23 @@
               <td>{{ item.quantity }}</td>
               <td>{{ item.unitWeight || '-' }}</td>
               <td>
-                <button type="button" class="btn btn-danger btn-sm" (click)="removeItem(item.id)">
-                  Remove
+                <button
+                  type="button"
+                  class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
+                  (click)="removeItem(item.id)"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M3 6h18"></path>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                  </svg>
                 </button>
               </td>
             </tr>
@@ -536,55 +730,54 @@
       </div> -->
     </div>
 
-          <!-- FINANCIAL DETAILS SECTION below Items -->
-      <div class="section financial-details-section">
-        <h3 class="sub-heading">Billing Details</h3>
-        <form [formGroup]="financialForm">
-          <div class="flex gap-1">
-            <div class="floating-group">
-              <input
-                type="number"
-                formControlName="totalCartons"
-                placeholder=" "
-                class="floating-input text-black"
-                [class.error]="
-                  financialForm.get('totalCartons')?.invalid &&
-                  financialForm.get('totalCartons')?.touched
-                "
-              />
-              <label class="floating-label">Total Cartons *</label>
-            </div>
-
-            <div class="floating-group">
-              <input
-                type="number"
-                formControlName="totalWeight"
-                placeholder=" "
-                class="floating-input text-black"
-                [class.error]="
-                  financialForm.get('totalWeight')?.invalid &&
-                  financialForm.get('totalWeight')?.touched
-                "
-              />
-              <label class="floating-label">Total Weight *</label>
-            </div>
-
-            <div class="floating-group">
-              <input
-                type="number"
-                formControlName="pricePerKg"
-                placeholder=" "
-                class="floating-input text-black"
-                [class.error]="
-                  financialForm.get('pricePerKg')?.invalid &&
-                  financialForm.get('pricePerKg')?.touched
-                "
-              />
-              <label class="floating-label">Price per Kg *</label>
-            </div>
+    <!-- FINANCIAL DETAILS SECTION below Items -->
+    <div class="section financial-details-section">
+      <h3 class="sub-heading">Billing Details</h3>
+      <form [formGroup]="financialForm">
+        <div class="flex gap-1">
+          <div class="floating-group">
+            <input
+              type="number"
+              formControlName="totalCartons"
+              placeholder=" "
+              class="floating-input text-black"
+              [class.error]="
+                financialForm.get('totalCartons')?.invalid &&
+                financialForm.get('totalCartons')?.touched
+              "
+            />
+            <label class="floating-label">Total Cartons *</label>
           </div>
-        </form>
-      </div>
+
+          <div class="floating-group">
+            <input
+              type="number"
+              formControlName="totalWeight"
+              placeholder=" "
+              class="floating-input text-black"
+              [class.error]="
+                financialForm.get('totalWeight')?.invalid &&
+                financialForm.get('totalWeight')?.touched
+              "
+            />
+            <label class="floating-label">Total Weight *</label>
+          </div>
+
+          <div class="floating-group">
+            <input
+              type="number"
+              formControlName="pricePerKg"
+              placeholder=" "
+              class="floating-input text-black"
+              [class.error]="
+                financialForm.get('pricePerKg')?.invalid && financialForm.get('pricePerKg')?.touched
+              "
+            />
+            <label class="floating-label">Price per Kg *</label>
+          </div>
+        </div>
+      </form>
+    </div>
 
     <!-- CHARGES SECTION -->
     <div class="section charges-section">
@@ -598,7 +791,8 @@
               placeholder=" "
               class="floating-input text-black"
               [class.error]="
-                chargesForm.get('customsCharge')?.invalid && chargesForm.get('customsCharge')?.touched
+                chargesForm.get('customsCharge')?.invalid &&
+                chargesForm.get('customsCharge')?.touched
               "
             />
             <label class="floating-label">Customs Charge</label>

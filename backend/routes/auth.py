@@ -2,8 +2,8 @@ from flask import Blueprint, request, jsonify, current_app
 import jwt
 import datetime
 from extensions import db
-from models.user import User, Role
-from utils.auth import role_required
+from models.user import User, Role, Office
+from utils.auth import role_required, is_super_user, validate_office_id
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -20,14 +20,17 @@ def login():
     token = jwt.encode({
         'user_id': user.id,
         'role': user.role.name,
+        'office':user.office_id,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
     }, current_app.config['SECRET_KEY'], algorithm="HS256")
 
     return jsonify({
         'token': token, 
-        'role': user.role.name, 
         'username': user.username,
-        'full_name': user.full_name
+        'role': user.role.name,
+        'full_name': user.full_name,
+        'office_id': user.office_id,
+        'office_name': user.office.name if user.office else None,
     })
 
 @auth_bp.route('/register', methods=['POST'])
@@ -45,7 +48,21 @@ def register(current_user):
     if not role:
          return jsonify({'message': 'Invalid role ID'}), 400
 
-    new_user = User(username=data['username'], role_id=data['role_id'], full_name=data.get('full_name'))
+    office_id = data.get('office_id')
+    if is_super_user(current_user):
+        office_id = office_id or current_user.office_id
+    else:
+        office_id = current_user.office_id
+
+    if not validate_office_id(office_id):
+        return jsonify({'message': 'A valid office_id is required'}), 400
+
+    new_user = User(
+        username=data['username'],
+        role_id=data['role_id'],
+        office_id=office_id,
+        full_name=data.get('full_name')
+    )
     new_user.set_password(data['password'])
     
     db.session.add(new_user)
@@ -56,13 +73,18 @@ def register(current_user):
 @auth_bp.route('/users', methods=['GET'])
 @role_required(['super_admin', 'ceo'])
 def get_users(current_user):
-    users = User.query.all()
+    if is_super_user(current_user):
+        users = User.query.all()
+    else:
+        users = User.query.filter_by(office_id=current_user.office_id).all()
     output = []
     for user in users:
         output.append({
             'id': user.id,
             'username': user.username,
             'role': user.role.name,
+            'office_id': user.office_id,
+            'office_name': user.office.name if user.office else None,
             'full_name': user.full_name,
             'created_at': user.created_at
         })
@@ -72,3 +94,9 @@ def get_users(current_user):
 def get_roles():
     roles = Role.query.all()
     return jsonify([{'id': r.id, 'name': r.name} for r in roles])
+
+@auth_bp.route('/offices', methods=['GET'])
+@role_required(['super_admin', 'ceo'])
+def get_offices(current_user):
+    offices = Office.query.order_by(Office.name.asc()).all()
+    return jsonify([{'id': o.id, 'name': o.name, 'location': o.location} for o in offices])

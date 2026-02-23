@@ -123,6 +123,7 @@ def init_db():
                     amount=100.0 + (i * 10), 
                     description=f"Purchase {i} - Automated Seed", 
                     category_id=cat.id,
+                    office_id=head_office.id,
                     created_at=datetime.datetime.utcnow() - datetime.timedelta(days=i)
                 ))
             db.session.commit()
@@ -140,6 +141,7 @@ def init_db():
                     amount=50.0 + (i * 5), 
                     description=f"Receipt {i} - Service Fee", 
                     category_id=service_cat.id,
+                    office_id=head_office.id,
                     created_at=datetime.datetime.utcnow() - datetime.timedelta(days=i)
                 ))
             db.session.commit()
@@ -157,6 +159,7 @@ def init_db():
                     amount=1000.0 + (i * 20), 
                     description=f"Payment {i} - Utility/Salary", 
                     category_id=utility_cat.id,
+                    office_id=head_office.id,
                     created_at=datetime.datetime.utcnow() - datetime.timedelta(days=i)
                 ))
             db.session.commit()
@@ -164,21 +167,21 @@ def init_db():
         # Seed Fleet Data
         if not Driver.query.first():
             print("Seeding Drivers...")
-            d1 = Driver(name="John Doe", license_number="DL-1001", status="Active", contact_number="+123456789", assigned_vehicle="Volvo FH16")
-            d2 = Driver(name="Jane Smith", license_number="DL-1002", status="On Leave", contact_number="+987654321", assigned_vehicle="Mercedes Actros")
+            d1 = Driver(name="John Doe", license_number="DL-1001", status="Active", contact_number="+123456789", assigned_vehicle="Volvo FH16", office_id=head_office.id)
+            d2 = Driver(name="Jane Smith", license_number="DL-1002", status="On Leave", contact_number="+987654321", assigned_vehicle="Mercedes Actros", office_id=head_office.id)
             db.session.add(d1)
             db.session.add(d2)
             db.session.commit()
             
             # Seed Live Tracking for John Doe
             print("Seeding Live Tracking...")
-            db.session.add(LiveTracking(driver_id=d1.id, latitude=52.5200, longitude=13.4050, speed=65.0, heading=90.0)) # Berlin
-            db.session.add(LiveTracking(driver_id=d2.id, latitude=48.8566, longitude=2.3522, speed=0.0, heading=0.0))   # Paris
+            db.session.add(LiveTracking(driver_id=d1.id, latitude=52.5200, longitude=13.4050, speed=65.0, heading=90.0, office_id=head_office.id)) # Berlin
+            db.session.add(LiveTracking(driver_id=d2.id, latitude=48.8566, longitude=2.3522, speed=0.0, heading=0.0, office_id=head_office.id))   # Paris
             db.session.commit()
 
         if not Tracking.query.first():
             print("Seeding Tracking...")
-            db.session.add(Tracking(tracking_number="TRK-987654321", status="In Transit", origin="Berlin", destination="Paris", estimated_delivery=datetime.date.today() + datetime.timedelta(days=2), current_location="Frankfurt"))
+            db.session.add(Tracking(tracking_number="TRK-987654321", status="In Transit", origin="Berlin", destination="Paris", estimated_delivery=datetime.date.today() + datetime.timedelta(days=2), current_location="Frankfurt", office_id=head_office.id))
             db.session.commit()
 
         # Seed Sample Invoices (Multi-Table)
@@ -195,7 +198,8 @@ def init_db():
                 tracking_number="TRK-TEST-001",
                 mode_of_delivery="Air Freight",
                 mode_of_payment="Bank Transfer",
-                creator_id=admin_user.id
+                creator_id=admin_user.id,
+                office_id=head_office.id
             )
             db.session.add(inv1)
             db.session.flush()
@@ -204,13 +208,18 @@ def init_db():
                 invoice_id=inv1.id,
                 sender_name="Global Tech Solutions",
                 sender_email="shipping@globaltech.com",
+                sender_country_code="+966",
                 sender_phone="+1-555-0199",
                 sender_address="123 Tech Park, Silicon Valley",
                 sender_city="San Jose",
                 sender_zip="95134",
+                sender_location_link="https://maps.google.com/?q=24.7136,46.6753",
                 consignee_name="Rayan Corp",
+                consignee_country_code="+971",
                 consignee_mobile="+971-50-1234567",
-                consignee_address="Business Bay, Dubai, UAE"
+                consignee_address="Business Bay, Dubai, UAE",
+                consignee_country="United Arab Emirates",
+                consignee_city="Dubai"
             ))
             
             db.session.add(InvoiceItem(invoice_id=inv1.id, description="Laptop Dell XPS 15", quantity=5, unit_weight=2.0))

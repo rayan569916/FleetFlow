@@ -73,14 +73,20 @@ export class ReportsComponent implements OnInit {
   }
 
   downloadExcel() {
+    const stats = this.financialStats();
+    const report = this.dailyReport();
+
     const data = [
-      ['Metric', 'Value', 'Trend'],
-      ['Revenue', '125000', '+12.5%'],
-      ['Expenses', '85000', '-'],
-      ['Profit', '40000', '-'],
-      ['Efficiency', '89%', '-'],
-      ['Fuel Usage', '12450 L', '+2.4%'],
-      ['Maintenance', '3200', '-0.8%']
+      ['Metric', 'Value'],
+      ['Revenue', String(stats?.revenue ?? 0)],
+      ['Expenses', String(stats?.expenses ?? 0)],
+      ['Profit', String(stats?.profit ?? 0)],
+      ['Growth %', String(stats?.growth ?? 0)],
+      ['Daily Invoice Grand Total', String(report?.total_invoice_grand ?? 0)],
+      ['Daily Payments', String(report?.total_payment ?? 0)],
+      ['Daily Purchases', String(report?.total_purchase ?? 0)],
+      ['Daily Receipts', String(report?.total_receipt ?? 0)],
+      ['Daily Final Total', String(report?.daily_total ?? 0)]
     ];
 
     const csvContent = "data:text/csv;charset=utf-8,"
@@ -89,7 +95,7 @@ export class ReportsComponent implements OnInit {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "captain_cargo_report.csv");
+    link.setAttribute("download", `captain_cargo_report_${this.selectedDate()}.csv`);
     document.body.appendChild(link); // Required for FF
     link.click();
     document.body.removeChild(link);

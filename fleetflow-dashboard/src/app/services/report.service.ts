@@ -22,9 +22,11 @@ export class ReportService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiBaseUrl}/api/reports`;
 
-    getDailyReport(date?: string): Observable<DailyReportData> {
-        const url = date ? `${this.apiUrl}/daily?date=${date}` : `${this.apiUrl}/daily`;
-        return this.http.get<DailyReportData>(url);
+    getDailyReport(date?: string, officeId?: number): Observable<DailyReportData> {
+        const params: any = {};
+        if (date) params.date = date;
+        if (officeId) params.office_id = officeId;
+        return this.http.get<DailyReportData>(`${this.apiUrl}/daily`, { params });
     }
 
     saveDailyReport(data: DailyReportData): Observable<any> {

@@ -8,6 +8,8 @@ export interface User {
     id: number;
     username: string;
     role: string;
+    office_id: number | null;
+    office_name: string | null;
     full_name: string;
     created_at: string;
 }
@@ -29,6 +31,6 @@ export class UserService {
     }
 
     getUsers(): Observable<{ users: User[] }> {
-        return this.http.get<{ users: User[] }>(`${this.apiUrl}/users`, { headers: this.getHeaders() });
+        return this.http.get<{ users: User[] }>(`${this.apiUrl}/api/auth/users`, { headers: this.getHeaders() });
     }
 }

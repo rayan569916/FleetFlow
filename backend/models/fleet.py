@@ -10,7 +10,9 @@ class Driver(db.Model):
     status = db.Column(db.String(20), default='Active') # Active, On Leave, Inactive
     contact_number = db.Column(db.String(20))
     assigned_vehicle = db.Column(db.String(50)) # Could be FK to Vehicle table later
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    office = db.relationship('Office', backref=db.backref('drivers', lazy=True))
 
 class Tracking(db.Model):
     __tablename__ = 'trackings'
@@ -23,7 +25,9 @@ class Tracking(db.Model):
     current_location = db.Column(db.String(100))
     weight = db.Column(db.String(20))
     service_type = db.Column(db.String(50))
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    office = db.relationship('Office', backref=db.backref('trackings', lazy=True))
 
 class LiveTracking(db.Model):
     __tablename__ = 'live_tracking'
@@ -31,6 +35,8 @@ class LiveTracking(db.Model):
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'), nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     last_updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     speed = db.Column(db.Float) # km/h
     heading = db.Column(db.Float) # degrees
+    office = db.relationship('Office', backref=db.backref('live_tracking', lazy=True))

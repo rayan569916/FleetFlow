@@ -46,6 +46,7 @@ export class SidebarComponent {
         items: allItems.filter(i => {
           if (['settings'].includes(i.id)) return true;
           if (i.id === 'register') return isAdminOrCEO;
+          if (i.id === 'unit-price') return isAdminOrCEO;
           return false;
         })
       }

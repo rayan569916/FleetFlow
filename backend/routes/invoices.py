@@ -3,7 +3,13 @@ import datetime
 import json
 from extensions import db
 from models.invoice import InvoiceHeader, InvoiceCustomerDetail, InvoiceItem, InvoiceAmountDetail
-from utils.auth import role_required
+from utils.auth import (
+    role_required,
+    get_effective_read_office_id,
+    get_effective_write_office_id,
+    can_access_office,
+    validate_office_id,
+)
 from utils.reports_util import update_daily_report
 
 invoices_bp = Blueprint('invoices', __name__)
@@ -12,7 +18,19 @@ invoices_bp = Blueprint('invoices', __name__)
 @role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
 def get_invoices(current_user):
     try:
-        invoices = InvoiceHeader.query.order_by(InvoiceHeader.created_at.desc()).all()
+        requested_office_id = request.args.get('office_id', type=int)
+        office_id = get_effective_read_office_id(current_user, requested_office_id)
+
+        if office_id is not None and not validate_office_id(office_id):
+            return jsonify({'message': 'Invalid office ID'}), 400
+        if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+            return jsonify({'message': 'User is not assigned to an office'}), 403
+
+        query = InvoiceHeader.query
+        if office_id is not None:
+            query = query.filter(InvoiceHeader.office_id == office_id)
+
+        invoices = query.order_by(InvoiceHeader.created_at.desc()).all()
     except Exception as e:
         return jsonify({'message': 'Database error', 'error': str(e)}), 500
     
@@ -31,7 +49,9 @@ def get_invoices(current_user):
             'date': str(inv.date),
             'status': inv.status,
             'description': f"To: {consignee}, By: {inv.mode_of_delivery}",
-            'full_name': inv.creator.full_name if inv.creator else 'System'
+            'full_name': inv.creator.full_name if inv.creator else 'System',
+            'office_id': inv.office_id,
+            'office_name': inv.office.name if inv.office else None,
         })
     return jsonify({'invoices': output})
 
@@ -41,18 +61,25 @@ def get_invoice(current_user, id):
     inv = InvoiceHeader.query.get(id)
     if not inv:
         return jsonify({'message': 'Invoice not found'}), 404
+    if not can_access_office(current_user, inv.office_id):
+        return jsonify({'message': 'You cannot access records from another office'}), 403
     
     # Construct details for frontend compatibility
     details = {
         'customerName': inv.customer.sender_name if inv.customer else '',
         'email': inv.customer.sender_email if inv.customer else '',
+        'senderCountryCode': inv.customer.sender_country_code if inv.customer else '',
         'phone': inv.customer.sender_phone if inv.customer else '',
         'address': inv.customer.sender_address if inv.customer else '',
         'city': inv.customer.sender_city if inv.customer else '',
         'zipCode': inv.customer.sender_zip if inv.customer else '',
+        'locationLink': inv.customer.sender_location_link if inv.customer else '',
         'consigneeName': inv.customer.consignee_name if inv.customer else '',
+        'consigneeCountryCode': inv.customer.consignee_country_code if inv.customer else '',
         'consigneeMobile': inv.customer.consignee_mobile if inv.customer else '',
         'consigneeAddress': inv.customer.consignee_address if inv.customer else '',
+        'consigneeCountry': inv.customer.consignee_country if inv.customer else '',
+        'consigneeCity': inv.customer.consignee_city if inv.customer else '',
         'modeOfDelivery': inv.mode_of_delivery,
         'modeOfPayment': inv.mode_of_payment,
         'trackingNumber': inv.tracking_number,
@@ -86,6 +113,8 @@ def get_invoice(current_user, id):
         'date': str(inv.date),
         'status': inv.status,
         'tracking_number': inv.tracking_number,
+        'office_id': inv.office_id,
+        'office_name': inv.office.name if inv.office else None,
         'invoice_details': details
     })
 
@@ -97,6 +126,10 @@ def create_invoice(current_user):
         return jsonify({'message': 'Missing required fields'}), 400
 
     try:
+        office_id = get_effective_write_office_id(current_user, data.get('office_id'))
+        if not validate_office_id(office_id):
+            return jsonify({'message': 'A valid office_id is required'}), 400
+
         # 1. Create Header
         header = InvoiceHeader(
             invoice_number=data['invoice_number'],
@@ -105,7 +138,8 @@ def create_invoice(current_user):
             tracking_number=data.get('tracking_number'),
             mode_of_delivery=data.get('modeOfDelivery'),
             mode_of_payment=data.get('modeOfPayment'),
-            creator_id=current_user.id
+            creator_id=current_user.id,
+            office_id=office_id
         )
         db.session.add(header)
         db.session.flush() # Get header.id
@@ -115,13 +149,18 @@ def create_invoice(current_user):
             invoice_id=header.id,
             sender_name=data.get('customerName'),
             sender_email=data.get('email'),
+            sender_country_code=data.get('senderCountryCode'),
             sender_phone=data.get('phone'),
             sender_address=data.get('address'),
             sender_city=data.get('city'),
             sender_zip=data.get('zipCode'),
+            sender_location_link=data.get('locationLink'),
             consignee_name=data.get('consigneeName'),
+            consignee_country_code=data.get('consigneeCountryCode'),
             consignee_mobile=data.get('consigneeMobile'),
-            consignee_address=data.get('consigneeAddress')
+            consignee_address=data.get('consigneeAddress'),
+            consignee_country=data.get('consigneeCountry'),
+            consignee_city=data.get('consigneeCity')
         )
         db.session.add(customer)
 
@@ -153,7 +192,7 @@ def create_invoice(current_user):
 
         db.session.commit()
         # Update daily report in real-time
-        update_daily_report(header.date)
+        update_daily_report(header.date, header.office_id)
     except Exception as e:
         db.session.rollback()
         print(f"Error creating invoice: {str(e)}")
@@ -171,6 +210,8 @@ def update_invoice_status(current_user, id):
     invoice = InvoiceHeader.query.get(id)
     if not invoice:
         return jsonify({'message': 'Invoice not found'}), 404
+    if not can_access_office(current_user, invoice.office_id):
+        return jsonify({'message': 'You cannot access records from another office'}), 403
     
     invoice.status = data['status']
     db.session.commit()
@@ -182,10 +223,13 @@ def delete_invoice(current_user, id):
     inv = InvoiceHeader.query.get(id)
     if not inv:
         return jsonify({'message': 'Invoice not found'}), 404
+    if not can_access_office(current_user, inv.office_id):
+        return jsonify({'message': 'You cannot access records from another office'}), 403
     
     invoice_date = inv.date
+    office_id = inv.office_id
     db.session.delete(inv)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(invoice_date)
+    update_daily_report(invoice_date, office_id)
     return jsonify({'message': 'Invoice deleted!'})

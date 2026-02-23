@@ -2,20 +2,35 @@ from flask import Blueprint, request, jsonify
 import datetime
 from extensions import db
 from models.finance import Purchase, Receipt, Payment
-from utils.auth import role_required
+from utils.auth import (
+    role_required,
+    get_effective_read_office_id,
+    get_effective_write_office_id,
+    can_access_office,
+    validate_office_id,
+)
 from utils.reports_util import update_daily_report
 
 finance_bp = Blueprint('finance', __name__)
 
 # --- HELPERS ---
-def get_paginated_list(model, serializer):
+def get_paginated_list(model, serializer, current_user):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     search = request.args.get('search', '')
     category_id = request.args.get('category_id', type=int)
     date_str = request.args.get('date')
+    requested_office_id = request.args.get('office_id', type=int)
+    office_id = get_effective_read_office_id(current_user, requested_office_id)
+
+    if office_id is not None and not validate_office_id(office_id):
+        return jsonify({'message': 'Invalid office ID'}), 400
+    if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+        return jsonify({'message': 'User is not assigned to an office'}), 403
 
     query = model.query
+    if office_id is not None:
+        query = query.filter(model.office_id == office_id)
 
     if search:
         query = query.filter(model.description.ilike(f"%{search}%"))
@@ -39,14 +54,17 @@ def get_paginated_list(model, serializer):
         'pages': pagination.pages
     })
 
-def delete_item(model, id):
+def delete_item(model, current_user, id):
     item = model.query.get(id)
     if not item: return jsonify({'message': 'Item not found'}), 404
+    if not can_access_office(current_user, item.office_id):
+        return jsonify({'message': 'You cannot access records from another office'}), 403
     item_date = item.created_at
+    item_office_id = item.office_id
     db.session.delete(item)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(item_date)
+    update_daily_report(item_date, item_office_id)
     return jsonify({'message': 'Item deleted'})
 
 def serialize_purchase(p):
@@ -56,6 +74,8 @@ def serialize_purchase(p):
         'description': p.description, 
         'category_id': p.category_id, 
         'category_name': p.category.name if p.category else None,
+        'office_id': p.office_id,
+        'office_name': p.office.name if p.office else None,
         'created_at': p.created_at.isoformat()
     }
 def serialize_receipt(r):
@@ -65,6 +85,8 @@ def serialize_receipt(r):
         'description': r.description, 
         'category_id': r.category_id, 
         'category_name': r.category.name if r.category else None,
+        'office_id': r.office_id,
+        'office_name': r.office.name if r.office else None,
         'created_at': r.created_at.isoformat()
     }
 def serialize_payment(p):
@@ -74,6 +96,8 @@ def serialize_payment(p):
         'description': p.description, 
         'category_id': p.category_id, 
         'category_name': p.category.name if p.category else None,
+        'office_id': p.office_id,
+        'office_name': p.office.name if p.office else None,
         'created_at': p.created_at.isoformat()
     }
 
@@ -99,68 +123,83 @@ def get_payment_categories(current_user):
 # Purchase Routes
 @finance_bp.route('/purchases', methods=['GET'])
 @role_required(['super_admin', 'ceo', 'accountant'])
-def get_purchases(current_user): return get_paginated_list(Purchase, serialize_purchase)
+def get_purchases(current_user): return get_paginated_list(Purchase, serialize_purchase, current_user)
 
 @finance_bp.route('/purchases', methods=['POST'])
 @role_required(['super_admin', 'ceo', 'accountant'])
 def create_purchase(current_user):
     data = request.get_json()
+    office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
+    if not validate_office_id(office_id):
+        return jsonify({'message': 'A valid office_id is required'}), 400
+
     new_purchase = Purchase(
         amount=data['amount'], description=data.get('description'), 
-        category_id=data['category_id']
+        category_id=data['category_id'],
+        office_id=office_id
     )
     db.session.add(new_purchase)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(datetime.date.today())
+    update_daily_report(datetime.date.today(), office_id)
     return jsonify({'message': 'Purchase created'}), 201
 
 @finance_bp.route('/purchases/<int:id>', methods=['DELETE'])
 @role_required(['super_admin', 'ceo', 'accountant'])
-def delete_purchase(current_user, id): return delete_item(Purchase, id)
+def delete_purchase(current_user, id): return delete_item(Purchase, current_user, id)
 
 # Receipt Routes
 @finance_bp.route('/receipts', methods=['GET'])
 @role_required(['super_admin', 'ceo', 'accountant'])
-def get_receipts(current_user): return get_paginated_list(Receipt, serialize_receipt)
+def get_receipts(current_user): return get_paginated_list(Receipt, serialize_receipt, current_user)
 
 @finance_bp.route('/receipts', methods=['POST'])
 @role_required(['super_admin', 'ceo', 'accountant'])
 def create_receipt(current_user):
     data = request.get_json()
+    office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
+    if not validate_office_id(office_id):
+        return jsonify({'message': 'A valid office_id is required'}), 400
+
     new_receipt = Receipt(
         amount=data['amount'], description=data.get('description'),
-        category_id=data['category_id']
+        category_id=data['category_id'],
+        office_id=office_id
     )
     db.session.add(new_receipt)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(datetime.date.today())
+    update_daily_report(datetime.date.today(), office_id)
     return jsonify({'message': 'Receipt created'}), 201
 
 @finance_bp.route('/receipts/<int:id>', methods=['DELETE'])
 @role_required(['super_admin', 'ceo', 'accountant'])
-def delete_receipt(current_user, id): return delete_item(Receipt, id)
+def delete_receipt(current_user, id): return delete_item(Receipt, current_user, id)
 
 # Payment Routes
 @finance_bp.route('/payments', methods=['GET'])
 @role_required(['super_admin', 'ceo', 'accountant'])
-def get_payments(current_user): return get_paginated_list(Payment, serialize_payment)
+def get_payments(current_user): return get_paginated_list(Payment, serialize_payment, current_user)
 
 @finance_bp.route('/payments', methods=['POST'])
 @role_required(['super_admin', 'ceo', 'accountant'])
 def create_payment(current_user):
     data = request.get_json()
+    office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
+    if not validate_office_id(office_id):
+        return jsonify({'message': 'A valid office_id is required'}), 400
+
     new_payment = Payment(
         amount=data['amount'], description=data.get('description'),
-        category_id=data['category_id']
+        category_id=data['category_id'],
+        office_id=office_id
     )
     db.session.add(new_payment)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(datetime.date.today())
+    update_daily_report(datetime.date.today(), office_id)
     return jsonify({'message': 'Payment created'}), 201
 
 @finance_bp.route('/payments/<int:id>', methods=['DELETE'])
 @role_required(['super_admin', 'ceo', 'accountant'])
-def delete_payment(current_user, id): return delete_item(Payment, id)
+def delete_payment(current_user, id): return delete_item(Payment, current_user, id)

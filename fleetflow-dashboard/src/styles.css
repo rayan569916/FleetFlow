@@ -69,6 +69,42 @@ a {
   text-decoration: none;
 }
 
+/* Global form readability */
+input,
+select,
+textarea {
+  color: #2f1f42 !important;
+  -webkit-text-fill-color: #2f1f42;
+}
+
+input::placeholder,
+textarea::placeholder,
+select:invalid {
+  color: #8a78a3 !important;
+  opacity: 1;
+}
+
+select option {
+  color: #2f1f42;
+  background: #fff8df;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  color: #786892 !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #2f1f42 !important;
+  box-shadow: 0 0 0px 1000px #fff8df inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 /* Global App Shell Styles that were duplicated across components */
 .content-shell {
   padding: 2rem;

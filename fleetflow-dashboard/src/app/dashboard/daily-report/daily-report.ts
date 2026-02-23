@@ -1,10 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
-import { Entry, InvoiceRecord } from '../../core/models/dashboard.models';
 import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { UiStateService } from '../../services/ui-state.service';
-import { payments, purchases, receipts, submittedInvoices } from '../../core/constants/dashboard.constants';
+import { ReportService } from '../../services/report.service';
+import { InvoiceService } from '../../services/invoice.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-daily-report',
@@ -14,112 +16,100 @@ import { payments, purchases, receipts, submittedInvoices } from '../../core/con
   styleUrl: './daily-report.css',
 })
 export class DailyReport implements OnInit {
-
   private uiStateService = inject(UiStateService);
+  private reportService = inject(ReportService);
+  private invoiceService = inject(InvoiceService);
   readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
 
-  // ─── DUMMY INVOICE DATA ──────────────────────────────────────────────────────
-  /** Simulated submitted invoices (in a real app these come from a service/store) */
-  submittedInvoices: InvoiceRecord[] = submittedInvoices;
+  submittedInvoices: any[] = [];
+  previousBalance = 0;
 
-  // ─── DUMMY TRANSACTION DATA ──────────────────────────────────────────────────
-  payments: Entry[] = payments;
-
-  purchases: Entry[] = purchases;
-
-  receipts: Entry[] = receipts;
-
-  /** Previous day balance (dummy constant) */
-  readonly previousBalance = 1000;
-
-  // ─── COMPUTED BUSINESS LOGIC VALUES ─────────────────────────────────────────
-
-  /** 1. Total Invoice Amount */
   totalInvoiceAmount = 0;
-
-  /** 2. Total Number of Bills */
   totalNumberOfBills = 0;
-
-  /** 3. Total Weight (kg) */
   totalWeightKg = 0;
-
-  /** 4a. Total Swipe Amount */
   totalSwipeAmount = 0;
-
-  /** 4b. Total Direct Bank Transfer Amount */
   totalBankTransferAmount = 0;
-
-  /** 4c. Total Direct Cash Amount */
   totalCashAmount = 0;
-
-  /** 5. Adjusted Invoice = Total Invoice - (Swipe + Bank Transfer) */
   adjustedInvoiceAmount = 0;
-
-  /** 6a. Total Payments */
   totalPayments = 0;
-
-  /** 6b. Total Purchases */
   totalPurchases = 0;
-
-  /** 7. Total Receipts */
   totalReceipts = 0;
-
-  /**
-   * 9. Final Amount =
-   *   Adjusted Invoice
-   *   - Total Payments
-   *   - Total Purchases
-   *   + Total Receipts
-   *   + Previous Balance
-   */
   finalAmount = 0;
 
-  // ────────────────────────────────────────────────────────────────────────────
-
   ngOnInit(): void {
-    this.calculateBusinessLogic();
+    this.loadDailyData();
   }
 
-  calculateBusinessLogic(): void {
-    // 1. Total Invoice Amount
-    this.totalInvoiceAmount = this.submittedInvoices.reduce((sum, inv) => sum + inv.grandTotal, 0);
+  private loadDailyData(): void {
+    const today = new Date().toISOString().split('T')[0];
 
-    // 2. Total Number of Bills
-    this.totalNumberOfBills = this.submittedInvoices.length;
+    forkJoin({
+      report: this.reportService.getDailyReport(today).pipe(catchError(() => of(null))),
+      invoiceList: this.invoiceService.getInvoices().pipe(catchError(() => of({ invoices: [] })))
+    }).subscribe(({ report, invoiceList }) => {
+      const invoices = (invoiceList?.invoices ?? []).filter((inv: any) => inv.date === today);
+      this.totalNumberOfBills = invoices.length;
 
-    // 3. Total Weight (kg)
-    this.totalWeightKg = this.submittedInvoices.reduce((sum, inv) => sum + inv.totalWeight, 0);
+      if (!report) {
+        this.resetAmounts();
+        return;
+      }
 
-    // 4. Payment Method Breakdown
+      const detailCalls = invoices.map((inv: any) =>
+        this.invoiceService.getInvoiceById(inv.id).pipe(catchError(() => of(null)))
+      );
+
+      if (detailCalls.length === 0) {
+        this.applyReportTotals(report, []);
+        return;
+      }
+
+      forkJoin(detailCalls).subscribe((details) => {
+        const validDetails = (details as any[]).filter(Boolean);
+        this.applyReportTotals(report, validDetails);
+      });
+    });
+  }
+
+  private applyReportTotals(report: any, invoiceDetails: any[]): void {
+    this.submittedInvoices = invoiceDetails;
+    this.totalInvoiceAmount = Number(report.total_invoice_grand ?? 0);
+    this.totalPayments = Number(report.total_payment ?? 0);
+    this.totalPurchases = Number(report.total_purchase ?? 0);
+    this.totalReceipts = Number(report.total_receipt ?? 0);
+    this.previousBalance = Number(report.previous_total ?? 0);
+    this.adjustedInvoiceAmount = this.totalInvoiceAmount - Number(report.bank_transfer_swipe_sum ?? 0);
+    this.finalAmount = Number(report.daily_total ?? 0);
+
+    this.totalWeightKg = this.submittedInvoices.reduce(
+      (sum, inv) => sum + Number(inv?.invoice_details?.totalWeight ?? 0),
+      0
+    );
     this.totalSwipeAmount = this.submittedInvoices
-      .filter(inv => inv.modeOfPayment === 'swipe')
-      .reduce((sum, inv) => sum + inv.grandTotal, 0);
-
+      .filter((inv) => inv?.invoice_details?.modeOfPayment === 'swipe')
+      .reduce((sum, inv) => sum + Number(inv?.amount ?? 0), 0);
     this.totalBankTransferAmount = this.submittedInvoices
-      .filter(inv => inv.modeOfPayment === 'bank_transfer')
-      .reduce((sum, inv) => sum + inv.grandTotal, 0);
-
+      .filter((inv) => inv?.invoice_details?.modeOfPayment === 'bank_transfer')
+      .reduce((sum, inv) => sum + Number(inv?.amount ?? 0), 0);
     this.totalCashAmount = this.submittedInvoices
-      .filter(inv => inv.modeOfPayment === 'cash')
-      .reduce((sum, inv) => sum + inv.grandTotal, 0);
+      .filter((inv) => inv?.invoice_details?.modeOfPayment === 'cash')
+      .reduce((sum, inv) => sum + Number(inv?.amount ?? 0), 0);
+  }
 
-    // 5. Adjusted Invoice = Total Invoice - (Swipe + Bank Transfer)
-    this.adjustedInvoiceAmount = this.totalInvoiceAmount - (this.totalSwipeAmount + this.totalBankTransferAmount);
-
-    // 6. Expenses
-    this.totalPayments = this.payments.reduce((sum, e) => sum + e.amount, 0);
-    this.totalPurchases = this.purchases.reduce((sum, e) => sum + e.amount, 0);
-
-    // 7. Receipts
-    this.totalReceipts = this.receipts.reduce((sum, e) => sum + e.amount, 0);
-
-    // 9. Final Amount
-    this.finalAmount =
-      this.adjustedInvoiceAmount
-      - this.totalPayments
-      - this.totalPurchases
-      + this.totalReceipts
-      + this.previousBalance;
+  private resetAmounts(): void {
+    this.submittedInvoices = [];
+    this.totalInvoiceAmount = 0;
+    this.totalNumberOfBills = 0;
+    this.totalWeightKg = 0;
+    this.totalSwipeAmount = 0;
+    this.totalBankTransferAmount = 0;
+    this.totalCashAmount = 0;
+    this.adjustedInvoiceAmount = 0;
+    this.totalPayments = 0;
+    this.totalPurchases = 0;
+    this.totalReceipts = 0;
+    this.previousBalance = 0;
+    this.finalAmount = 0;
   }
 
   toggleSidebar(): void {

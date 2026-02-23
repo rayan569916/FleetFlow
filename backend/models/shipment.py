@@ -10,4 +10,6 @@ class Shipment(db.Model):
     destination = db.Column(db.String(100))
     estimated_delivery = db.Column(db.Date)
     carrier = db.Column(db.String(50))
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    office = db.relationship('Office', backref=db.backref('shipments', lazy=True))

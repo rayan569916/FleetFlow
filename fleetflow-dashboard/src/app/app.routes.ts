@@ -85,7 +85,10 @@ export const routes: Routes = [
         path: 'daily-report',
         loadComponent: () => import('./dashboard/daily-report/daily-report').then((c) => c.DailyReport)
       },
-      // Placeholders for expanded items
+      {
+        path: 'unit-price',
+        loadComponent: () => import('./dashboard/unit-price/unit-price').then((c) => c.UnitPrice)
+      },
       { path: 'vehicles', redirectTo: 'overview' },
       { path: 'maintenance', redirectTo: 'overview' },
       { path: 'routes', redirectTo: 'overview' }

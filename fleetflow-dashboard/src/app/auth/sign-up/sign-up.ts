@@ -22,6 +22,7 @@ export class SignUpComponent implements OnInit {
   successMessage: string | null = null;
   errorMessage: string | null = null;
   roles: any[] = [];
+  offices: any[] = [];
 
   private uiStateService = inject(UiStateService);
   sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
@@ -38,6 +39,7 @@ export class SignUpComponent implements OnInit {
   ngOnInit(): void {
     this.buildForm();
     this.fetchRoles();
+    this.fetchOffices();
   }
 
   private fetchRoles(): void {
@@ -52,12 +54,22 @@ export class SignUpComponent implements OnInit {
     });
   }
 
+  private fetchOffices(): void {
+    this.authService.getOffices().subscribe({
+      next: (data) => {
+        this.offices = data;
+      },
+      error: (err) => console.error('Failed to fetch offices', err)
+    });
+  }
+
   private buildForm(): void {
     const STRONG_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     this.signupForm = this.formBuilder.group({
       fullName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       role: ['', Validators.required],
+      officeId: ['', Validators.required],
       password: ['', [Validators.required, Validators.pattern(STRONG_PASSWORD)]],
       ConfirmPassword: ['', [Validators.required]]
     }, {
@@ -76,6 +88,7 @@ export class SignUpComponent implements OnInit {
       username: formData.email, // Mapping email to username
       full_name: formData.fullName,
       role_id: formData.role, // This will now be the numeric ID from the select
+      office_id: Number(formData.officeId),
       password: formData.password
     };
 
