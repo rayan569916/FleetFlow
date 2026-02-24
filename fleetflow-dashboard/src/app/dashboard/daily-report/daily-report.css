@@ -7,7 +7,7 @@
     z-index: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 20% 20%, rgba(79, 18, 98, 0.03) 0%, transparent 50%),
         radial-gradient(circle at 80% 80%, rgba(252, 211, 77, 0.03) 0%, transparent 50%);
 }
 
@@ -178,7 +178,7 @@
     border-radius: 12px;
     padding: 28px 32px;
     color: white;
-    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.25);
+    box-shadow: 0 8px 32px rgba(79, 18, 98, 0.25);
 }
 
 .biz-final-title {

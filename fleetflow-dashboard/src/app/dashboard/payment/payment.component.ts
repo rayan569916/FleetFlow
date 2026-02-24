@@ -4,6 +4,7 @@ import { SettingsService } from '../../services/settings.service';
 import { DashboardDataService } from '../../services/dashboard-data.service';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Category } from '../../core/models/dashboard.models';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 
 @Component({
   selector: 'app-payment',
@@ -16,6 +17,7 @@ export class PaymentComponent implements OnInit {
   private fb = inject(FormBuilder);
   settingsService = inject(SettingsService);
   dashboardDataService = inject(DashboardDataService);
+  confirmationService = inject(ConfirmationDialogService);
 
   payments = signal<any[]>([]);
   categories = signal<Category[]>([]);
@@ -95,8 +97,17 @@ export class PaymentComponent implements OnInit {
     }
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.paymentForm.valid) {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Submit Payment',
+        message: 'Are you sure you want to record this payment?',
+        confirmText: 'Submit',
+        cancelText: 'Cancel'
+      });
+
+      if (!confirmed) return;
+
       this.dashboardDataService.createPayment(this.paymentForm.value).subscribe({
         next: () => {
           this.fetchData();
@@ -107,8 +118,28 @@ export class PaymentComponent implements OnInit {
     }
   }
 
-  deletePayment(id: number) {
-    if (confirm('Are you sure you want to delete this payment?')) {
+  async deletePayment(id: number) {
+    const payment = this.payments().find(p => p.id === id);
+    const today = new Date().toISOString().split('T')[0];
+    const paymentDate = payment?.created_at ? payment.created_at.split('T')[0].split(' ')[0] : null;
+
+    if (paymentDate && paymentDate !== today) {
+      await this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot delete this payment because the daily report for that day has already been calculated. Only payments from today can be deleted.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Payment',
+      message: 'Are you sure you want to delete this payment record? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       this.dashboardDataService.deletePayment(id).subscribe({
         next: () => {
           this.payments.update(prev => prev.filter(p => p.id !== id));

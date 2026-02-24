@@ -16,6 +16,8 @@ def list_unit_price(current_user):
                 'id': unit_price.id,
                 'air_price': unit_price.air_price,
                 'sea_price': unit_price.sea_price,
+                'bill_charge': unit_price.bill_charge,
+                'packing_charge': unit_price.packing_charge,
                 'country': unit_price.country.name if unit_price.country else None,
             })
         return jsonify({'unit_prices': output})
@@ -39,6 +41,8 @@ def create_unit_price(current_user):
     country_name = (data.get('country') or '').strip()
     air_price = data.get('air_price')
     sea_price = data.get('sea_price')
+    bill_charge = data.get('bill_charge')
+    packing_charge = data.get('packing_charge')
 
     if not country_name:
         return jsonify({'message': 'country is required'}), 400
@@ -59,7 +63,9 @@ def create_unit_price(current_user):
         new_entry = Unit_price(
             country_id=new_country.id,
             air_price=float(air_price),
-            sea_price=float(sea_price)
+            sea_price=float(sea_price),
+            bill_charge=float(bill_charge),
+            packing_charge=float(packing_charge)
         )
         db.session.add(new_entry)
         db.session.commit()
@@ -70,7 +76,9 @@ def create_unit_price(current_user):
                 'id': new_entry.id,
                 'country': new_country.name,
                 'air_price': new_entry.air_price,
-                'sea_price': new_entry.sea_price
+                'sea_price': new_entry.sea_price,
+                'bill_charge': new_entry.bill_charge,
+                'packing_charge': new_entry.packing_charge
             }
         }), 201
     except Exception as e:
@@ -107,6 +115,12 @@ def update_unit_price(current_user, id):
     if 'sea_price' in data:
         unit_price.sea_price = float(data.get('sea_price'))
 
+    if 'bill_charge' in data:
+        unit_price.bill_charge = float(data.get('bill_charge'))
+
+    if 'packing_charge' in data:
+        unit_price.packing_charge = float(data.get('packing_charge'))
+
     try:
         db.session.commit()
         return jsonify({
@@ -115,7 +129,9 @@ def update_unit_price(current_user, id):
                 'id': unit_price.id,
                 'country': unit_price.country.name if unit_price.country else country_name,
                 'air_price': unit_price.air_price,
-                'sea_price': unit_price.sea_price
+                'sea_price': unit_price.sea_price,
+                'bill_charge': unit_price.bill_charge,
+                'packing_charge': unit_price.packing_charge
             }
         })
     except Exception as e:

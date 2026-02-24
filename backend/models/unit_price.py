@@ -10,6 +10,8 @@ class Unit_price(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     air_price = db.Column(db.Float, nullable=False)
     sea_price = db.Column(db.Float, nullable=False)
+    bill_charge= db.Column(db.Float, nullable=False)
+    packing_charge= db.Column(db.Float, nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=False)
     country = db.relationship('Country', backref='unit_prices')
     

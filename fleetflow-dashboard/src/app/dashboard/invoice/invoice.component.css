@@ -100,6 +100,26 @@
   letter-spacing: 0.05em;
 }
 
+.cartons-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.carton-card {
+  border: 1px dashed rgba(79, 70, 229, 0.35);
+  background: rgba(99, 102, 241, 0.04);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.carton-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #4338ca;
+  margin: 0 0 0.5rem 0;
+}
+
 /* Form Controls */
 .form-group label {
   display: block;

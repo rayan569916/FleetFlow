@@ -11,7 +11,7 @@
   border: 1px solid var(--surface-border);
   border-radius: 1rem;
   color: var(--brand-text);
-  background: linear-gradient(145deg, rgba(73, 16, 116, 0.84), rgba(51, 8, 84, 0.82));
+  background: linear-gradient(145deg, rgba(79, 18, 98, 0.84), rgba(59, 13, 73, 0.82));
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-strong);
 }
@@ -24,7 +24,7 @@
 }
 
 .menu-toggle {
-  display: flex;
+  display: none;
   height: 2.5rem;
   width: 2.5rem;
   flex-direction: column;
@@ -34,7 +34,7 @@
   border-radius: 0.75rem;
   border: 1px solid rgba(242, 210, 27, 0.28);
   background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 10px 20px rgba(22, 2, 37, 0.22);
+  box-shadow: 0 10px 20px rgba(38, 9, 47, 0.22);
   transition: all 0.2s ease;
 }
 
@@ -100,7 +100,7 @@
   width: 0.5rem;
   border-radius: 999px;
   background: #f04444;
-  box-shadow: 0 0 0 2px #551181;
+  box-shadow: 0 0 0 2px #4f1262;
 }
 
 .user-meta {
@@ -121,7 +121,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #4a126f;
+  color: #4f1262;
   background: linear-gradient(140deg, #f7db31, #ffe67c);
 }
 
@@ -136,7 +136,7 @@
   padding: 0.6rem 1.2rem;
   font-size: 0.87rem;
   font-weight: 700;
-  color: #3c0c63;
+  color: #3b0d49;
   background: linear-gradient(135deg, #f2d21b, #ffe15f);
   box-shadow: 0 12px 30px rgba(20, 0, 34, 0.33);
   transition: all 0.3s ease;
@@ -150,7 +150,7 @@
 .scan-icon {
   height: 1.25rem;
   width: 1.25rem;
-  color: #51117b;
+  color: #4f1262;
 }
 
 @media (max-width: 768px) {
@@ -165,5 +165,9 @@
 
   .scan-btn {
     padding: 0.5rem 0.8rem;
+  }
+
+  .menu-toggle {
+    display: flex;
   }
 }

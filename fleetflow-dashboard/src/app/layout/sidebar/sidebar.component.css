@@ -12,7 +12,7 @@
   overflow: hidden;
   color: var(--brand-text);
   background:
-    linear-gradient(180deg, #25023e 0%, #3f0965 52%, #2e064d 100%),
+    linear-gradient(180deg, #26092f 0%, #3b0d49 52%, #26092f 100%),
     radial-gradient(circle at 15% -12%, rgba(255, 228, 111, 0.16), transparent 46%);
   border-right: 2px solid rgba(242, 210, 27, 0.55);
   box-shadow: 10px 0 32px rgba(10, 0, 18, 0.5);
@@ -26,31 +26,39 @@
 .sidebar-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   height: 80px;
-  padding: 0 1.5rem;
+  padding: 0;
   border-bottom: 1px solid rgba(242, 210, 27, 0.35);
-  background: linear-gradient(180deg, rgba(107, 28, 154, 0.34), rgba(58, 9, 95, 0.32));
+  background: linear-gradient(180deg, rgba(79, 18, 98, 0.34), rgba(59, 13, 73, 0.32));
+  transition: padding 0.3s ease;
+}
+
+.sidebar.expanded .sidebar-header {
+  padding: 0 1.5rem;
+  justify-content: flex-start;
 }
 
 .sidebar-header-inner {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
   width: 100%;
   overflow: hidden;
 }
 
 .sidebar.expanded .sidebar-header-inner {
+  justify-content: flex-start;
   overflow: visible;
 }
 
 .sidebar-logo {
-  opacity: 0;
-}
-
-.sidebar.expanded .sidebar-logo {
-  opacity: 1;
-  transition-delay: 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  transition: all 0.3s ease;
 }
 
 .sidebar-toggle {
@@ -76,7 +84,7 @@
   flex-shrink: 0;
   border-radius: 999px;
   background: linear-gradient(150deg, #f7d929, #f3bb14);
-  color: #3f0666;
+  color: #4f1262;
   border: 2px solid rgba(255, 244, 198, 0.35);
   box-shadow: 0 8px 18px rgba(242, 210, 27, 0.38);
 }
@@ -122,9 +130,9 @@
 }
 
 .nav-item-active {
-  color: #2d074b;
+  color: #3b0d49;
   background: linear-gradient(90deg, rgba(242, 210, 27, 0.92), rgba(255, 231, 101, 0.82));
-  box-shadow: inset 0 0 0 1px rgba(77, 22, 117, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(79, 18, 98, 0.2);
 }
 
 .nav-item-inactive {
@@ -170,7 +178,7 @@
 }
 
 .nav-icon-active {
-  color: #4a0e76;
+  color: #4f1262;
 }
 
 .nav-text {
@@ -203,7 +211,7 @@
 .sidebar-profile {
   padding: 1rem;
   border-top: 1px solid rgba(242, 210, 27, 0.42);
-  background: linear-gradient(180deg, rgba(74, 12, 117, 0.42), rgba(37, 6, 60, 0.5));
+  background: linear-gradient(180deg, rgba(79, 18, 98, 0.42), rgba(38, 9, 47, 0.5));
 }
 
 .profile-row {
@@ -227,7 +235,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  color: #371059;
+  color: #3b0d49;
   font-weight: 700;
   background: linear-gradient(130deg, #f2d21b, #ffd84f);
   border: 2px solid rgba(255, 250, 234, 0.35);
@@ -240,7 +248,7 @@
   height: 0.75rem;
   width: 0.75rem;
   border-radius: 999px;
-  border: 2px solid #3d0a66;
+  border: 2px solid #3b0d49;
   background: #35d07f;
 }
 
@@ -270,7 +278,7 @@
 }
 
 .logout-btn:hover {
-  color: #4f0e7a;
+  color: #4f1262;
   background: rgba(255, 225, 106, 0.92);
 }
 

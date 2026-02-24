@@ -9,12 +9,12 @@
 }
 
 .activity-item {
-  border-color: rgba(124, 58, 237, 0.1);
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.02), rgba(124, 58, 237, 0.01));
+  border-color: rgba(79, 18, 98, 0.1);
+  background: linear-gradient(135deg, rgba(79, 18, 98, 0.02), rgba(79, 18, 98, 0.01));
 }
 
 .activity-item:hover {
-  border-color: rgba(124, 58, 237, 0.15);
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(124, 58, 237, 0.02));
+  border-color: rgba(79, 18, 98, 0.15);
+  background: linear-gradient(135deg, rgba(79, 18, 98, 0.05), rgba(79, 18, 98, 0.02));
   transform: translateX(4px);
 }

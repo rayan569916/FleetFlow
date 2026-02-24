@@ -4,6 +4,7 @@ import { SettingsService } from '../../services/settings.service';
 import { DashboardDataService } from '../../services/dashboard-data.service';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Category } from '../../core/models/dashboard.models';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 
 @Component({
   selector: 'app-receipt',
@@ -16,6 +17,7 @@ export class ReceiptComponent implements OnInit {
   private fb = inject(FormBuilder);
   settingsService = inject(SettingsService);
   dashboardDataService = inject(DashboardDataService);
+  private confirmationService = inject(ConfirmationDialogService);
 
   receipts = signal<any[]>([]);
   categories = signal<Category[]>([]);
@@ -95,8 +97,17 @@ export class ReceiptComponent implements OnInit {
     }
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.receiptForm.valid) {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Submit Receipt',
+        message: 'Are you sure you want to record this receipt?',
+        confirmText: 'Submit',
+        cancelText: 'Cancel'
+      });
+
+      if (!confirmed) return;
+
       this.dashboardDataService.createReceipt(this.receiptForm.value).subscribe({
         next: () => {
           this.fetchData();
@@ -107,8 +118,28 @@ export class ReceiptComponent implements OnInit {
     }
   }
 
-  deleteReceipt(id: number) {
-    if (confirm('Are you sure you want to delete this receipt?')) {
+  async deleteReceipt(id: number) {
+    const receipt = this.receipts().find(r => r.id === id);
+    const today = new Date().toISOString().split('T')[0];
+    const receiptDate = receipt?.created_at ? receipt.created_at.split('T')[0].split(' ')[0] : null;
+
+    if (receiptDate && receiptDate !== today) {
+      await this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot delete this receipt because the daily report for that day has already been calculated. Only receipts from today can be deleted.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Receipt',
+      message: 'Are you sure you want to delete this receipt record? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       this.dashboardDataService.deleteReceipt(id).subscribe({
         next: () => {
           this.receipts.update(prev => prev.filter(r => r.id !== id));

@@ -1,6 +1,6 @@
 :host ::ng-deep .income-card {
   @apply relative rounded-3xl border border-white/10 px-7 py-8 text-white;
-  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  background: linear-gradient(135deg, #4f1262, #3b0d49);
 }
 
 .card-header {
@@ -33,5 +33,5 @@
 }
 
 .dropdown option {
-  background: #5b21b6;
+  background: #3b0d49;
 }

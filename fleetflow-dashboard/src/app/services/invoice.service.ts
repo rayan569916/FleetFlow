@@ -43,4 +43,8 @@ export class InvoiceService {
     deleteInvoice(id: number): Observable<any> {
         return this.http.delete<any>(`${this.apiUrl}/${id}`);
     }
+
+    searchCustomers(phone: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/customers/search`, { params: { phone } });
+    }
 }

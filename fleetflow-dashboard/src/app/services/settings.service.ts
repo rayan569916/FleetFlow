@@ -22,7 +22,7 @@ export class SettingsService {
         const saved = localStorage.getItem(this.STORAGE_KEY);
         const defaults: AppSettings = {
             language: 'en',
-            currency: 'USD',
+            currency: 'SAR',
             notifications: true,
             maintenanceMode: false,
             debugLogging: false

@@ -1,15 +1,19 @@
 <header class="app-header">
   <div class="left-section">
     <!-- Hamburger: Visible only on mobile -->
-    <button type="button" class="menu-toggle md:hidden"
-      (click)="onToggleSidebar()" aria-label="Toggle sidebar">
+    <button
+      type="button"
+      class="menu-toggle md:hidden"
+      (click)="onToggleSidebar()"
+      aria-label="Toggle sidebar"
+    >
       <span class="block h-0.5 w-5 rounded bg-slate-600"></span>
       <span class="block h-0.5 w-5 rounded bg-slate-600"></span>
       <span class="block h-0.5 w-5 rounded bg-slate-600"></span>
     </button>
 
-    <div class="logo-section md:hidden">
-      <!-- Only show text on mobile if you want, or hiding it is fine if sidebar has it -->
+    <div class="logo-section md:hidden flex items-center gap-2">
+      <img src="captain_cargo_logo_yellow.svg" alt="Logo" class="h-8 w-auto" />
       <h1 class="mobile-brand">Captain Cargo</h1>
     </div>
 
@@ -19,27 +23,35 @@
       <span class="mx-2">/</span>
       <span class="crumb-current">{{ currentPageTitle() }}</span>
     </div>
+    <span class="user-office text-primary-600 font-semibold">{{ userOfficeName() }}</span>
   </div>
 
   <div class="right-section">
-    <!-- Notifications (Placeholder) -->
-    <button class="notify-btn">
-      <span class="notify-dot"></span>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-    </button>
-
     <!-- User Profile Info -->
-    <div class="user-meta hidden md:flex cursor-pointer">
-      <span class="user-name">{{ userName() }}</span>
-      <span class="user-role">{{ userRole() }}</span>
-    </div>
+    <!-- <div class="user-meta hidden md:flex cursor-pointer">
+      <div class="flex flex-col">
+        <span class="user-name text-sm font-semibold text-slate-100 px-2 leading-tight">{{
+          userName()
+        }}</span>
+        <div class="flex items-center gap-2 text-[15px] text-slate-500">
+          <span class="user-role uppercase tracking-wider font-medium">{{ userRole() }}</span>
+          <span
+            *ngIf="userOfficeName()"
+            class="inline-block w-0.5 h-0.5 bg-slate-300 rounded-full"
+          ></span>
+        </div>
+      </div>
+    </div> -->
 
     <button class="scan-btn" type="button">
-      <svg class="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        aria-hidden="true">
+      <svg
+        class="scan-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
         <rect x="3" y="5" width="2" height="14"></rect>
         <rect x="7" y="5" width="1" height="14"></rect>
         <rect x="10" y="5" width="2" height="14"></rect>
@@ -47,6 +59,24 @@
         <rect x="17" y="5" width="3" height="14"></rect>
       </svg>
       Scan
+    </button>
+    <!-- Notifications (Placeholder) -->
+    <button class="notify-btn">
+      <span class="notify-dot"></span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+        />
+      </svg>
     </button>
   </div>
 </header>

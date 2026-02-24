@@ -1,33 +1,28 @@
 <div
-    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="flex justify-center mb-6">
-            <!-- Logo Icon (SVG) -->
-            <div
-                class="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-            </div>
-        </div>
-        <h2 class="text-center text-3xl font-extrabold text-white tracking-tight">
-            {{ isLogin ? 'Sign in to Captain Cargo' : 'Create your account' }}
-        </h2>
-        <p class="mt-2 text-center text-sm text-slate-400">
-            Transportation Management System
-        </p>
+  class="min-h-screen bg-gradient-to-br from-[#26092F] via-[#3B0D49] to-[#26092F] flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+>
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="flex justify-center mb-6">
+      <!-- Company Logo -->
+      <img src="captain_cargo_logo_yellow.svg" alt="Captain Cargo Logo" class="h-24 w-auto" />
     </div>
+    <h2 class="text-center text-3xl font-extrabold text-white tracking-tight">
+      {{ isLogin ? 'Sign in to Captain Cargo' : 'Create your account' }}
+    </h2>
+    <p class="mt-2 text-center text-sm text-slate-400">Transportation Management System</p>
+  </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div
-            class="bg-white py-8 px-4 shadow-2xl shadow-black/50 border border-slate-700/50 sm:rounded-xl sm:px-10 relative overflow-hidden">
-            <!-- Decorative top accent -->
-            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
-            </div>
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div
+      class="bg-white/95 backdrop-blur-md py-8 px-4 shadow-2xl shadow-black/50 border border-white/10 sm:rounded-xl sm:px-10 relative overflow-hidden"
+    >
+      <!-- Decorative top accent -->
+      <div
+        class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#F2D21B] via-[#4F1262] to-[#F2D21B]"
+      ></div>
 
-            <app-login *ngIf="isLogin"></app-login>
-            <app-sign-up *ngIf="!isLogin"></app-sign-up>
-        </div>
+      <app-login *ngIf="isLogin"></app-login>
+      <app-sign-up *ngIf="!isLogin"></app-sign-up>
     </div>
+  </div>
 </div>

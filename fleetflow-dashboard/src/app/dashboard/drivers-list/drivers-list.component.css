@@ -3,14 +3,14 @@
 }
 
 .driver-card {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.02), rgba(124, 58, 237, 0.01));
+  background: linear-gradient(135deg, rgba(79, 18, 98, 0.02), rgba(79, 18, 98, 0.01));
 }
 
 .driver-card:hover {
-  border-color: #a78bfa;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(124, 58, 237, 0.02));
+  border-color: #7c1c9a;
+  background: linear-gradient(135deg, rgba(79, 18, 98, 0.05), rgba(79, 18, 98, 0.02));
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 4px 12px rgba(79, 18, 98, 0.1);
 }
 
 .status-dot.active {

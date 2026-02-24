@@ -59,6 +59,7 @@ class InvoiceAmountDetail(db.Model):
     
     total_cartons = db.Column(db.Integer, default=1)
     total_weight = db.Column(db.Float, default=0.0)
+    carton_details = db.Column(db.Text, nullable=True)
     price_per_kg = db.Column(db.Float, default=0.0)
     
     customs_charge = db.Column(db.Float, default=0.0)

@@ -7,6 +7,8 @@ export interface UnitPriceInterface {
     id: number;
     air_price: number;
     sea_price: number;
+    bill_charge: number;
+    packing_charge: number;
     country: string;
 }
 

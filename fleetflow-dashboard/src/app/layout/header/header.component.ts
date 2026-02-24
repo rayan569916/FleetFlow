@@ -21,6 +21,7 @@ export class HeaderComponent implements OnInit {
 
   userName = this.authService.currentUserFullName;
   userRole = this.authService.currentUserRole;
+  userOfficeName = this.authService.currentUserOfficeName;
 
   currentPageTitle = signal<string>('Overview');
 

@@ -4,6 +4,7 @@ import { SettingsService } from '../../services/settings.service';
 import { DashboardDataService } from '../../services/dashboard-data.service';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Category } from '../../core/models/dashboard.models';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 
 @Component({
   selector: 'app-purchase',
@@ -16,6 +17,7 @@ export class PurchaseComponent implements OnInit {
   private fb = inject(FormBuilder);
   settingsService = inject(SettingsService);
   dashboardDataService = inject(DashboardDataService);
+  private confirmationService = inject(ConfirmationDialogService);
 
   purchases = signal<any[]>([]);
   categories = signal<Category[]>([]);
@@ -97,8 +99,17 @@ export class PurchaseComponent implements OnInit {
     }
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.purchaseForm.valid) {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Submit Purchase',
+        message: 'Are you sure you want to record this purchase?',
+        confirmText: 'Submit',
+        cancelText: 'Cancel'
+      });
+
+      if (!confirmed) return;
+
       this.dashboardDataService.createPurchase(this.purchaseForm.value).subscribe({
         next: () => {
           this.fetchData();
@@ -109,8 +120,28 @@ export class PurchaseComponent implements OnInit {
     }
   }
 
-  deletePurchase(id: number) {
-    if (confirm('Are you sure you want to delete this purchase?')) {
+  async deletePurchase(id: number) {
+    const purchase = this.purchases().find(p => p.id === id);
+    const today = new Date().toISOString().split('T')[0];
+    const purchaseDate = purchase?.created_at ? purchase.created_at.split('T')[0].split(' ')[0] : null;
+
+    if (purchaseDate && purchaseDate !== today) {
+      await this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot delete this purchase because the daily report for that day has already been calculated. Only purchases from today can be deleted.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Purchase',
+      message: 'Are you sure you want to delete this purchase record? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       this.dashboardDataService.deletePurchase(id).subscribe({
         next: () => {
           this.purchases.update(prev => prev.filter(p => p.id !== id));

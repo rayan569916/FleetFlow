@@ -367,6 +367,61 @@
     <div class="section user-info-section">
       <div class="section-header-row">
         <h2>Invoice Information</h2>
+
+        <!-- Search by Phone Autocomplete -->
+        <div class="search-container relative flex-1 max-w-sm mx-4">
+          <div
+            class="flex items-center bg-slate-100 rounded-lg px-3 py-1.5 border border-slate-200 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-slate-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              #phoneSearchInput
+              type="text"
+              placeholder="Search existing customer by phone..."
+              (input)="onSearchPhone($event)"
+              (focus)="showCustomerDropdown = foundCustomers.length > 0"
+              class="bg-transparent border-none outline-none text-sm px-2 w-full text-slate-700"
+            />
+          </div>
+
+          <!-- Autocomplete Dropdown -->
+          <div
+            *ngIf="showCustomerDropdown && foundCustomers.length > 0"
+            class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <div
+              *ngFor="let customer of foundCustomers"
+              (click)="selectCustomer(customer)"
+              class="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+            >
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-bold text-slate-800">{{ customer.customerName }}</span>
+                <span
+                  class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold"
+                  >MATCH</span
+                >
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-xs text-slate-500 font-mono">{{ customer.phone }}</span>
+                <span class="text-xs text-slate-300">|</span>
+                <span class="text-xs text-slate-500 truncate"
+                  >{{ customer.city }}, {{ customer.address }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="tracking-display" *ngIf="userInfoForm.get('trackingNumber')?.value">
           <span class="label">Tracking #:</span>
           <span class="value">{{ userInfoForm.get('trackingNumber')?.value }}</span>
@@ -441,16 +496,18 @@
                 <label class="floating-label">Sender Address *</label>
               </div>
               <div class="floating-group">
-                <input
-                  type="text"
+                <select
                   formControlName="city"
-                  list="saudi-cities-list"
-                  placeholder=" "
                   class="floating-input text-black"
                   [class.error]="
                     userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched
                   "
-                />
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let city of saudiMajorCities" [value]="city">
+                    {{ city }}
+                  </option>
+                </select>
                 <label class="floating-label">Sender City *</label>
               </div>
 
@@ -559,17 +616,19 @@
                 <label class="floating-label">Consignee Address *</label>
               </div>
               <div class="floating-group">
-                <input
-                  type="text"
+                <select
                   formControlName="consigneeCountry"
-                  list="country-list"
-                  placeholder=" "
                   class="floating-input text-black"
                   [class.error]="
                     userInfoForm.get('consigneeCountry')?.invalid &&
                     userInfoForm.get('consigneeCountry')?.touched
                   "
-                />
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let country of countryOptions" [value]="country">
+                    {{ country }}
+                  </option>
+                </select>
                 <label class="floating-label">Consignee Country *</label>
               </div>
 
@@ -624,18 +683,6 @@
             </div>
           </div>
         </div>
-
-        <datalist id="saudi-cities-list">
-          <option *ngFor="let city of saudiMajorCities" [value]="city"></option>
-        </datalist>
-
-        <datalist id="country-city-list">
-          <option *ngFor="let city of saudiMajorCities" [value]="city"></option>
-        </datalist>
-
-        <datalist id="country-list">
-          <option *ngFor="let country of countryOptions" [value]="country"></option>
-        </datalist>
       </form>
     </div>
 
@@ -729,169 +776,172 @@
         <p>No items added yet. Add items to create the invoice.</p>
       </div> -->
     </div>
+    <div class="flex grid-cols-2 gap-5">
+      <!-- FINANCIAL DETAILS SECTION below Items -->
+      <div class="section financial-details-section flex-1">
+        <h3 class="sub-heading">Billing Details</h3>
+        <form [formGroup]="financialForm">
+          <div class="flex gap-1">
+            <div class="floating-group">
+              <input
+                type="number"
+                formControlName="totalCartons"
+                placeholder=" "
+                class="floating-input text-black"
+                [class.error]="
+                  financialForm.get('totalCartons')?.invalid &&
+                  financialForm.get('totalCartons')?.touched
+                "
+              />
+              <label class="floating-label">Total Cartons *</label>
+            </div>
 
-    <!-- FINANCIAL DETAILS SECTION below Items -->
-    <div class="section financial-details-section">
-      <h3 class="sub-heading">Billing Details</h3>
-      <form [formGroup]="financialForm">
-        <div class="flex gap-1">
-          <div class="floating-group">
-            <input
-              type="number"
-              formControlName="totalCartons"
-              placeholder=" "
-              class="floating-input text-black"
-              [class.error]="
-                financialForm.get('totalCartons')?.invalid &&
-                financialForm.get('totalCartons')?.touched
-              "
-            />
-            <label class="floating-label">Total Cartons *</label>
+            <div class="floating-group">
+              <input
+                type="number"
+                formControlName="pricePerKg"
+                placeholder=" "
+                class="floating-input text-black"
+                [class.error]="
+                  financialForm.get('pricePerKg')?.invalid &&
+                  financialForm.get('pricePerKg')?.touched
+                "
+              />
+              <label class="floating-label">Price per Kg *</label>
+            </div>
           </div>
 
-          <div class="floating-group">
-            <input
-              type="number"
-              formControlName="totalWeight"
-              placeholder=" "
-              class="floating-input text-black"
-              [class.error]="
-                financialForm.get('totalWeight')?.invalid &&
-                financialForm.get('totalWeight')?.touched
-              "
-            />
-            <label class="floating-label">Total Weight *</label>
-          </div>
+          <div class="cartons-wrapper mt-4" formArrayName="cartons">
+            <div
+              class="carton-card"
+              *ngFor="let carton of cartons.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <h4 class="carton-title">Carton {{ i + 1 }}</h4>
+              <div class="flex gap-1">
+                <div class="floating-group">
+                  <input
+                    type="number"
+                    formControlName="weight"
+                    placeholder=" "
+                    class="floating-input text-black"
+                    [class.error]="carton.get('weight')?.invalid && carton.get('weight')?.touched"
+                  />
+                  <label class="floating-label">Carton {{ i + 1 }} Weight *</label>
+                </div>
 
-          <div class="floating-group">
-            <input
-              type="number"
-              formControlName="pricePerKg"
-              placeholder=" "
-              class="floating-input text-black"
-              [class.error]="
-                financialForm.get('pricePerKg')?.invalid && financialForm.get('pricePerKg')?.touched
-              "
-            />
-            <label class="floating-label">Price per Kg *</label>
+                <div class="floating-group">
+                  <input
+                    type="number"
+                    formControlName="customsCharge"
+                    placeholder=" "
+                    class="floating-input text-black"
+                    [class.error]="
+                      carton.get('customsCharge')?.invalid && carton.get('customsCharge')?.touched
+                    "
+                  />
+                  <label class="floating-label">Carton {{ i + 1 }} Customs *</label>
+                </div>
+
+                <div class="floating-group">
+                  <input
+                    type="number"
+                    formControlName="packingCharge"
+                    placeholder=" "
+                    class="floating-input text-black"
+                    [class.error]="
+                      carton.get('packingCharge')?.invalid && carton.get('packingCharge')?.touched
+                    "
+                  />
+                  <label class="floating-label">Carton {{ i + 1 }} Packing *</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+        <form [formGroup]="chargesForm" class="mt-5">
+          <div class="flex gap-1">
+            <div class="floating-group">
+              <input
+                type="number"
+                formControlName="billCharge"
+                placeholder=" "
+                class="floating-input text-black"
+                [class.error]="
+                  chargesForm.get('billCharge')?.invalid && chargesForm.get('billCharge')?.touched
+                "
+              />
+              <label class="floating-label">Bill Charge</label>
+            </div>
+
+            <div class="floating-group">
+              <input
+                type="number"
+                formControlName="discount"
+                placeholder=" "
+                class="floating-input text-black"
+                [class.error]="
+                  chargesForm.get('discount')?.invalid && chargesForm.get('discount')?.touched
+                "
+              />
+              <label class="floating-label">Discount</label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- TOTALS SECTION -->
+      <div class="section totals-section flex-1">
+        <h2>Invoice Summary</h2>
+        <div class="totals-grid">
+          <div class="total-item">
+            <span class="label">Subtotal:</span>
+            <span class="value"
+              >{{ settingsService.currencySymbol() }}{{ subtotal.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="customsCharge > 0">
+            <span class="label">Customs Charge:</span>
+            <span class="value positive"
+              >+{{ settingsService.currencySymbol() }}{{ customsCharge.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="billCharge > 0">
+            <span class="label">Bill Charge:</span>
+            <span class="value positive"
+              >+{{ settingsService.currencySymbol() }}{{ billCharge.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="packingCharge > 0">
+            <span class="label">Packing Charge:</span>
+            <span class="value positive"
+              >+{{ settingsService.currencySymbol() }}{{ packingCharge.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="discount > 0">
+            <span class="label">Discount:</span>
+            <span class="value negative"
+              >-{{ settingsService.currencySymbol() }}{{ discount.toFixed(2) }}</span
+            >
+          </div>
+          <div class="grand-total">
+            <span class="label">Grand Total:</span>
+            <span class="value"
+              >{{ settingsService.currencySymbol() }}{{ grandTotal.toFixed(2) }}</span
+            >
           </div>
         </div>
-      </form>
-    </div>
-
-    <!-- CHARGES SECTION -->
-    <div class="section charges-section">
-      <h2>Additional Charges & Discount</h2>
-      <form [formGroup]="chargesForm">
-        <div class="flex gap-1">
-          <div class="floating-group">
-            <input
-              type="number"
-              formControlName="customsCharge"
-              placeholder=" "
-              class="floating-input text-black"
-              [class.error]="
-                chargesForm.get('customsCharge')?.invalid &&
-                chargesForm.get('customsCharge')?.touched
-              "
-            />
-            <label class="floating-label">Customs Charge</label>
-          </div>
-
-          <div class="floating-group">
-            <input
-              type="number"
-              formControlName="billCharge"
-              placeholder=" "
-              class="floating-input text-black"
-              [class.error]="
-                chargesForm.get('billCharge')?.invalid && chargesForm.get('billCharge')?.touched
-              "
-            />
-            <label class="floating-label">Bill Charge</label>
-          </div>
-
-          <div class="floating-group">
-            <input
-              type="number"
-              formControlName="packingCharge"
-              placeholder=" "
-              class="floating-input text-black"
-              [class.error]="
-                chargesForm.get('packingCharge')?.invalid &&
-                chargesForm.get('packingCharge')?.touched
-              "
-            />
-            <label class="floating-label">Packing Charge</label>
-          </div>
-
-          <div class="floating-group">
-            <input
-              type="number"
-              formControlName="discount"
-              placeholder=" "
-              class="floating-input text-black"
-              [class.error]="
-                chargesForm.get('discount')?.invalid && chargesForm.get('discount')?.touched
-              "
-            />
-            <label class="floating-label">Discount</label>
-          </div>
-        </div>
-      </form>
-    </div>
-
-    <!-- TOTALS SECTION -->
-    <div class="section totals-section">
-      <h2>Invoice Summary</h2>
-      <div class="totals-grid">
-        <div class="total-item">
-          <span class="label">Subtotal:</span>
-          <span class="value">{{ settingsService.currencySymbol() }}{{ subtotal.toFixed(2) }}</span>
-        </div>
-        <div class="total-item" *ngIf="customsCharge > 0">
-          <span class="label">Customs Charge:</span>
-          <span class="value positive"
-            >+{{ settingsService.currencySymbol() }}{{ customsCharge.toFixed(2) }}</span
+        <!-- ACTION BUTTONS -->
+        <div class="section action-buttons mt-5">
+          <button
+            type="button"
+            class="btn btn-primary btn-large"
+            (click)="submitInvoice()"
+            [disabled]="items.length === 0"
           >
-        </div>
-        <div class="total-item" *ngIf="billCharge > 0">
-          <span class="label">Bill Charge:</span>
-          <span class="value positive"
-            >+{{ settingsService.currencySymbol() }}{{ billCharge.toFixed(2) }}</span
-          >
-        </div>
-        <div class="total-item" *ngIf="packingCharge > 0">
-          <span class="label">Packing Charge:</span>
-          <span class="value positive"
-            >+{{ settingsService.currencySymbol() }}{{ packingCharge.toFixed(2) }}</span
-          >
-        </div>
-        <div class="total-item" *ngIf="discount > 0">
-          <span class="label">Discount:</span>
-          <span class="value negative"
-            >-{{ settingsService.currencySymbol() }}{{ discount.toFixed(2) }}</span
-          >
-        </div>
-        <div class="grand-total">
-          <span class="label">Grand Total:</span>
-          <span class="value"
-            >{{ settingsService.currencySymbol() }}{{ grandTotal.toFixed(2) }}</span
-          >
+            Create Invoice
+          </button>
         </div>
       </div>
-    </div>
-
-    <!-- ACTION BUTTONS -->
-    <div class="section action-buttons">
-      <button
-        type="button"
-        class="btn btn-primary btn-large"
-        (click)="submitInvoice()"
-        [disabled]="items.length === 0"
-      >
-        Create Invoice
-      </button>
     </div>
   </div>
 </div>

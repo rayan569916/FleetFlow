@@ -35,12 +35,16 @@ export class AuthService {
                 localStorage.setItem('user_office_name', response.office_name || '');
                 // Update the signal
                 this.currentUserRole.set(response.role);
+                this.currentUserOfficeName.set(response.office_name || '');
+                this.currentUserName.set(response.username);
+                this.currentUserFullName.set(response.full_name || response.username);
             })
         );
     }
 
     currentUserName = signal<string | null>(localStorage.getItem('user_name'));
     currentUserFullName = signal<string | null>(localStorage.getItem('user_full_name'));
+    currentUserOfficeName = signal<string | null>(localStorage.getItem('user_office_name'));
 
     register(userData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/register`, userData);
@@ -64,6 +68,7 @@ export class AuthService {
         this.currentUserRole.set(null);
         this.currentUserName.set(null);
         this.currentUserFullName.set(null);
+        this.currentUserOfficeName.set(null);
         this.router.navigate(['/login']);
     }
 

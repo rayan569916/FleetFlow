@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Shipment, ShipmentService } from '../../services/shipment.service';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 
 @Component({
   selector: 'app-shipment',
@@ -13,6 +14,7 @@ import { Shipment, ShipmentService } from '../../services/shipment.service';
 export class ShipmentComponent implements OnInit {
   shipmentService = inject(ShipmentService);
   fb = inject(FormBuilder);
+  confirmationService = inject(ConfirmationDialogService);
 
   shipments = signal<Shipment[]>([]);
   isCreating = false;
@@ -72,8 +74,17 @@ export class ShipmentComponent implements OnInit {
     });
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.shipmentForm.invalid) return;
+
+    const confirmed = await this.confirmationService.confirm({
+      title: this.isEditing ? 'Update Shipment' : 'Create Shipment',
+      message: `Are you sure you want to ${this.isEditing ? 'update' : 'create'} this shipment?`,
+      confirmText: this.isEditing ? 'Update' : 'Create',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
 
     this.isLoading = true;
 
@@ -108,8 +119,28 @@ export class ShipmentComponent implements OnInit {
     }
   }
 
-  deleteShipment(id: number) {
-    if (confirm('Are you sure?')) {
+  async deleteShipment(id: number) {
+    const shipment = this.shipments().find(s => s.id === id);
+    const today = new Date().toISOString().split('T')[0];
+    const shipmentDate = shipment?.created_at ? shipment.created_at.split('T')[0].split(' ')[0] : null;
+
+    if (shipmentDate && shipmentDate !== today) {
+      await this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot delete this shipment because the daily report for that day has already been calculated. Only shipments from today can be deleted.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Shipment',
+      message: 'Are you sure you want to delete this shipment? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       this.shipmentService.deleteShipment(id).subscribe({
         next: () => this.loadShipments(),
         error: (err: any) => console.error('Error deleting shipment', err)

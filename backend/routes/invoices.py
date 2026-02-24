@@ -55,6 +55,54 @@ def get_invoices(current_user):
         })
     return jsonify({'invoices': output})
 
+@invoices_bp.route('/customers/search', methods=['GET'])
+@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'staff'])
+def search_customers(current_user):
+    phone = request.args.get('phone', '')
+    if not phone:
+        return jsonify({'customers': []})
+    
+    try:
+        office_id = get_effective_read_office_id(current_user)
+        
+        # Query distinct customer details based on sender_phone
+        # Joining with InvoiceHeader to respect office filtering
+        query = db.session.query(
+            InvoiceCustomerDetail.sender_name,
+            InvoiceCustomerDetail.sender_email,
+            InvoiceCustomerDetail.sender_phone,
+            InvoiceCustomerDetail.sender_address,
+            InvoiceCustomerDetail.sender_city,
+            InvoiceCustomerDetail.sender_zip,
+            InvoiceCustomerDetail.sender_country_code
+        ).join(InvoiceHeader).filter(InvoiceCustomerDetail.sender_phone.like(f'%{phone}%'))
+        
+        if office_id is not None:
+            query = query.filter(InvoiceHeader.office_id == office_id)
+        
+        customers = query.distinct().all()
+        
+        output = []
+        seen_phones = set()
+        for c in customers:
+            if c.sender_phone and c.sender_phone not in seen_phones:
+                output.append({
+                    'customerName': c.sender_name,
+                    'email': c.sender_email,
+                    'phone': c.sender_phone,
+                    'address': c.sender_address,
+                    'city': c.sender_city,
+                    'zipCode': c.sender_zip,
+                    'senderCountryCode': c.sender_country_code
+                })
+                seen_phones.add(c.sender_phone)
+                if len(output) >= 10: # Limit result count
+                    break
+                    
+        return jsonify({'customers': output})
+    except Exception as e:
+        return jsonify({'message': 'Search error', 'error': str(e)}), 500
+
 @invoices_bp.route('/<int:id>', methods=['GET'])
 @role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
 def get_invoice(current_user, id):
@@ -86,9 +134,17 @@ def get_invoice(current_user, id):
     }
     
     if inv.amount_detail:
+        carton_details = []
+        if inv.amount_detail.carton_details:
+            try:
+                carton_details = json.loads(inv.amount_detail.carton_details)
+            except Exception:
+                carton_details = []
+
         details.update({
             'totalCartons': inv.amount_detail.total_cartons,
             'totalWeight': inv.amount_detail.total_weight,
+            'cartons': carton_details,
             'pricePerKg': inv.amount_detail.price_per_kg,
             'customsCharge': inv.amount_detail.customs_charge,
             'billCharge': inv.amount_detail.bill_charge,
@@ -176,14 +232,24 @@ def create_invoice(current_user):
             db.session.add(new_item)
 
         # 4. Create Amount Details
+        cartons = data.get('cartons', []) or []
+        total_weight = data.get('totalWeight', 0.0)
+        total_customs = 0.0
+        total_packing = 0.0
+        if cartons:
+            total_weight = sum(float(c.get('weight', 0) or 0) for c in cartons)
+            total_customs = sum(float(c.get('customsCharge', 0) or 0) for c in cartons)
+            total_packing = sum(float(c.get('packingCharge', 0) or 0) for c in cartons)
+
         amount = InvoiceAmountDetail(
             invoice_id=header.id,
             total_cartons=data.get('totalCartons', 1),
-            total_weight=data.get('totalWeight', 0.0),
+            total_weight=total_weight,
+            carton_details=json.dumps(cartons) if cartons else None,
             price_per_kg=data.get('pricePerKg', 0.0),
-            customs_charge=data.get('customsCharge', 0.0),
+            customs_charge=total_customs if cartons else data.get('customsCharge', 0.0),
             bill_charge=data.get('billCharge', 0.0),
-            packing_charge=data.get('packingCharge', 0.0),
+            packing_charge=total_packing if cartons else data.get('packingCharge', 0.0),
             discount=data.get('discount', 0.0),
             subtotal=data.get('subtotal', 0.0),
             grand_total=data['amount'] # This is the grand total
