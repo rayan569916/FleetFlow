@@ -1,0 +1,54 @@
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+  <h3 class="text-xl font-bold text-slate-800">Daily Report Breakdown ({{ report?.date | date }})</h3>
+
+  <div class="overflow-x-auto">
+    <table class="w-full table-fixed text-left">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="p-3 text-xs font-bold text-slate-500 uppercase">Invoice #</th>
+          <th class="p-3 text-xs font-bold text-slate-500 uppercase">Tracking #</th>
+          <th class="p-3 text-xs font-bold text-slate-500 uppercase text-right">Total Weight</th>
+          <th class="p-3 text-xs font-bold text-slate-500 uppercase">Mode of Payment</th>
+          <th class="p-3 text-xs font-bold text-slate-500 uppercase text-right">Grand Total</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr *ngFor="let inv of invoices">
+          <td class="p-3 text-sm text-slate-800 font-semibold">{{ inv.invoice_number }}</td>
+          <td class="p-3 text-sm text-slate-600">{{ inv.tracking_number || '-' }}</td>
+          <td class="p-3 text-sm text-slate-700 text-right">{{ inv.invoice_details?.totalWeight || 0 }}</td>
+          <td class="p-3 text-sm text-slate-700">{{ inv.invoice_details?.modeOfPayment || 'N/A' }}</td>
+          <td class="p-3 text-sm text-slate-900 font-bold text-right">
+            {{ settingsService.currencySymbol() }}{{ inv.amount | number: '1.2-2' }}
+          </td>
+        </tr>
+        <tr *ngIf="invoices.length === 0">
+          <td colspan="5" class="p-6 text-center text-slate-500">No invoices found for this day.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2">
+    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+      <p class="text-xs text-slate-500">Total Receipts</p>
+      <p class="font-bold text-emerald-600">+{{ settingsService.currencySymbol() }}{{ report?.total_receipt || 0 }}</p>
+    </div>
+    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+      <p class="text-xs text-slate-500">Total Purchase</p>
+      <p class="font-bold text-rose-600">-{{ settingsService.currencySymbol() }}{{ report?.total_purchase || 0 }}</p>
+    </div>
+    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+      <p class="text-xs text-slate-500">Total Payments</p>
+      <p class="font-bold text-rose-600">-{{ settingsService.currencySymbol() }}{{ report?.total_payment || 0 }}</p>
+    </div>
+    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+      <p class="text-xs text-slate-500">Invoice Grand</p>
+      <p class="font-bold text-slate-800">{{ settingsService.currencySymbol() }}{{ report?.total_invoice_grand || 0 }}</p>
+    </div>
+    <div class="p-3 rounded-lg bg-slate-900 border border-slate-800">
+      <p class="text-xs text-slate-300">Daily Total</p>
+      <p class="font-bold text-white">{{ settingsService.currencySymbol() }}{{ report?.daily_total || 0 }}</p>
+    </div>
+  </div>
+</div>

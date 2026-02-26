@@ -78,14 +78,20 @@ def get_daily_report(current_user):
     # Total Receipts
     total_receipt = payment_query(Receipt).scalar() or 0.0
 
-    # Previous Total
-    previous_date = target_date - datetime.timedelta(days=1)
+    # Previous Total - find the most recent stored report BEFORE target_date (not just yesterday)
     if office_id is not None:
-        previous_report = DailyReport.query.filter_by(date=previous_date, office_id=office_id).first()
+        previous_report = DailyReport.query\
+            .filter(DailyReport.office_id == office_id, DailyReport.date < target_date)\
+            .order_by(DailyReport.date.desc())\
+            .first()
         previous_total = previous_report.daily_total if previous_report else 0.0
     else:
-        previous_total = db.session.query(func.sum(DailyReport.daily_total)).\
-            filter(DailyReport.date == previous_date).scalar() or 0.0
+        # For super_admin viewing all offices, sum the most recent report per office
+        previous_report = DailyReport.query\
+            .filter(DailyReport.date < target_date)\
+            .order_by(DailyReport.date.desc())\
+            .first()
+        previous_total = previous_report.daily_total if previous_report else 0.0
 
     # Formula: (total_invoice_grand - bank_transfer_swipe_sum - total_payment - total_purchase + total_receipt + previous_total)
     daily_total = (total_invoice_grand - bank_transfer_swipe_sum - total_payment - total_purchase + total_receipt + previous_total)
@@ -147,3 +153,146 @@ def save_daily_report(current_user):
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': 'Failed to save report', 'error': str(e)}), 500
+
+@reports_bp.route('/categories', methods=['GET'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def get_categories(current_user):
+    from models.finance import PurchaseCategory, ReceiptCategory, PaymentCategory
+    type = request.args.get('type')
+    if type == 'purchase':
+        cats = PurchaseCategory.query.all()
+    elif type == 'receipt':
+        cats = ReceiptCategory.query.all()
+    elif type == 'payment':
+        cats = PaymentCategory.query.all()
+    else:
+        return jsonify({'message': 'Invalid category type'}), 400
+    
+    return jsonify([{'id': c.id, 'name': c.name} for c in cats])
+
+@reports_bp.route('/invoices', methods=['GET'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def get_invoice_report(current_user):
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    requested_office_id = request.args.get('office_id', type=int)
+
+    office_id = get_effective_read_office_id(current_user, requested_office_id)
+    
+    from models.user import User, Office
+    query = db.session.query(
+        InvoiceHeader.date,
+        InvoiceHeader.invoice_number,
+        InvoiceHeader.tracking_number,
+        InvoiceHeader.mode_of_payment,
+        InvoiceAmountDetail.grand_total,
+        InvoiceHeader.office_id,
+        Office.name.label('office_name'),
+        User.full_name.label('created_by_name')
+    ).join(InvoiceAmountDetail).join(Office, InvoiceHeader.office_id == Office.id).outerjoin(User, InvoiceHeader.creator_id == User.id)
+
+    if start_date_str:
+        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        query = query.filter(InvoiceHeader.date >= start_date)
+    if end_date_str:
+        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        query = query.filter(InvoiceHeader.date <= end_date)
+    if office_id is not None:
+        query = query.filter(InvoiceHeader.office_id == office_id)
+
+    results = query.order_by(InvoiceHeader.date.desc()).all()
+    
+    return jsonify([{
+        'date': str(r.date),
+        'invoice_number': r.invoice_number,
+        'tracking_number': r.tracking_number,
+        'mode_of_payment': r.mode_of_payment,
+        'grand_total': r.grand_total,
+        'office_id': r.office_id,
+        'office_name': r.office_name,
+        'created_by_name': r.created_by_name or 'System'
+    } for r in results])
+
+def get_finance_report(model, current_user):
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    requested_office_id = request.args.get('office_id', type=int)
+    category_id = request.args.get('category_id', type=int)
+
+    office_id = get_effective_read_office_id(current_user, requested_office_id)
+    
+    query = model.query
+
+    if start_date_str:
+        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        query = query.filter(func.date(model.created_at) >= start_date)
+    if end_date_str:
+        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        query = query.filter(func.date(model.created_at) <= end_date)
+    if office_id is not None:
+        query = query.filter(model.office_id == office_id)
+    if category_id:
+        query = query.filter(model.category_id == category_id)
+
+    results = query.order_by(model.created_at.desc()).all()
+    
+    return jsonify([{
+        'id': r.id,
+        'amount': r.amount,
+        'description': r.description,
+        'category_name': r.category.name if r.category else 'N/A',
+        'office_id': r.office_id,
+        'office_name': r.office.name if r.office else 'N/A',
+        'created_by_name': r.creator.full_name if r.creator else 'System',
+        'created_at': r.created_at.isoformat()
+    } for r in results])
+
+@reports_bp.route('/payments', methods=['GET'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def get_payment_report(current_user):
+    return get_finance_report(Payment, current_user)
+
+@reports_bp.route('/purchases', methods=['GET'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def get_purchase_report(current_user):
+    return get_finance_report(Purchase, current_user)
+
+@reports_bp.route('/receipts', methods=['GET'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def get_receipt_report(current_user):
+    return get_finance_report(Receipt, current_user)
+
+@reports_bp.route('/daily-list', methods=['GET'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def get_daily_reports_list(current_user):
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    requested_office_id = request.args.get('office_id', type=int)
+
+    office_id = get_effective_read_office_id(current_user, requested_office_id)
+    
+    query = DailyReport.query
+
+    if start_date_str:
+        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        query = query.filter(DailyReport.date >= start_date)
+    if end_date_str:
+        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        query = query.filter(DailyReport.date <= end_date)
+    if office_id is not None:
+        query = query.filter(DailyReport.office_id == office_id)
+
+    results = query.order_by(DailyReport.date.desc()).all()
+    
+    return jsonify([{
+        'date': str(r.date),
+        'total_invoice_grand': r.total_invoice_grand,
+        'bank_transfer_swipe_sum': r.bank_transfer_swipe_sum,
+        'total_payment': r.total_payment,
+        'total_purchase': r.total_purchase,
+        'total_receipt': r.total_receipt,
+        'previous_total': r.previous_total,
+        'daily_total': r.daily_total,
+        'office_id': r.office_id,
+        'office_name': r.office.name if r.office else 'N/A'
+    } for r in results])

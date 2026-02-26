@@ -58,7 +58,7 @@
                 Created By
               </th>
               <th
-                class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right"
+                class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider"
               >
                 Action
               </th>
@@ -118,7 +118,7 @@
                 </ng-template>
               </td>
               <td class="px-6 py-4 text-sm text-slate-600">{{ inv.full_name || 'N/A' }}</td>
-              <td class="px-6 py-4 text-right">
+              <td class="px-6 py-4">
                 <div class="flex justify-end gap-2">
                   <button
                     class="p-2 text-slate-400 hover:text-indigo-600 transition-colors hover:bg-indigo-50 rounded-lg"
@@ -200,156 +200,7 @@
       </div>
     </div>
 
-    <div class="invoice-paper bg-white p-8 shadow-lg rounded-lg w-full" id="printable-area">
-      <!-- Printable Header -->
-      <div class="flex justify-between items-start mb-8 border-b pb-6">
-        <div>
-          <h2 class="text-3xl font-bold text-gray-800">INVOICE</h2>
-          <p class="text-gray-500 mt-1">#{{ selectedInvoice.invoice_number }}</p>
-        </div>
-        <div class="text-right">
-          <div class="text-xl font-bold text-indigo-600 mb-1">Captain Cargo</div>
-          <p class="text-sm text-gray-600">Transportation Management</p>
-          <p class="text-sm text-gray-600">Date: {{ selectedInvoice.date | date: 'mediumDate' }}</p>
-          <p class="text-sm text-gray-600 font-semibold mt-2">
-            Status:
-            <span
-              [class.text-green-600]="selectedInvoice.status === 'Paid'"
-              [class.text-red-600]="selectedInvoice.status === 'Pending'"
-              >{{ selectedInvoice.status }}</span
-            >
-          </p>
-        </div>
-      </div>
-
-      <!-- Addresses -->
-      <div class="grid grid-cols-2 gap-8 mb-8">
-        <div>
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Billed To
-          </h3>
-          <div class="text-sm text-gray-800" *ngIf="selectedInvoice.invoice_details as d">
-            <p class="font-bold text-lg">{{ d.consigneeName }}</p>
-            <p>{{ d.consigneeAddress }}</p>
-            <p>{{ d.consigneeCity }}{{ d.consigneeCountry ? ', ' + d.consigneeCountry : '' }}</p>
-            <p>Tel: {{ d.consigneeCountryCode || '' }} {{ d.consigneeMobile }}</p>
-          </div>
-        </div>
-        <div class="text-right">
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Shipped From
-          </h3>
-          <div class="text-sm text-gray-800" *ngIf="selectedInvoice.invoice_details as d">
-            <p class="font-bold text-lg">{{ d.customerName }}</p>
-            <p>{{ d.address }}</p>
-            <p>{{ d.city }} - {{ d.zipCode }}</p>
-            <p>Tel: {{ d.senderCountryCode || '' }} {{ d.phone }}</p>
-            <p>{{ d.email }}</p>
-            <p *ngIf="d.locationLink">Location: {{ d.locationLink }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-8" *ngIf="selectedInvoice.invoice_details as d">
-        <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
-          <div>
-            <span class="text-gray-500">Tracking Number:</span>
-            <span class="font-semibold ml-2">{{ selectedInvoice.tracking_number || '-' }}</span>
-          </div>
-          <div>
-            <span class="text-gray-500">Mode of Delivery:</span>
-            <span class="font-semibold ml-2">{{ d.modeOfDelivery || 'N/A' }}</span>
-          </div>
-          <div>
-            <span class="text-gray-500">Mode of Payment:</span>
-            <span class="font-semibold ml-2">{{ d.modeOfPayment || 'N/A' }}</span>
-          </div>
-          <div>
-            <span class="text-gray-500">Total Cartons:</span>
-            <span class="font-semibold ml-2">{{ d.totalCartons || d.numberOfCartons || 0 }}</span>
-          </div>
-          <div>
-            <span class="text-gray-500">Total Weight:</span>
-            <span class="font-semibold ml-2">{{ d.totalWeight || 0 }} kg</span>
-          </div>
-          <div *ngIf="d.pricePerKg">
-            <span class="text-gray-500">Price per kg:</span>
-            <span class="font-semibold ml-2"
-              >{{ settingsService.currencySymbol() }}{{ d.pricePerKg }}</span
-            >
-          </div>
-        </div>
-      </div>
-
-      <!-- Items Table -->
-      <table class="w-full mb-8">
-        <thead>
-          <tr class="border-b-2 border-gray-200">
-            <th class="text-left py-3 text-sm font-semibold text-gray-600">Description</th>
-            <th class="text-right py-3 text-sm font-semibold text-gray-600">Qty</th>
-            <th class="text-right py-3 text-sm font-semibold text-gray-600">Unit Weight (kg)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Check if we have item details -->
-          <ng-container *ngIf="selectedInvoice.invoice_details?.items; else noItemDetails">
-            <tr
-              *ngFor="let item of selectedInvoice.invoice_details.items"
-              class="border-b border-gray-100"
-            >
-              <td class="py-3 text-sm text-gray-800">{{ item.description }}</td>
-              <td class="py-3 text-sm text-gray-800 text-right">{{ item.quantity }}</td>
-              <td class="py-3 text-sm text-gray-800 text-right">{{ item.unitWeight || '-' }}</td>
-            </tr>
-          </ng-container>
-          <ng-template #noItemDetails>
-            <!-- Fallback if old invoice format -->
-            <tr>
-              <td colspan="3" class="py-4 text-center text-gray-500 italic">
-                Item details not available for this invoice.
-              </td>
-            </tr>
-          </ng-template>
-        </tbody>
-      </table>
-
-      <!-- Totals -->
-      <div class="flex justify-end">
-        <div class="w-64 space-y-2">
-          <!-- We can try to use saved totals or just re-calculate/display fields -->
-          <ng-container *ngIf="selectedInvoice.invoice_details as d">
-            <div class="flex justify-between text-sm text-gray-600" *ngIf="d.customsCharge > 0">
-              <span>Customs:</span>
-              <span>+{{ settingsService.currencySymbol() }}{{ d.customsCharge }}</span>
-            </div>
-            <div class="flex justify-between text-sm text-gray-600" *ngIf="d.billCharge > 0">
-              <span>Bill Charge:</span>
-              <span>+{{ settingsService.currencySymbol() }}{{ d.billCharge }}</span>
-            </div>
-            <div class="flex justify-between text-sm text-gray-600" *ngIf="d.packingCharge > 0">
-              <span>Packing:</span>
-              <span>+{{ settingsService.currencySymbol() }}{{ d.packingCharge }}</span>
-            </div>
-            <div class="flex justify-between text-sm text-gray-600" *ngIf="d.discount > 0">
-              <span>Discount:</span>
-              <span>-{{ settingsService.currencySymbol() }}{{ d.discount }}</span>
-            </div>
-          </ng-container>
-
-          <div class="flex justify-between text-lg font-bold border-t pt-2">
-            <span>Grand Total:</span>
-            <span
-              >{{ settingsService.currencySymbol() }}{{ selectedInvoice.amount.toFixed(2) }}</span
-            >
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="mt-12 pt-8 border-t text-center text-gray-500 text-xs">
-        <p>Thank you for your business!</p>
-      </div>
-    </div>
+    <app-invoice-details-view [invoice]="selectedInvoice"></app-invoice-details-view>
   </div>
 
   <!-- CREATE VIEW -->
@@ -691,17 +542,42 @@
       <h2>Add Items</h2>
       <form [formGroup]="itemForm">
         <div class="flex gap-1">
-          <div class="floating-group">
+          <div class="floating-group search-container relative">
             <input
               type="text"
               formControlName="description"
               placeholder=" "
               class="floating-input text-black"
+              (input)="onItemSearch($event)"
+              (focus)="showItemDropdown = suggestedItems.length > 0"
               [class.error]="
                 itemForm.get('description')?.invalid && itemForm.get('description')?.touched
               "
             />
             <label class="floating-label">Item Description *</label>
+
+            <!-- Item Autocomplete Dropdown -->
+            <div
+              *ngIf="showItemDropdown && suggestedItems.length > 0"
+              class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+            >
+              <div
+                *ngFor="let item of suggestedItems"
+                (click)="selectItem(item)"
+                class="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+              >
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-bold text-slate-800">{{ item.item_name }}</span>
+                  <span
+                    class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold"
+                    >ITEM</span
+                  >
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-xs text-slate-500">{{ item.category_name }}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="floating-group">
@@ -840,7 +716,7 @@
                       carton.get('customsCharge')?.invalid && carton.get('customsCharge')?.touched
                     "
                   />
-                  <label class="floating-label">Carton {{ i + 1 }} Customs *</label>
+                  <label class="floating-label">Carton {{ i + 1 }} Customs Charge*</label>
                 </div>
 
                 <div class="floating-group">
@@ -853,7 +729,7 @@
                       carton.get('packingCharge')?.invalid && carton.get('packingCharge')?.touched
                     "
                   />
-                  <label class="floating-label">Carton {{ i + 1 }} Packing *</label>
+                  <label class="floating-label">Carton {{ i + 1 }} Packing Charge*</label>
                 </div>
               </div>
             </div>

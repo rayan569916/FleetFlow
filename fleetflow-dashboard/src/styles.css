@@ -139,6 +139,12 @@ select:-webkit-autofill {
   border-color: rgba(242, 210, 27, 0.35) !important;
 }
 
+/* Keep table columns evenly distributed across dashboard tables */
+.app-shell table {
+  width: 100%;
+  table-layout: fixed;
+}
+
 .mobile-overlay {
   display: none;
   position: fixed;

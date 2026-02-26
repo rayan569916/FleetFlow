@@ -12,7 +12,10 @@
     </button>
   </div>
 
-  <div *ngIf="isFormOpen()" class="unit-price-card p-6 rounded-2xl shadow-sm border border-slate-200">
+  <div
+    *ngIf="isFormOpen()"
+    class="unit-price-card p-6 rounded-2xl shadow-sm border border-slate-200"
+  >
     <h2 class="text-xl font-bold text-slate-800 mb-4">
       {{ editingId() !== null ? 'Edit Unit Price' : 'Add New Unit Price' }}
     </h2>
@@ -85,19 +88,37 @@
 
   <div class="unit-price-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full text-left">
+      <table class="w-full table-fixed text-left">
         <thead>
           <tr class="bg-slate-50 border-b border-slate-200">
-            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">Country</th>
-            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">
+            <th
+              class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+            >
+              Country
+            </th>
+            <th
+              class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+            >
               Sea Cargo
             </th>
-            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">
+            <th
+              class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+            >
               Air Cargo
             </th>
-            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">Billing Charge</th>
-            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">Packing Charge</th>
-            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-right">
+            <th
+              class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+            >
+              Billing Charge
+            </th>
+            <th
+              class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+            >
+              Packing Charge
+            </th>
+            <th
+              class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+            >
               Actions
             </th>
           </tr>
@@ -105,15 +126,27 @@
         <tbody class="divide-y divide-slate-100">
           @for (unitPrice of unitPrices(); track unitPrice.id) {
             <tr class="hover:bg-slate-50/50 transition-colors">
-              <td class="px-6 py-4 text-sm text-slate-800 font-semibold">{{ unitPrice.country }}</td>
-              <td class="px-6 py-4 text-sm text-slate-700 text-right">{{ unitPrice.sea_price }}</td>
-              <td class="px-6 py-4 text-sm text-slate-700 text-right">{{ unitPrice.air_price }}</td>
-              <td class="px-6 py-4 text-sm text-slate-700 text-right">{{ unitPrice.bill_charge }}</td>
-              <td class="px-6 py-4 text-sm text-slate-700 text-right">{{ unitPrice.packing_charge }}</td>
-              <td class="px-6 py-4 text-right">
+              <td
+                class="px-6 py-4 text-center align-middle text-sm text-slate-800 font-semibold truncate"
+              >
+                {{ unitPrice.country }}
+              </td>
+              <td class="px-6 py-4 text-center align-middle text-sm text-slate-700">
+                {{ unitPrice.sea_price }}
+              </td>
+              <td class="px-6 py-4 text-center align-middle text-sm text-slate-700">
+                {{ unitPrice.air_price }}
+              </td>
+              <td class="px-6 py-4 text-center align-middle text-sm text-slate-700">
+                {{ unitPrice.bill_charge }}
+              </td>
+              <td class="px-6 py-4 text-center align-middle text-sm text-slate-700">
+                {{ unitPrice.packing_charge }}
+              </td>
+              <td class="px-6 py-4 text-center align-middle">
                 <button
                   (click)="openEditForm(unitPrice)"
-                  class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition"
+                  class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition mx-auto"
                 >
                   Edit
                 </button>
@@ -121,7 +154,9 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="4" class="px-6 py-12 text-center text-slate-500">No unit price entries found.</td>
+              <td colspan="4" class="px-6 py-12 text-center text-slate-500">
+                No unit price entries found.
+              </td>
             </tr>
           }
         </tbody>

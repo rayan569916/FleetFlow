@@ -89,6 +89,10 @@ export const routes: Routes = [
         path: 'unit-price',
         loadComponent: () => import('./dashboard/unit-price/unit-price').then((c) => c.UnitPrice)
       },
+      {
+        path: 'cargo-items',
+        loadComponent: () => import('./dashboard/cargo-items/cargo-items').then((c) => c.CargoItems)
+      },
       { path: 'vehicles', redirectTo: 'overview' },
       { path: 'maintenance', redirectTo: 'overview' },
       { path: 'routes', redirectTo: 'overview' }

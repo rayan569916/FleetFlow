@@ -69,35 +69,38 @@ def delete_item(model, current_user, id):
 
 def serialize_purchase(p):
     return {
-        'id': p.id, 
-        'amount': p.amount, 
-        'description': p.description, 
-        'category_id': p.category_id, 
+        'id': p.id,
+        'amount': p.amount,
+        'description': p.description,
+        'category_id': p.category_id,
         'category_name': p.category.name if p.category else None,
         'office_id': p.office_id,
         'office_name': p.office.name if p.office else None,
+        'created_by_name': p.creator.full_name if p.creator else 'System',
         'created_at': p.created_at.isoformat()
     }
 def serialize_receipt(r):
     return {
-        'id': r.id, 
-        'amount': r.amount, 
-        'description': r.description, 
-        'category_id': r.category_id, 
+        'id': r.id,
+        'amount': r.amount,
+        'description': r.description,
+        'category_id': r.category_id,
         'category_name': r.category.name if r.category else None,
         'office_id': r.office_id,
         'office_name': r.office.name if r.office else None,
+        'created_by_name': r.creator.full_name if r.creator else 'System',
         'created_at': r.created_at.isoformat()
     }
 def serialize_payment(p):
     return {
-        'id': p.id, 
-        'amount': p.amount, 
-        'description': p.description, 
-        'category_id': p.category_id, 
+        'id': p.id,
+        'amount': p.amount,
+        'description': p.description,
+        'category_id': p.category_id,
         'category_name': p.category.name if p.category else None,
         'office_id': p.office_id,
         'office_name': p.office.name if p.office else None,
+        'created_by_name': p.creator.full_name if p.creator else 'System',
         'created_at': p.created_at.isoformat()
     }
 
@@ -136,7 +139,8 @@ def create_purchase(current_user):
     new_purchase = Purchase(
         amount=data['amount'], description=data.get('description'), 
         category_id=data['category_id'],
-        office_id=office_id
+        office_id=office_id,
+        creator_id=current_user.id
     )
     db.session.add(new_purchase)
     db.session.commit()
@@ -164,7 +168,8 @@ def create_receipt(current_user):
     new_receipt = Receipt(
         amount=data['amount'], description=data.get('description'),
         category_id=data['category_id'],
-        office_id=office_id
+        office_id=office_id,
+        creator_id=current_user.id
     )
     db.session.add(new_receipt)
     db.session.commit()
@@ -192,7 +197,8 @@ def create_payment(current_user):
     new_payment = Payment(
         amount=data['amount'], description=data.get('description'),
         category_id=data['category_id'],
-        office_id=office_id
+        office_id=office_id,
+        creator_id=current_user.id
     )
     db.session.add(new_payment)
     db.session.commit()

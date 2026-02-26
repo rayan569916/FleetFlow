@@ -7,6 +7,7 @@ from .dashboard import dashboard_bp
 from .general import general_bp
 from .reports import reports_bp
 from .unit_price import unit_price_bp
+from .item_list import item_list_bp
 
 def register_routes(app):
     app.register_blueprint(general_bp, url_prefix='/api')
@@ -18,3 +19,4 @@ def register_routes(app):
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     app.register_blueprint(reports_bp, url_prefix='/api/reports')
     app.register_blueprint(unit_price_bp, url_prefix='/api/unit_price')
+    app.register_blueprint(item_list_bp, url_prefix='/api/item_list')

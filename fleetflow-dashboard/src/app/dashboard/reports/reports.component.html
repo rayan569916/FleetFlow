@@ -1,159 +1,500 @@
-<div class="space-y-8">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
-        <div>
-            <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Financial Reports</h1>
-            <p class="text-slate-100 mt-1">Analyze fleet performance and revenue streams.</p>
+<div class="space-y-8 animate-in fade-in duration-500">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+    <div>
+      <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Business Reports</h1>
+      <p class="text-slate-100 mt-1">Comprehensive financial and operational analysis.</p>
+    </div>
+    <div class="flex gap-3">
+      <button
+        (click)="printReport()"
+        class="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white font-medium hover:bg-white/20 transition shadow-sm flex items-center gap-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        Export PDF
+      </button>
+      <button
+        (click)="downloadExcel()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center gap-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="space-y-6 no-print">
+    <!-- Report Type Selector Buttons -->
+    <div
+      class="flex flex-wrap gap-2 p-1.5 bg-slate-900/5 backdrop-blur-md rounded-2xl border border-white/40"
+    >
+      <button
+        *ngFor="let type of reportTypes"
+        (click)="reportType.set(type.id); onReportTypeChange()"
+        [class]="
+          reportType() === type.id
+            ? 'px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all scale-105 z-10'
+            : 'px-4 py-2.5 bg-white/50 text-slate-600 rounded-xl font-semibold hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100'
+        "
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-xs">{{ type.label }}</span>
         </div>
-        <div class="flex gap-3">
-            <button (click)="printReport()"
-                class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                Export PDF
+      </button>
+    </div>
+
+    <div
+      class="bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-sm border border-slate-200/60 no-print"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <ng-container >
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              [(ngModel)]="startDate"
+              (change)="loadReport()"
+              class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+              >End Date</label
+            >
+            <input
+              type="date"
+              [(ngModel)]="endDate"
+              (change)="loadReport()"
+              class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+            />
+          </div>
+        </ng-container>
+
+        <!-- <div class="space-y-1.5" *ngIf="reportType() === 'daily'">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+            >Select Date</label
+          >
+          <input
+            type="date"
+            [(ngModel)]="selectedDate"
+            (change)="onDateChange()"
+            class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+          />
+        </div> -->
+
+        <div class="space-y-1.5">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+            >Office</label
+          >
+          <select
+            [(ngModel)]="selectedOfficeId"
+            (change)="loadReport()"
+            class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+          >
+            <option [ngValue]="undefined">All Offices</option>
+            <option *ngFor="let office of offices()" [value]="office.id">
+              {{ office.name }}
+            </option>
+          </select>
+        </div>
+
+        <div
+          class="space-y-1.5"
+          *ngIf="['payments', 'purchases', 'receipts'].includes(reportType())"
+        >
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+            >Category</label
+          >
+          <select
+            [(ngModel)]="selectedCategoryId"
+            (change)="loadReport()"
+            class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+          >
+            <option [ngValue]="undefined">All Categories</option>
+            <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+
+        <div class="lg:col-start-5">
+          <button
+            (click)="loadReport()"
+            class="w-full px-4 py-2 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition flex items-center justify-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Display Area -->
+  <div class="relative min-h-[400px]">
+    <!-- Loading Overlay -->
+    <div
+      *ngIf="isLoading()"
+      class="absolute inset-0 z-10 bg-white/50 backdrop-blur-[2px] rounded-2xl flex items-center justify-center animate-in fade-in duration-300"
+    >
+      <div class="flex flex-col items-center gap-3">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        <span class="text-sm font-medium text-slate-600">Loading data...</span>
+      </div>
+    </div>
+
+    <!-- Daily Summary View (Keep existing logic but prettified) -->
+    <!-- <div
+      *ngIf="reportType() === 'daily'"
+      class="space-y-8 animate-in slide-in-from-bottom-4 duration-500"
+     >
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Daily Financial Breakdown</h2>
+            <p class="text-sm text-slate-500 mt-0.5">
+              Summary for {{ selectedDate() | date: 'fullDate' }}
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button
+              *ngIf="dailyReport() && !dailyReport()?.is_stored"
+              (click)="saveReport()"
+              class="px-5 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition shadow-md shadow-green-100"
+            >
+              Save Final Report
             </button>
-            <button (click)="downloadExcel()"
-                class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Download CSV
-            </button>
+            <span
+              *ngIf="dailyReport()?.is_stored"
+              class="px-4 py-1.5 bg-green-50 text-green-600 rounded-full text-xs font-bold border border-green-200 flex items-center gap-2"
+            >
+              <div class="h-1.5 w-1.5 rounded-full bg-green-600"></div>
+              Report Stored
+            </span>
+          </div>
         </div>
+
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          *ngIf="dailyReport() as report"
+        >
+           
+          <div class="space-y-4">
+            <div class="p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+              <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-2">
+                Invoice Grand Total
+              </p>
+              <p class="text-2xl font-black text-slate-900">
+                {{ settingsService.currencySymbol() }}
+                {{ report.total_invoice_grand | number: '1.2-2' }}
+              </p>
+            </div>
+            <div class="p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+              <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-2">
+                Total Receipts (Add)
+              </p>
+              <p class="text-2xl font-black text-emerald-600">
+                + {{ settingsService.currencySymbol() }}
+                {{ report.total_receipt | number: '1.2-2' }}
+              </p>
+            </div>
+          </div>
+
+
+          <div class="space-y-4">
+            <div class="p-5 bg-rose-50/50 rounded-2xl border border-rose-100">
+              <p class="text-[10px] text-rose-500 font-bold uppercase tracking-wider mb-2">
+                Bank/Swipe (Subtract)
+              </p>
+              <p class="text-2xl font-black text-rose-600">
+                - {{ settingsService.currencySymbol() }}
+                {{ report.bank_transfer_swipe_sum | number: '1.2-2' }}
+              </p>
+            </div>
+            <div
+              class="p-4 bg-rose-50/40 rounded-xl border border-rose-100/50 flex justify-between items-center text-sm"
+            >
+              <span class="text-slate-500">Payments</span>
+              <span class="font-bold text-rose-600"
+                >- {{ report.total_payment | number: '1.2-2' }}</span
+              >
+            </div>
+            <div
+              class="p-4 bg-rose-50/40 rounded-xl border border-rose-100/50 flex justify-between items-center text-sm"
+            >
+              <span class="text-slate-500">Purchases</span>
+              <span class="font-bold text-rose-600"
+                >- {{ report.total_purchase | number: '1.2-2' }}</span
+              >
+            </div>
+          </div>
+
+
+          <div class="space-y-4">
+            <div class="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+              <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider mb-2">
+                Previous Day Balance
+              </p>
+              <p class="text-2xl font-black text-indigo-600">
+                {{ settingsService.currencySymbol() }} {{ report.previous_total | number: '1.2-2' }}
+              </p>
+            </div>
+            <div
+              class="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl shadow-indigo-200"
+            >
+              <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider mb-2">
+                Final Daily Total
+              </p>
+              <p class="text-3xl font-black text-white">
+                {{ settingsService.currencySymbol() }} {{ report.daily_total | number: '1.2-2' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Table View for Detailed Reports -->
+    <div
+      class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden animate-in fade-in duration-500"
+    >
+      <div class="overflow-x-auto">
+        <!-- Invoices Table -->
+        <table *ngIf="reportType() === 'invoices'" class="w-full table-fixed text-left border-collapse">
+          <thead class="bg-slate-50/50 border-b border-slate-100">
+            <tr>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Invoice #
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Tracking #
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Payment Mode
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider ">
+                Amount
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Office</th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Created By
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            <tr *ngFor="let row of invoiceData()" class="hover:bg-slate-50/80 transition-colors cursor-pointer" (click)="openInvoiceDetailsFromReport(row)">
+              <td class="p-4 text-sm text-slate-600 font-medium">{{ row.date | date }}</td>
+              <td class="p-4 text-sm font-bold text-slate-800">{{ row.invoice_number }}</td>
+              <td class="p-4 text-sm text-slate-500 font-mono">
+                {{ row.tracking_number || 'N/A' }}
+              </td>
+              <td class="p-4 text-sm">
+                <span
+                  class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                  [ngClass]="
+                    row.mode_of_payment === 'cash'
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                      : 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                  "
+                >
+                  {{ row.mode_of_payment }}
+                </span>
+              </td>
+              <td class="p-4 text-sm font-bold text-slate-900 ">
+                {{ settingsService.currencySymbol() }} {{ row.grand_total | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm text-slate-600">{{ row.office_name }}</td>
+              <td class="p-4 text-sm text-slate-500">{{ row.created_by_name }}</td>
+            </tr>
+            <tr *ngIf="invoiceData().length === 0 && !isLoading()">
+              <td colspan="7" class="p-12 text-center text-slate-400">
+                No invoice data found for the selected filters.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Finance Table (Payments, Purchases, Receipts) -->
+        <table
+          *ngIf="['payments', 'purchases', 'receipts'].includes(reportType())"
+          class="w-full table-fixed text-left border-collapse"
+        >
+          <thead class="bg-slate-50/50 border-b border-slate-100">
+            <tr>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Description
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Amount
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Office</th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Created By
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            <tr *ngFor="let row of financeData()" class="hover:bg-slate-50/80 transition-colors">
+              <td class="p-4 text-sm text-slate-600 font-medium">{{ row.created_at | date }}</td>
+              <td class="p-4 text-sm text-slate-800">{{ row.description }}</td>
+              <td class="p-4 text-sm">
+                <span
+                  class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium"
+                >
+                  {{ row.category_name }}
+                </span>
+              </td>
+              <td
+                class="p-4 text-sm font-bold"
+                [ngClass]="reportType() === 'receipts' ? 'text-emerald-600' : 'text-rose-600'"
+              >
+                {{ reportType() === 'receipts' ? '+' : '-' }} {{ settingsService.currencySymbol() }}
+                {{ row.amount | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm text-slate-600">{{ row.office_name }}</td>
+              <td class="p-4 text-sm text-slate-500">{{ row.created_by_name }}</td>
+            </tr>
+            <tr *ngIf="financeData().length === 0 && !isLoading()">
+              <td colspan="6" class="p-12 text-center text-slate-400">
+                No data found for the selected filters.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Daily Reports List Table -->
+        <table *ngIf="reportType() === 'daily-list'" class="w-full table-fixed text-left border-collapse">
+          <thead class="bg-slate-50/50 border-b border-slate-100">
+            <tr>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Office</th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Billing Invoice
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Bank/Swipe
+              </th>
+              <th class="p-4 text-xs font-bold text-rose-400 uppercase tracking-wider">
+                Payments
+              </th>
+              <th class="p-4 text-xs font-bold text-rose-400 uppercase tracking-wider">
+                Purchases
+              </th>
+              <th
+                class="p-4 text-xs font-bold text-emerald-500 uppercase tracking-wider"
+              >
+                Receipts
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Prev. Total
+              </th>
+              <th class="p-4 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Daily Total
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            <tr *ngFor="let row of dailyReportsList()" class="hover:bg-slate-50/80 transition-colors cursor-pointer" (click)="openDailyBreakdown(row)">
+              <td class="p-4 text-sm font-bold text-slate-800">{{ row.date | date }}</td>
+              <td class="p-4 text-sm text-slate-500">{{ row.office_name || 'N/A' }}</td>
+              <td class="p-4 text-sm text-slate-700">
+                {{ settingsService.currencySymbol() }}
+                {{ row.total_invoice_grand | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm text-slate-700">
+                {{ settingsService.currencySymbol() }}
+                {{ row.bank_transfer_swipe_sum | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm text-rose-500">
+                - {{ settingsService.currencySymbol() }} {{ row.total_payment | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm text-rose-500">
+                - {{ settingsService.currencySymbol() }} {{ row.total_purchase | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm text-emerald-500">
+                + {{ settingsService.currencySymbol() }} {{ row.total_receipt | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm text-slate-400">
+                {{ settingsService.currencySymbol() }} {{ row.previous_total | number: '1.2-2' }}
+              </td>
+              <td class="p-4 text-sm font-black text-slate-900">
+                {{ settingsService.currencySymbol() }} {{ row.daily_total | number: '1.2-2' }}
+              </td>
+            </tr>
+            <tr *ngIf="dailyReportsList().length === 0 && !isLoading()">
+              <td colspan="8" class="p-12 text-center text-slate-400">
+                No daily reports found for the selected period.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" *ngIf="financialStats() as stats">
-        <!-- Daily Report Breakdown -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full lg:col-span-2">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">Daily Financial Report</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Calculated based on selected date</p>
-                </div>
-                <div class="flex gap-3 items-center no-print">
-                    <input type="date" [(ngModel)]="selectedDate" (change)="onDateChange()"
-                        class="text-sm border-slate-200 rounded-lg focus:ring-indigo-500 py-1.5 px-3">
-                    <button *ngIf="dailyReport() && !dailyReport()?.is_stored" (click)="saveReport()"
-                        class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition">
-                        Save Report
-                    </button>
-                    <span *ngIf="dailyReport()?.is_stored"
-                        class="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-bold border border-green-100">
-                        Stored
-                    </span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" *ngIf="dailyReport() as report">
-                <!-- Sum of Grand Total -->
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Invoice Grand Total
-                    </p>
-                    <p class="text-lg font-bold text-slate-800">{{ settingsService.currencySymbol() }} {{
-                        report.total_invoice_grand | number:'1.2-2' }}</p>
-                </div>
-
-                <!-- Bank/Swipe Subtraction -->
-                <div class="p-4 bg-red-50/50 rounded-xl border border-red-100/50">
-                    <p class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1">Bank/Swipe (Subtract)
-                    </p>
-                    <p class="text-lg font-bold text-red-600">- {{ settingsService.currencySymbol() }} {{
-                        report.bank_transfer_swipe_sum | number:'1.2-2' }}</p>
-                </div>
-
-                <!-- Total Payment Subtraction -->
-                <div class="p-4 bg-red-50/50 rounded-xl border border-red-100/50">
-                    <p class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1">Total Payment (Subtract)
-                    </p>
-                    <p class="text-lg font-bold text-red-600">- {{ settingsService.currencySymbol() }} {{
-                        report.total_payment | number:'1.2-2' }}</p>
-                </div>
-
-                <!-- Total Purchase Subtraction -->
-                <div class="p-4 bg-red-50/50 rounded-xl border border-red-100/50">
-                    <p class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1">Total Purchase
-                        (Subtract)</p>
-                    <p class="text-lg font-bold text-red-600">- {{ settingsService.currencySymbol() }} {{
-                        report.total_purchase | number:'1.2-2' }}</p>
-                </div>
-
-                <!-- Total Receipt Addition -->
-                <div class="p-4 bg-green-50/50 rounded-xl border border-green-100/50">
-                    <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider mb-1">Total Receipt (Add)
-                    </p>
-                    <p class="text-lg font-bold text-green-600">+ {{ settingsService.currencySymbol() }} {{
-                        report.total_receipt | number:'1.2-2' }}</p>
-                </div>
-
-                <!-- Previous Total -->
-                <div class="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
-                    <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider mb-1">Previous Total (Add)
-                    </p>
-                    <p class="text-lg font-bold text-indigo-600">+ {{ settingsService.currencySymbol() }} {{
-                        report.previous_total | number:'1.2-2' }}</p>
-                </div>
-
-                <!-- Final Daily Total -->
-                <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 md:col-span-2 lg:col-span-2">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Final Daily Total</p>
-                    <div class="flex items-center justify-between">
-                        <p class="text-2xl font-black text-white">{{ settingsService.currencySymbol() }} {{
-                            report.daily_total | number:'1.2-2' }}</p>
-                        <div class="text-[10px] text-slate-500 italic">Formula based on business requirements</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Loading Spinner -->
-            <div *ngIf="isLoading()" class="h-32 flex items-center justify-center">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            </div>
-        </div>
-
-        <!-- Delivery Performance Report -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">Monthly Revenue</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Income vs Expenses Analysis</p>
-                </div>
-                <div class="p-2 bg-green-50 rounded-lg text-green-600 font-bold text-sm">+{{ stats.growth }}%</div>
-            </div>
-
-            <!-- Mock Chart Area (Visual only, but data driven heights could be implemented) -->
-            <div class="h-64 mt-auto flex items-end justify-between gap-3 px-2">
-                <div *ngFor="let val of stats.history; let i = index"
-                    class="w-full rounded-t-lg relative group transition-all duration-500 hover:opacity-80"
-                    [ngClass]="i % 2 === 0 ? 'bg-indigo-200' : 'bg-indigo-500'" [style.height.%]="(val / 150) * 100">
-                    <div
-                        class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg transition-opacity">
-                        {{ val }}k
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-between text-xs text-slate-400 mt-4 px-2 font-medium">
-                <span>Jan</span><span>Dec</span>
-            </div>
-        </div>
+  <!-- Reusable Invoice Details View (from invoice module) -->
+  <div *ngIf="selectedInvoiceDetails()" class="space-y-3">
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-bold text-yellow-300">Invoice Detail View</h3>
+      <button
+        (click)="closeDetailPanels()"
+        class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200"
+      >
+        Close
+      </button>
     </div>
-    
+    <app-invoice-details-view [invoice]="selectedInvoiceDetails()"></app-invoice-details-view>
+  </div>
 
-    <!-- Recent Reports List -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden break-inside-avoid">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Generated Reports</h2>
-            <span class="text-sm text-slate-500">No stored files API yet</span>
-        </div>
-        <div class="p-0">
-            <div class="p-6 text-sm text-slate-500">Reports can be exported from the current data above.</div>
-        </div>
+  <!-- Daily History Breakdown -->
+  <div *ngIf="selectedDailyBreakdown() as breakdown" class="space-y-3">
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-bold text-yellow-300">History Day Breakdown</h3>
+      <button
+        (click)="closeDetailPanels()"
+        class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200"
+      >
+        Close
+      </button>
     </div>
+    <app-daily-breakdown-view [report]="breakdown.report" [invoices]="breakdown.invoices"></app-daily-breakdown-view>
+  </div>
 </div>

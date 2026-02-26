@@ -15,7 +15,7 @@ import {
 } from '../models/dashboard.models';
 
 export const SIDEBAR_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'grid', active: true, route: '/dashboard' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'grid', route: '/dashboard' },
   { id: 'tracking', label: 'Tracking', icon: 'map', route: '/dashboard/tracking' },
   { id: 'shipments', label: 'Shipments', icon: 'box', route: '/dashboard/shipments' },
   { id: 'live-tracking', label: 'Live Tracking', icon: 'navigation', route: '/dashboard/live-tracking' },
@@ -24,12 +24,13 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { id: 'purchase', label: 'Purchase', icon: 'shopping-cart', route: '/dashboard/purchase' },
   { id: 'drivers', label: 'Drivers', icon: 'users', route: '/dashboard/drivers' },
   { id: 'reports', label: 'Reports', icon: 'file', route: '/dashboard/reports' },
-  { id: 'income', label: 'Income', icon: 'income', route: '/dashboard/income' },
+  // { id: 'income', label: 'Income', icon: 'income', route: '/dashboard/income' },
   { id: 'invoice', label: 'Billing Invoice', icon: 'file', route: '/dashboard/invoice' },
   { id: 'settings', label: 'Settings', icon: 'settings', route: '/dashboard/settings' },
   { id: 'register', label: 'Register User', icon: 'users', route: '/dashboard/register' },
   { id: 'unit-price', label: 'Unit Price', icon: 'dollar-sign', route: '/dashboard/unit-price' },
-  { id: 'logout', label: 'Logout', icon: 'logout', route: '' }
+  { id: 'logout', label: 'Logout', icon: 'logout', route: '' },
+  { id: 'cargo-items', label: 'Cargo Items', icon: 'box', route: '/dashboard/cargo-items' },
 ];
 
 

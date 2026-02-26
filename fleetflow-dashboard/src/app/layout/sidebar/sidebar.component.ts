@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SIDEBAR_ITEMS } from '../../core/constants/dashboard.constants';
 import { UiStateService } from '../../services/ui-state.service';
 import { AuthService } from '../../services/auth.service';
@@ -14,7 +14,7 @@ export interface NavGroup {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, RouterLinkActive, CommonModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -47,6 +47,7 @@ export class SidebarComponent {
           if (['settings'].includes(i.id)) return true;
           if (i.id === 'register') return isAdminOrCEO;
           if (i.id === 'unit-price') return isAdminOrCEO;
+          if (i.id === 'cargo-items') return isAdminOrCEO;
           return false;
         })
       }

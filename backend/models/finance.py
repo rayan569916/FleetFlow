@@ -24,9 +24,11 @@ class Purchase(db.Model):
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('purchase_categories.id'), nullable=False)
     office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     category = db.relationship('PurchaseCategory', backref=db.backref('purchases', lazy=True))
     office = db.relationship('Office', backref=db.backref('purchases', lazy=True))
+    creator = db.relationship('User', backref='purchases_created')
 
 class Receipt(db.Model):
     __tablename__ = 'receipts'
@@ -35,9 +37,11 @@ class Receipt(db.Model):
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('receipt_categories.id'), nullable=False)
     office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     category = db.relationship('ReceiptCategory', backref=db.backref('receipts', lazy=True))
     office = db.relationship('Office', backref=db.backref('receipts', lazy=True))
+    creator = db.relationship('User', backref='receipts_created')
 
 class Payment(db.Model):
     __tablename__ = 'payments'
@@ -46,9 +50,11 @@ class Payment(db.Model):
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('payment_categories.id'), nullable=False)
     office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     category = db.relationship('PaymentCategory', backref=db.backref('payments', lazy=True))
     office = db.relationship('Office', backref=db.backref('payments', lazy=True))
+    creator = db.relationship('User', backref='payments_created')
 
 class DailyReport(db.Model):
     __tablename__ = 'daily_reports'

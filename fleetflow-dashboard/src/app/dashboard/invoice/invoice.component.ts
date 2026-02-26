@@ -11,13 +11,16 @@ import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { UiStateService } from '../../services/ui-state.service';
 import { UnitPriceService, UnitPriceInterface } from '../../services/unit-price.service';
+import { InvoiceDetailsViewComponent } from './invoice-details-view.component';
 import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
+import { CargoItemsService, CargoItem } from '../../services/cargo-items.service';
+
 
 
 @Component({
   selector: 'app-invoice',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, InvoiceDetailsViewComponent],
   templateUrl: './invoice.component.html',
   styleUrl: './invoice.component.css'
 })
@@ -56,6 +59,12 @@ export class InvoiceComponent implements OnInit {
   private searchSubject = new Subject<string>();
   foundCustomers: any[] = [];
   showCustomerDropdown = false;
+  
+  // Item Autocomplete
+  private itemSearchSubject = new Subject<string>();
+  suggestedItems: CargoItem[] = [];
+  showItemDropdown = false;
+
 
   // Dropdown options
   modeOfDeliveryOptions = modeOfDeliveryOptions;
@@ -121,6 +130,8 @@ export class InvoiceComponent implements OnInit {
   private confirmationService = inject(ConfirmationDialogService);
   private cdr = inject(ChangeDetectorRef);
   settingsService = inject(SettingsService);
+  private cargoItemsService = inject(CargoItemsService);
+
 
   readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$ as Observable<boolean>;
 
@@ -137,16 +148,20 @@ export class InvoiceComponent implements OnInit {
     this.loadInvoices();
     this.loadCountries();
     this.setupCustomerSearch();
+    this.setupItemAutocomplete();
   }
+
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.search-container')) {
       this.showCustomerDropdown = false;
+      this.showItemDropdown = false;
       this.cdr.detectChanges();
     }
   }
+
 
   setupCustomerSearch(): void {
     this.searchSubject.pipe(
@@ -187,6 +202,38 @@ export class InvoiceComponent implements OnInit {
     }
     this.cdr.detectChanges();
   }
+
+  setupItemAutocomplete(): void {
+    this.itemSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(search => {
+        if (!search || search.length < 1) return of({ items: [] });
+        return this.cargoItemsService.getCargoItemsList(search);
+      })
+    ).subscribe(res => {
+      this.suggestedItems = res.items || [];
+      this.showItemDropdown = this.suggestedItems.length > 0;
+      this.cdr.detectChanges();
+    });
+  }
+
+  onItemSearch(event: any): void {
+    const search = event.target.value;
+    this.itemSearchSubject.next(search);
+    // Sync the manual value to the form
+    this.itemForm.patchValue({ description: search }, { emitEvent: false });
+  }
+
+  selectItem(item: CargoItem): void {
+    this.itemForm.patchValue({
+      description: item.item_name
+    });
+    this.showItemDropdown = false;
+    this.suggestedItems = [];
+    this.cdr.detectChanges();
+  }
+
 
   loadCountries(): void {
     this.unitPriceService.getCountries().subscribe({
