@@ -1,54 +1,242 @@
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-  <h3 class="text-xl font-bold text-slate-800">Daily Report Breakdown ({{ report?.date | date }})</h3>
+  <h3 class="text-xl font-bold text-slate-800">
+    Daily Report Breakdown ({{ report?.date | date }})
+  </h3>
 
   <div class="overflow-x-auto">
     <table class="w-full table-fixed text-left">
       <thead>
         <tr class="bg-slate-50 border-b border-slate-200">
-          <th class="p-3 text-xs font-bold text-slate-500 uppercase">Invoice #</th>
-          <th class="p-3 text-xs font-bold text-slate-500 uppercase">Tracking #</th>
-          <th class="p-3 text-xs font-bold text-slate-500 uppercase text-right">Total Weight</th>
-          <th class="p-3 text-xs font-bold text-slate-500 uppercase">Mode of Payment</th>
-          <th class="p-3 text-xs font-bold text-slate-500 uppercase text-right">Grand Total</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase">Invoice #</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase">Tracking #</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase text-right">Weight</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase text-right">SubTotal</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase text-right">Packing</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase text-right">Customs</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase text-right">Billing</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase text-right">Grand Total</th>
+          <th class="p-3 text-[10px] font-bold text-slate-500 uppercase text-center w-16">
+            Action
+          </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
-        <tr *ngFor="let inv of invoices">
+        <tr *ngFor="let inv of invoices" class="hover:bg-slate-50 transition-colors">
           <td class="p-3 text-sm text-slate-800 font-semibold">{{ inv.invoice_number }}</td>
-          <td class="p-3 text-sm text-slate-600">{{ inv.tracking_number || '-' }}</td>
-          <td class="p-3 text-sm text-slate-700 text-right">{{ inv.invoice_details?.totalWeight || 0 }}</td>
-          <td class="p-3 text-sm text-slate-700">{{ inv.invoice_details?.modeOfPayment || 'N/A' }}</td>
+          <td class="p-3 text-sm text-slate-600 font-mono">{{ inv.tracking_number || '-' }}</td>
+          <td class="p-3 text-sm text-slate-700 text-right">
+            {{ inv.invoice_details?.totalWeight || 0 }} kg
+          </td>
+          <td class="p-3 text-sm text-slate-700 text-right">
+            {{ inv.invoice_details?.subtotal || 0 | number: '1.2-2' }}
+          </td>
+          <td class="p-3 text-sm text-slate-700 text-right">
+            {{ inv.invoice_details?.packingCharge || 0 | number: '1.2-2' }}
+          </td>
+          <td class="p-3 text-sm text-slate-700 text-right">
+            {{ inv.invoice_details?.customsCharge || 0 | number: '1.2-2' }}
+          </td>
+          <td class="p-3 text-sm text-slate-700 text-right">
+            {{ inv.invoice_details?.billCharge || 0 | number: '1.2-2' }}
+          </td>
           <td class="p-3 text-sm text-slate-900 font-bold text-right">
             {{ settingsService.currencySymbol() }}{{ inv.amount | number: '1.2-2' }}
           </td>
+          <td class="p-3 text-center">
+            <button
+              (click)="editInvoice.emit(inv)"
+              class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit Invoice"
+            >
+              <svg
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+          </td>
         </tr>
         <tr *ngIf="invoices.length === 0">
-          <td colspan="5" class="p-6 text-center text-slate-500">No invoices found for this day.</td>
+          <td colspan="8" class="p-6 text-center text-slate-500">
+            No invoices found for this day.
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2">
-    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
-      <p class="text-xs text-slate-500">Total Receipts</p>
-      <p class="font-bold text-emerald-600">+{{ settingsService.currencySymbol() }}{{ report?.total_receipt || 0 }}</p>
+  <!-- Finance Details Sections -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+    <!-- Payments -->
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-rose-600 uppercase tracking-widest flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-rose-600"></div>
+        Payments
+      </h4>
+      <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 border-b border-slate-200">
+            <tr>
+              <th class="p-2 font-bold text-slate-500">Description</th>
+              <th class="p-2 font-bold text-slate-500 text-right">Amount</th>
+              <th class="p-2 font-bold text-slate-500 text-center w-10">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <tr *ngFor="let p of payments">
+              <td class="p-2 text-slate-700">{{ p.description }}</td>
+              <td class="p-2 text-rose-600 font-bold text-right">
+                -{{ p.amount | number: '1.2-2' }}
+              </td>
+              <td class="p-2 text-center">
+                <button (click)="editPayment.emit(p)" class="text-blue-600 hover:text-blue-800">
+                  <svg
+                    class="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="payments.length === 0">
+              <td colspan="2" class="p-4 text-center text-slate-400 italic">No payments</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
-      <p class="text-xs text-slate-500">Total Purchase</p>
-      <p class="font-bold text-rose-600">-{{ settingsService.currencySymbol() }}{{ report?.total_purchase || 0 }}</p>
+
+    <!-- Purchases -->
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-rose-600 uppercase tracking-widest flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-rose-600"></div>
+        Purchases
+      </h4>
+      <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 border-b border-slate-200">
+            <tr>
+              <th class="p-2 font-bold text-slate-500">Description</th>
+              <th class="p-2 font-bold text-slate-500 text-right">Amount</th>
+              <th class="p-2 font-bold text-slate-500 text-center w-10">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <tr *ngFor="let p of purchases">
+              <td class="p-2 text-slate-700">{{ p.description }}</td>
+              <td class="p-2 text-rose-600 font-bold text-right">
+                -{{ p.amount | number: '1.2-2' }}
+              </td>
+              <td class="p-2 text-center">
+                <button (click)="editPurchase.emit(p)" class="text-blue-600 hover:text-blue-800">
+                  <svg
+                    class="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="purchases.length === 0">
+              <td colspan="2" class="p-4 text-center text-slate-400 italic">No purchases</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
-      <p class="text-xs text-slate-500">Total Payments</p>
-      <p class="font-bold text-rose-600">-{{ settingsService.currencySymbol() }}{{ report?.total_payment || 0 }}</p>
+
+    <!-- Receipts -->
+    <div class="space-y-3">
+      <h4
+        class="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-2"
+      >
+        <div class="w-2 h-2 rounded-full bg-emerald-600"></div>
+        Receipts
+      </h4>
+      <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 border-b border-slate-200">
+            <tr>
+              <th class="p-2 font-bold text-slate-500">Description</th>
+              <th class="p-2 font-bold text-slate-500 text-right">Amount</th>
+              <th class="p-2 font-bold text-slate-500 text-center w-10">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <tr *ngFor="let r of receipts">
+              <td class="p-2 text-slate-700">{{ r.description }}</td>
+              <td class="p-2 text-emerald-600 font-bold text-right">
+                +{{ r.amount | number: '1.2-2' }}
+              </td>
+              <td class="p-2 text-center">
+                <button (click)="editReceipt.emit(r)" class="text-blue-600 hover:text-blue-800">
+                  <svg
+                    class="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="receipts.length === 0">
+              <td colspan="2" class="p-4 text-center text-slate-400 italic">No receipts</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
-      <p class="text-xs text-slate-500">Invoice Grand</p>
-      <p class="font-bold text-slate-800">{{ settingsService.currencySymbol() }}{{ report?.total_invoice_grand || 0 }}</p>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 pt-4 border-t border-slate-100">
+    <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+      <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Total Receipts</p>
+      <p class="text-lg font-black text-emerald-700">
+        +{{ settingsService.currencySymbol() }}{{ report?.total_receipt | number: '1.2-2' }}
+      </p>
     </div>
-    <div class="p-3 rounded-lg bg-slate-900 border border-slate-800">
-      <p class="text-xs text-slate-300">Daily Total</p>
-      <p class="font-bold text-white">{{ settingsService.currencySymbol() }}{{ report?.daily_total || 0 }}</p>
+    <div class="p-3 rounded-xl bg-rose-50 border border-rose-100">
+      <p class="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Total Purchase</p>
+      <p class="text-lg font-black text-rose-700">
+        -{{ settingsService.currencySymbol() }}{{ report?.total_purchase | number: '1.2-2' }}
+      </p>
+    </div>
+    <div class="p-3 rounded-xl bg-rose-50 border border-rose-100">
+      <p class="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Total Payments</p>
+      <p class="text-lg font-black text-rose-700">
+        -{{ settingsService.currencySymbol() }}{{ report?.total_payment | number: '1.2-2' }}
+      </p>
+    </div>
+    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+      <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Invoice Grand</p>
+      <p class="text-lg font-black text-slate-900">
+        {{ settingsService.currencySymbol() }}{{ report?.total_invoice_grand | number: '1.2-2' }}
+      </p>
+    </div>
+    <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-lg shadow-slate-200">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daily Total</p>
+      <p class="text-lg font-black text-white">
+        {{ settingsService.currencySymbol() }}{{ report?.daily_total | number: '1.2-2' }}
+      </p>
     </div>
   </div>
 </div>

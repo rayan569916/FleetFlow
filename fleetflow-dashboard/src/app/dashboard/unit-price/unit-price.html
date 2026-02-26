@@ -6,7 +6,7 @@
     </div>
     <button
       (click)="openAddForm()"
-      class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
+      class="px-4 py-2 bg-yellow-400 text-slate-900 rounded-xl font-medium hover:bg-yellow-500 transition shadow-lg shadow-yellow-200/50"
     >
       Add Unit Price
     </button>
@@ -36,6 +36,7 @@
         <input
           type="number"
           [(ngModel)]="formModel.sea_price"
+          (focus)="$event.target.select()"
           class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
           placeholder="0.00"
         />
@@ -46,6 +47,7 @@
         <input
           type="number"
           [(ngModel)]="formModel.air_price"
+          (focus)="$event.target.select()"
           class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
           placeholder="0.00"
         />
@@ -55,6 +57,7 @@
         <input
           type="number"
           [(ngModel)]="formModel.bill_charge"
+          (focus)="$event.target.select()"
           class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
           placeholder="0.00"
         />
@@ -64,6 +67,7 @@
         <input
           type="number"
           [(ngModel)]="formModel.packing_charge"
+          (focus)="$event.target.select()"
           class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
           placeholder="0.00"
         />
@@ -79,7 +83,7 @@
       </button>
       <button
         (click)="saveForm()"
-        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition"
+        class="px-4 py-2 bg-yellow-400 text-slate-900 rounded-xl font-medium hover:bg-yellow-500 transition"
       >
         {{ editingId() !== null ? 'Update' : 'Save' }}
       </button>

@@ -45,7 +45,7 @@
               class="nav-item group"
               [routerLink]="item.route && item.route !== '#' ? item.route : null"
               routerLinkActive="nav-item-active"
-              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard/overview' }"
               #rla="routerLinkActive"
               [class.nav-item-inactive]="!rla.isActive"
               [attr.href]="!item.route || item.route === '#' ? 'javascript:void(0)' : null"

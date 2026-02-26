@@ -22,9 +22,7 @@ export class InvoiceService {
     private apiUrl = `${environment.apiBaseUrl}/api/invoices`;
     private http = inject(HttpClient);
 
-    getInvoices(officeId?: number): Observable<any> {
-        const params: Record<string, string | number | boolean> = {};
-        if (officeId) params['office_id'] = officeId;
+    getInvoices(params: any = {}): Observable<any> {
         return this.http.get<any>(this.apiUrl, { params });
     }
 
@@ -38,6 +36,10 @@ export class InvoiceService {
 
     updateStatus(id: number, status: string): Observable<any> {
         return this.http.put<any>(`${this.apiUrl}/${id}/status`, { status });
+    }
+
+    updateInvoice(id: number, invoiceData: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/${id}`, invoiceData);
     }
 
     deleteInvoice(id: number): Observable<any> {

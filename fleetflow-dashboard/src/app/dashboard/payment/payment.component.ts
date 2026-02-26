@@ -5,6 +5,7 @@ import { DashboardDataService } from '../../services/dashboard-data.service';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Category } from '../../core/models/dashboard.models';
 import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
+import { UiStateService } from '../../services/ui-state.service';
 
 @Component({
   selector: 'app-payment',
@@ -18,10 +19,12 @@ export class PaymentComponent implements OnInit {
   settingsService = inject(SettingsService);
   dashboardDataService = inject(DashboardDataService);
   confirmationService = inject(ConfirmationDialogService);
+  private uiStateService = inject(UiStateService);
 
   payments = signal<any[]>([]);
   categories = signal<Category[]>([]);
   showForm = signal(false);
+  editingItem = signal<any | null>(null);
 
   // Pagination & Filtering Signals
   searchTerm = signal('');
@@ -46,6 +49,12 @@ export class PaymentComponent implements OnInit {
 
   ngOnInit() {
     this.fetchCategories();
+    
+    // Check for pending edit from Report
+    const pendingEdit = this.uiStateService.getPendingEdit();
+    if (pendingEdit) {
+      setTimeout(() => this.onEdit(pendingEdit), 100);
+    }
   }
 
   fetchData() {
@@ -94,26 +103,55 @@ export class PaymentComponent implements OnInit {
     this.showForm.update(v => !v);
     if (!this.showForm()) {
       this.paymentForm.reset();
+      this.editingItem.set(null);
     }
+  }
+
+  onEdit(payment: any) {
+    const today = new Date().toISOString().split('T')[0];
+    const paymentDate = payment?.created_at ? payment.created_at.split('T')[0].split(' ')[0] : null;
+
+    if (paymentDate && paymentDate !== today) {
+      this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot edit this payment because the daily report for that day has already been calculated. Only payments from today can be edited.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    this.editingItem.set(payment);
+    this.paymentForm.patchValue({
+      amount: payment.amount,
+      description: payment.description,
+      category_id: payment.category_id
+    });
+    this.showForm.set(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async onSubmit() {
     if (this.paymentForm.valid) {
+      const isEdit = !!this.editingItem();
       const confirmed = await this.confirmationService.confirm({
-        title: 'Submit Payment',
-        message: 'Are you sure you want to record this payment?',
-        confirmText: 'Submit',
+        title: isEdit ? 'Update Payment' : 'Submit Payment',
+        message: isEdit ? 'Are you sure you want to update this payment record?' : 'Are you sure you want to record this payment?',
+        confirmText: isEdit ? 'Update' : 'Submit',
         cancelText: 'Cancel'
       });
 
       if (!confirmed) return;
 
-      this.dashboardDataService.createPayment(this.paymentForm.value).subscribe({
+      const request = isEdit 
+        ? this.dashboardDataService.updatePayment(this.editingItem().id, this.paymentForm.value)
+        : this.dashboardDataService.createPayment(this.paymentForm.value);
+
+      request.subscribe({
         next: () => {
           this.fetchData();
           this.toggleForm();
         },
-        error: (err: any) => console.error('Failed to create payment', err)
+        error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} payment`, err)
       });
     }
   }

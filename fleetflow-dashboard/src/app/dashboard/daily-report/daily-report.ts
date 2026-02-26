@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
 import { HeaderComponent } from '../../layout/header/header.component';
+import { SettingsService } from '../../services/settings.service';
 import { UiStateService } from '../../services/ui-state.service';
 import { ReportService } from '../../services/report.service';
 import { InvoiceService } from '../../services/invoice.service';
@@ -20,6 +21,7 @@ export class DailyReport implements OnInit {
   private reportService = inject(ReportService);
   private invoiceService = inject(InvoiceService);
   readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
+  public settingsService = inject(SettingsService);
 
   submittedInvoices: any[] = [];
   previousBalance = 0;
@@ -45,9 +47,9 @@ export class DailyReport implements OnInit {
 
     forkJoin({
       report: this.reportService.getDailyReport(today).pipe(catchError(() => of(null))),
-      invoiceList: this.invoiceService.getInvoices().pipe(catchError(() => of({ invoices: [] })))
+      invoiceList: this.invoiceService.getInvoices({ date: today, per_page: 1000 }).pipe(catchError(() => of({ items: [], invoices: [] })))
     }).subscribe(({ report, invoiceList }) => {
-      const invoices = (invoiceList?.invoices ?? []).filter((inv: any) => inv.date === today);
+      const invoices = (invoiceList?.items || invoiceList?.invoices || []).filter((inv: any) => inv.date === today);
       this.totalNumberOfBills = invoices.length;
 
       if (!report) {
@@ -55,9 +57,11 @@ export class DailyReport implements OnInit {
         return;
       }
 
-      const detailCalls = invoices.map((inv: any) =>
-        this.invoiceService.getInvoiceById(inv.id).pipe(catchError(() => of(null)))
-      );
+      const detailCalls = invoices
+        .filter((inv: any) => !!inv.id)
+        .map((inv: any) =>
+          this.invoiceService.getInvoiceById(inv.id).pipe(catchError(() => of(null)))
+        );
 
       if (detailCalls.length === 0) {
         this.applyReportTotals(report, []);

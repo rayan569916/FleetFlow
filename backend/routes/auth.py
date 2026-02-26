@@ -95,6 +95,45 @@ def get_roles():
     roles = Role.query.all()
     return jsonify([{'id': r.id, 'name': r.name} for r in roles])
 
+@auth_bp.route('/users/<int:user_id>', methods=['PUT'])
+@role_required(['super_admin', 'ceo'])
+def update_user(current_user, user_id):
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+
+    if 'role_id' in data:
+        role = Role.query.get(data['role_id'])
+        if not role:
+            return jsonify({'message': 'Invalid role ID'}), 400
+        user.role_id = data['role_id']
+
+    if 'office_id' in data:
+        if not validate_office_id(data['office_id']):
+            return jsonify({'message': 'Invalid office ID'}), 400
+        user.office_id = data['office_id']
+
+    if 'full_name' in data:
+        user.full_name = data['full_name']
+
+    if 'password' in data and data['password']:
+        user.set_password(data['password'])
+
+    db.session.commit()
+    return jsonify({'message': 'User updated successfully!'})
+
+@auth_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@role_required(['super_admin', 'ceo'])
+def delete_user(current_user, user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting yourself
+    if user.id == current_user.id:
+        return jsonify({'message': 'Cannot delete your own account'}), 400
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted successfully!'})
+
 @auth_bp.route('/offices', methods=['GET'])
 @role_required(['super_admin', 'ceo'])
 def get_offices(current_user):

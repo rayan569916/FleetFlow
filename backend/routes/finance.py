@@ -67,6 +67,26 @@ def delete_item(model, current_user, id):
     update_daily_report(item_date, item_office_id)
     return jsonify({'message': 'Item deleted'})
 
+def update_item(model, current_user, id, data):
+    item = model.query.get(id)
+    if not item: return jsonify({'message': 'Item not found'}), 404
+    if not can_access_office(current_user, item.office_id):
+        return jsonify({'message': 'You cannot access records from another office'}), 403
+    
+    # Check if item is from today
+    today = datetime.date.today()
+    if item.created_at.date() != today:
+        return jsonify({'message': 'Records from previous days cannot be edited to ensure historical data integrity.'}), 403
+
+    if 'amount' in data: item.amount = data['amount']
+    if 'description' in data: item.description = data['description']
+    if 'category_id' in data: item.category_id = data['category_id']
+    
+    db.session.commit()
+    # Update daily report in real-time
+    update_daily_report(today, item.office_id)
+    return jsonify({'message': 'Item updated'})
+
 def serialize_purchase(p):
     return {
         'id': p.id,
@@ -148,6 +168,12 @@ def create_purchase(current_user):
     update_daily_report(datetime.date.today(), office_id)
     return jsonify({'message': 'Purchase created'}), 201
 
+@finance_bp.route('/purchases/<int:id>', methods=['PUT'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def update_purchase(current_user, id):
+    data = request.get_json()
+    return update_item(Purchase, current_user, id, data)
+
 @finance_bp.route('/purchases/<int:id>', methods=['DELETE'])
 @role_required(['super_admin', 'ceo', 'accountant'])
 def delete_purchase(current_user, id): return delete_item(Purchase, current_user, id)
@@ -177,6 +203,12 @@ def create_receipt(current_user):
     update_daily_report(datetime.date.today(), office_id)
     return jsonify({'message': 'Receipt created'}), 201
 
+@finance_bp.route('/receipts/<int:id>', methods=['PUT'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def update_receipt(current_user, id):
+    data = request.get_json()
+    return update_item(Receipt, current_user, id, data)
+
 @finance_bp.route('/receipts/<int:id>', methods=['DELETE'])
 @role_required(['super_admin', 'ceo', 'accountant'])
 def delete_receipt(current_user, id): return delete_item(Receipt, current_user, id)
@@ -205,6 +237,12 @@ def create_payment(current_user):
     # Update daily report in real-time
     update_daily_report(datetime.date.today(), office_id)
     return jsonify({'message': 'Payment created'}), 201
+
+@finance_bp.route('/payments/<int:id>', methods=['PUT'])
+@role_required(['super_admin', 'ceo', 'accountant'])
+def update_payment(current_user, id):
+    data = request.get_json()
+    return update_item(Payment, current_user, id, data)
 
 @finance_bp.route('/payments/<int:id>', methods=['DELETE'])
 @role_required(['super_admin', 'ceo', 'accountant'])

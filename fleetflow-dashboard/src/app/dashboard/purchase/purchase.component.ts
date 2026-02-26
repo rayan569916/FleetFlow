@@ -5,6 +5,7 @@ import { DashboardDataService } from '../../services/dashboard-data.service';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Category } from '../../core/models/dashboard.models';
 import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
+import { UiStateService } from '../../services/ui-state.service';
 
 @Component({
   selector: 'app-purchase',
@@ -18,10 +19,12 @@ export class PurchaseComponent implements OnInit {
   settingsService = inject(SettingsService);
   dashboardDataService = inject(DashboardDataService);
   private confirmationService = inject(ConfirmationDialogService);
+  private uiStateService = inject(UiStateService);
 
   purchases = signal<any[]>([]);
   categories = signal<Category[]>([]);
   showForm = signal(false);
+  editingItem = signal<any | null>(null);
 
   // Pagination & Filtering Signals
   searchTerm = signal('');
@@ -47,6 +50,12 @@ export class PurchaseComponent implements OnInit {
 
   ngOnInit() {
     this.fetchCategories();
+    
+    // Check for pending edit from Report
+    const pendingEdit = this.uiStateService.getPendingEdit();
+    if (pendingEdit) {
+      setTimeout(() => this.onEdit(pendingEdit), 100);
+    }
   }
 
   fetchData() {
@@ -96,26 +105,55 @@ export class PurchaseComponent implements OnInit {
     this.showForm.update(v => !v);
     if (!this.showForm()) {
       this.purchaseForm.reset();
+      this.editingItem.set(null);
     }
+  }
+
+  onEdit(purchase: any) {
+    const today = new Date().toISOString().split('T')[0];
+    const purchaseDate = purchase?.created_at ? purchase.created_at.split('T')[0].split(' ')[0] : null;
+
+    if (purchaseDate && purchaseDate !== today) {
+      this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot edit this purchase because the daily report for that day has already been calculated. Only purchases from today can be edited.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    this.editingItem.set(purchase);
+    this.purchaseForm.patchValue({
+      amount: purchase.amount,
+      description: purchase.description,
+      category_id: purchase.category_id
+    });
+    this.showForm.set(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async onSubmit() {
     if (this.purchaseForm.valid) {
+      const isEdit = !!this.editingItem();
       const confirmed = await this.confirmationService.confirm({
-        title: 'Submit Purchase',
-        message: 'Are you sure you want to record this purchase?',
-        confirmText: 'Submit',
+        title: isEdit ? 'Update Purchase' : 'Submit Purchase',
+        message: isEdit ? 'Are you sure you want to update this purchase record?' : 'Are you sure you want to record this purchase?',
+        confirmText: isEdit ? 'Update' : 'Submit',
         cancelText: 'Cancel'
       });
 
       if (!confirmed) return;
 
-      this.dashboardDataService.createPurchase(this.purchaseForm.value).subscribe({
+      const request = isEdit 
+        ? this.dashboardDataService.updatePurchase(this.editingItem().id, this.purchaseForm.value)
+        : this.dashboardDataService.createPurchase(this.purchaseForm.value);
+
+      request.subscribe({
         next: () => {
           this.fetchData();
           this.toggleForm();
         },
-        error: (err: any) => console.error('Failed to create purchase', err)
+        error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} purchase`, err)
       });
     }
   }

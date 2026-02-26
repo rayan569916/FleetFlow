@@ -181,6 +181,7 @@ def get_invoice_report(current_user):
     
     from models.user import User, Office
     query = db.session.query(
+        InvoiceHeader.id,
         InvoiceHeader.date,
         InvoiceHeader.invoice_number,
         InvoiceHeader.tracking_number,
@@ -200,9 +201,14 @@ def get_invoice_report(current_user):
     if office_id is not None:
         query = query.filter(InvoiceHeader.office_id == office_id)
 
-    results = query.order_by(InvoiceHeader.date.desc()).all()
-    
-    return jsonify([{
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    paginated_data = query.order_by(InvoiceHeader.date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    results = paginated_data.items
+ 
+    output = [{
+        'id': r.id,
         'date': str(r.date),
         'invoice_number': r.invoice_number,
         'tracking_number': r.tracking_number,
@@ -211,7 +217,15 @@ def get_invoice_report(current_user):
         'office_id': r.office_id,
         'office_name': r.office_name,
         'created_by_name': r.created_by_name or 'System'
-    } for r in results])
+    } for r in results]
+
+    return jsonify({
+        'items': output,
+        'total': paginated_data.total,
+        'page': page,
+        'pages': paginated_data.pages,
+        'per_page': per_page
+    })
 
 def get_finance_report(model, current_user):
     start_date_str = request.args.get('start_date')
@@ -234,18 +248,31 @@ def get_finance_report(model, current_user):
     if category_id:
         query = query.filter(model.category_id == category_id)
 
-    results = query.order_by(model.created_at.desc()).all()
-    
-    return jsonify([{
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    paginated_data = query.order_by(model.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    results = paginated_data.items
+
+    output = [{
         'id': r.id,
         'amount': r.amount,
         'description': r.description,
+        'category_id': r.category_id,
         'category_name': r.category.name if r.category else 'N/A',
         'office_id': r.office_id,
         'office_name': r.office.name if r.office else 'N/A',
         'created_by_name': r.creator.full_name if r.creator else 'System',
         'created_at': r.created_at.isoformat()
-    } for r in results])
+    } for r in results]
+
+    return jsonify({
+        'items': output,
+        'total': paginated_data.total,
+        'page': page,
+        'pages': paginated_data.pages,
+        'per_page': per_page
+    })
 
 @reports_bp.route('/payments', methods=['GET'])
 @role_required(['super_admin', 'ceo', 'accountant'])
@@ -282,9 +309,13 @@ def get_daily_reports_list(current_user):
     if office_id is not None:
         query = query.filter(DailyReport.office_id == office_id)
 
-    results = query.order_by(DailyReport.date.desc()).all()
-    
-    return jsonify([{
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    paginated_data = query.order_by(DailyReport.date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    results = paginated_data.items
+
+    output = [{
         'date': str(r.date),
         'total_invoice_grand': r.total_invoice_grand,
         'bank_transfer_swipe_sum': r.bank_transfer_swipe_sum,
@@ -295,4 +326,12 @@ def get_daily_reports_list(current_user):
         'daily_total': r.daily_total,
         'office_id': r.office_id,
         'office_name': r.office.name if r.office else 'N/A'
-    } for r in results])
+    } for r in results]
+
+    return jsonify({
+        'items': output,
+        'total': paginated_data.total,
+        'page': page,
+        'pages': paginated_data.pages,
+        'per_page': per_page
+    })

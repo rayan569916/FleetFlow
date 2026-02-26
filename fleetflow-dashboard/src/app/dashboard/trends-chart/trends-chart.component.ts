@@ -1,76 +1,49 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal, inject } from '@angular/core';
-
-import { TrendPoint, ChartPointMapped } from '../../core/models/dashboard.models';
+import { ChangeDetectionStrategy, Component, signal, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { CardComponent } from '../../shared/ui/card/card.component';
 import { SettingsService } from '../../services/settings.service';
+import { ReportService, DailyReportData } from '../../services/report.service';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-trends-chart',
   standalone: true,
-  imports: [CardComponent],
+  imports: [CommonModule, CardComponent],
   templateUrl: './trends-chart.component.html',
   styleUrl: './trends-chart.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TrendsChartComponent {
-  readonly trendPoints = input.required<TrendPoint[]>();
+export class TrendsChartComponent implements OnInit {
   settingsService = inject(SettingsService);
+  private reportService = inject(ReportService);
+  private authService = inject(AuthService);
 
-  readonly width = 600;
-  readonly height = 250;
-  readonly padding = 20;
-  readonly hoveredPoint = signal<ChartPointMapped | null>(null);
+  dailyReport = signal<DailyReportData | null>(null);
+  isLoading = signal<boolean>(true);
 
-  readonly mappedPoints = computed<ChartPointMapped[]>(() => {
-    const points = this.trendPoints();
-    if (!points.length) {
-      return [];
-    }
+  private router = inject(Router);
 
-    const maxValue = Math.max(...points.map((point) => point.value));
-    const xStep = (this.width - this.padding * 2) / (points.length - 1);
-
-    return points.map((point, index) => ({
-      ...point,
-      x: this.padding + index * xStep,
-      y: this.height - this.padding - (point.value / maxValue) * (this.height - this.padding * 2)
-    }));
-  });
-
-  readonly linePath = computed(() => this.generatePath(this.mappedPoints(), false));
-  readonly areaPath = computed(() => this.generatePath(this.mappedPoints(), true));
-
-  onPointEnter(point: ChartPointMapped): void {
-    this.hoveredPoint.set(point);
+  ngOnInit(): void {
+    this.loadDailyReport();
   }
 
-  onPointLeave(): void {
-    this.hoveredPoint.set(null);
+  loadDailyReport(): void {
+    this.isLoading.set(true);
+    const today = new Date().toISOString().split('T')[0];
+    this.reportService.getDailyReport(today).subscribe({
+      next: (data) => {
+        this.dailyReport.set(data);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading daily report for widget:', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  trackByMonth(index: number): number {
-    return index;
-  }
-
-  private generatePath(points: ChartPointMapped[], area: boolean): string {
-    if (!points.length) {
-      return '';
-    }
-
-    let path = `M ${points[0].x} ${points[0].y}`;
-
-    for (let index = 0; index < points.length - 1; index++) {
-      const current = points[index];
-      const next = points[index + 1];
-      const controlX = (current.x + next.x) / 2;
-      path += ` Q ${controlX} ${current.y}, ${next.x} ${next.y}`;
-    }
-
-    if (area) {
-      path += ` L ${points[points.length - 1].x} ${this.height - this.padding}`;
-      path += ` L ${points[0].x} ${this.height - this.padding} Z`;
-    }
-
-    return path;
+  navigateToReports(): void {
+    this.router.navigate(['/dashboard/reports']);
   }
 }

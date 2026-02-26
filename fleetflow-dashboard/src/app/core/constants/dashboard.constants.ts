@@ -15,7 +15,7 @@ import {
 } from '../models/dashboard.models';
 
 export const SIDEBAR_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'grid', route: '/dashboard' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'grid', route: '/dashboard/overview' },
   { id: 'tracking', label: 'Tracking', icon: 'map', route: '/dashboard/tracking' },
   { id: 'shipments', label: 'Shipments', icon: 'box', route: '/dashboard/shipments' },
   { id: 'live-tracking', label: 'Live Tracking', icon: 'navigation', route: '/dashboard/live-tracking' },

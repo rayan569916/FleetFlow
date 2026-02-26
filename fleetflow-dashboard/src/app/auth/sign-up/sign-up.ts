@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -21,8 +21,10 @@ export class SignUpComponent implements OnInit {
   isLoading = false;
   successMessage: string | null = null;
   errorMessage: string | null = null;
-  roles: any[] = [];
-  offices: any[] = [];
+  roles = signal<any[]>([]);
+  offices = signal<any[]>([]);
+  users = signal<any[]>([]);
+  editingUser = signal<any | null>(null);
 
   private uiStateService = inject(UiStateService);
   sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
@@ -40,15 +42,26 @@ export class SignUpComponent implements OnInit {
     this.buildForm();
     this.fetchRoles();
     this.fetchOffices();
+    this.fetchUsers();
+  }
+
+  private fetchUsers(): void {
+    this.authService.getUsers().subscribe({
+      next: (data) => {
+        this.users.set(data.users);
+      },
+      error: (err) => console.error('Failed to fetch users', err)
+    });
   }
 
   private fetchRoles(): void {
     this.authService.getRoles().subscribe({
       next: (data) => {
-        this.roles = data.map(role => ({
+        const mappedRoles = data.map(role => ({
           ...role,
           displayName: role.name.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
         }));
+        this.roles.set(mappedRoles);
       },
       error: (err) => console.error('Failed to fetch roles', err)
     });
@@ -57,7 +70,7 @@ export class SignUpComponent implements OnInit {
   private fetchOffices(): void {
     this.authService.getOffices().subscribe({
       next: (data) => {
-        this.offices = data;
+        this.offices.set(data);
       },
       error: (err) => console.error('Failed to fetch offices', err)
     });
@@ -93,22 +106,82 @@ export class SignUpComponent implements OnInit {
     };
 
     this.isLoading = true;
-    this.authService.register(registerData).subscribe({
-      next: (response: any) => {
-        console.log('Registration successful', response);
-        this.successMessage = 'User registered successfully!';
-        this.errorMessage = null;
-        this.toastService.show(this.successMessage || '', 'success');
-        this.signupForm.reset();
-        this.isLoading = false;
-      },
-      error: (error: any) => {
-        console.error('Registration failed', error);
-        this.errorMessage = error.error?.message || 'Registration failed.';
-        this.successMessage = null;
-        this.toastService.show(this.errorMessage || '', 'error');
-        this.isLoading = false;
-      }
+    const editingUserId = this.editingUser()?.id;
+    if (editingUserId) {
+      this.authService.updateUser(editingUserId, registerData).subscribe({
+        next: () => {
+          this.toastService.show('User updated successfully!', 'success');
+          this.resetForm();
+          this.fetchUsers();
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.toastService.show(err.error?.message || 'Update failed', 'error');
+          this.isLoading = false;
+        }
+      });
+    } else {
+      this.authService.register(registerData).subscribe({
+        next: (response: any) => {
+          console.log('Registration successful', response);
+          this.successMessage = 'User registered successfully!';
+          this.errorMessage = null;
+          this.toastService.show(this.successMessage || '', 'success');
+          this.resetForm();
+          this.fetchUsers();
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          console.error('Registration failed', error);
+          this.errorMessage = error.error?.message || 'Registration failed.';
+          this.successMessage = null;
+          this.toastService.show(this.errorMessage || '', 'error');
+          this.isLoading = false;
+        }
+      });
+    }
+  }
+
+  onEdit(user: any): void {
+    this.editingUser.set(user);
+    const roleId = this.roles().find((r: any) => r.name === user.role)?.id;
+    this.signupForm.patchValue({
+      fullName: user.full_name,
+      email: user.username,
+      role: roleId,
+      officeId: user.office_id,
+      password: '',
+      ConfirmPassword: ''
     });
+    // Remove password requirement when editing
+    this.signupForm.get('password')?.setValidators([Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)]);
+    this.signupForm.get('ConfirmPassword')?.setValidators([]);
+    this.signupForm.get('password')?.updateValueAndValidity();
+    this.signupForm.get('ConfirmPassword')?.updateValueAndValidity();
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  onDelete(userId: number): void {
+    if (confirm('Are you sure you want to delete this user?')) {
+      this.authService.deleteUser(userId).subscribe({
+        next: () => {
+          this.toastService.show('User deleted successfully!', 'success');
+          this.fetchUsers();
+        },
+        error: (err) => {
+          this.toastService.show(err.error?.message || 'Delete failed', 'error');
+        }
+      });
+    }
+  }
+
+  resetForm(): void {
+    this.editingUser.set(null);
+    this.signupForm.reset();
+    this.buildForm(); // Re-apply validators
+    this.successMessage = null;
+    this.errorMessage = null;
   }
 }

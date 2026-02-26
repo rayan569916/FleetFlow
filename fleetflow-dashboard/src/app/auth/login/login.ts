@@ -8,13 +8,14 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-login',
   imports: [ReactiveFormsModule, CommonModule],
-  templateUrl: './login.component.html',
+  templateUrl: './login.html',
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   errorMessage: string | null = null;
   isLoading = false;
+  showPassword = false;
 
   constructor(
     private formBuilder: FormBuilder,

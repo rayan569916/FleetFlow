@@ -45,6 +45,8 @@ export class InvoiceComponent implements OnInit {
   successMessage: string | null = null;
   currentUserRole: string | null = null;
   @ViewChild('phoneSearchInput') phoneSearchInput!: ElementRef;
+  isEditMode = false;
+  editingInvoiceId: number | null = null;
 
   // Calculated totals
   subtotal = 0;
@@ -65,81 +67,45 @@ export class InvoiceComponent implements OnInit {
   suggestedItems: CargoItem[] = [];
   showItemDropdown = false;
 
+  // Pagination Signals
+  currentPage = 1;
+  pageSize = 10;
+  totalItems = 0;
+  totalPages = 0;
+  selectedOfficeId = 0;
 
   // Dropdown options
   modeOfDeliveryOptions = modeOfDeliveryOptions;
   modeOfPaymentOptions = modeOfPaymentOptions;
-  saudiMajorCities: string[] = [
-    'Riyadh',
-    'Jeddah',
-    'Mecca',
-    'Medina',
-    'Dammam',
-    'Khobar',
-    'Dhahran',
-    'Taif',
-    'Tabuk',
-    'Abha',
-    'Buraidah',
-    'Hail',
-    'Najran',
-    'Jizan',
-    'Yanbu',
-    'Al Jubail',
-    'Al Ahsa',
-    'Qatif',
-    'Khamis Mushait',
-    'Al Qunfudhah'
+  countryOptions: any[] = [];
+  saudiMajorCities = [
+    'Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Sultanah', 'Dammam', 'Taif', 'Tabuk', 'Al Kharj', 'Buraidah',
+    'Abha', 'Khamis Mushait', 'Al Hofuf', 'Al Mubarraz', 'Hail', 'Najran', 'Hafar Al-Batin', 'Jubail', 'Al Qatif', 'Al Khobar'
   ];
-  countryOptions: string[] = [
-    'Saudi Arabia',
-    'United Arab Emirates',
-    'Qatar',
-    'Kuwait',
-    'Bahrain',
-    'Oman',
-    'Jordan',
-    'Egypt',
-    'India',
-    'Pakistan',
-    'Bangladesh',
-    'Philippines',
-    'United Kingdom',
-    'United States'
-  ];
-  countryCodeOptions: Array<{ code: string; label: string }> = [
-    { code: '+966', label: 'Saudi Arabia (+966)' },
-    { code: '+971', label: 'UAE (+971)' },
-    { code: '+974', label: 'Qatar (+974)' },
-    { code: '+965', label: 'Kuwait (+965)' },
-    { code: '+973', label: 'Bahrain (+973)' },
-    { code: '+968', label: 'Oman (+968)' },
-    { code: '+91', label: 'India (+91)' },
-    { code: '+92', label: 'Pakistan (+92)' },
-    { code: '+880', label: 'Bangladesh (+880)' },
-    { code: '+63', label: 'Philippines (+63)' },
-    { code: '+44', label: 'UK (+44)' },
-    { code: '+1', label: 'USA (+1)' }
+  countryCodeOptions = [
+    { label: 'KSA (+966)', code: '+966' },
+    { label: 'UAE (+971)', code: '+971' },
+    { label: 'Qatar (+974)', code: '+974' },
+    { label: 'Oman (+968)', code: '+968' },
+    { label: 'Kuwait (+965)', code: '+965' },
+    { label: 'Bahrain (+973)', code: '+973' },
+    { label: 'India (+91)', code: '+91' },
+    { label: 'Pakistan (+92)', code: '+92' },
+    { label: 'Bangladesh (+880)', code: '+880' }
   ];
 
-  private uiStateService = inject(UiStateService);
-  private invoiceService = inject(InvoiceService);
-  private unitPriceService = inject(UnitPriceService);
-  private authService = inject(AuthService);
-  private toastService = inject(ToastService);
-  private confirmationService = inject(ConfirmationDialogService);
-  private cdr = inject(ChangeDetectorRef);
-  settingsService = inject(SettingsService);
-  private cargoItemsService = inject(CargoItemsService);
-
-
-  readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$ as Observable<boolean>;
-
-  get cartons(): FormArray {
-    return this.financialForm.get('cartons') as FormArray;
-  }
-
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private invoiceService: InvoiceService,
+    private authService: AuthService,
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef,
+    private confirmationService: ConfirmationDialogService,
+    private unitPriceService: UnitPriceService,
+    private cargoItemsService: CargoItemsService,
+    private uiStateService: UiStateService,
+    public settingsService: SettingsService
+  ) {
     this.currentUserRole = this.authService.currentUserRole();
   }
 
@@ -149,19 +115,27 @@ export class InvoiceComponent implements OnInit {
     this.loadCountries();
     this.setupCustomerSearch();
     this.setupItemAutocomplete();
-  }
 
+    // Check for pending edit from Report
+    const pendingEdit = this.uiStateService.getPendingEdit();
+    if (pendingEdit) {
+      setTimeout(() => this.onEditInvoice(pendingEdit), 100);
+    }
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.search-container')) {
+    // Close customer dropdown if click outside
+    if (this.showCustomerDropdown && this.phoneSearchInput && !this.phoneSearchInput.nativeElement.contains(event.target)) {
       this.showCustomerDropdown = false;
+      this.cdr?.detectChanges();
+    }
+    // Close item dropdown if click outside
+    if (this.showItemDropdown && event.target instanceof HTMLElement && !event.target.closest('.item-autocomplete-input')) {
       this.showItemDropdown = false;
       this.cdr.detectChanges();
     }
   }
-
 
   setupCustomerSearch(): void {
     this.searchSubject.pipe(
@@ -234,7 +208,6 @@ export class InvoiceComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-
   loadCountries(): void {
     this.unitPriceService.getCountries().subscribe({
       next: (countries) => {
@@ -263,7 +236,7 @@ export class InvoiceComponent implements OnInit {
       // Sender/Shipper Information
       trackingNumber: [{ value: '', disabled: true }],
       customerName: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
+      email: [''],
       senderCountryCode: ['+966', Validators.required],
       phone: ['', [Validators.required, Validators.pattern(/^\d{6,14}$/)]],
       address: ['', [Validators.required, Validators.minLength(5)]],
@@ -321,6 +294,10 @@ export class InvoiceComponent implements OnInit {
     this.chargesForm.valueChanges.subscribe(() => {
       this.updateChargesAndTotal();
     });
+  }
+
+  get cartons(): FormArray {
+    return this.financialForm.get('cartons') as FormArray;
   }
 
   createCartonGroup(): FormGroup {
@@ -391,12 +368,121 @@ export class InvoiceComponent implements OnInit {
   // View Switching
   switchToCreate(): void {
     this.resetForm();
+    this.isEditMode = false;
+    this.editingInvoiceId = null;
     this.userInfoForm.patchValue({
       trackingNumber: this.generateTrackingNumber()
     });
     this.viewMode = 'create';
     this.errorMessage = null;
     this.successMessage = null;
+  }
+
+  onEditInvoice(invoice: any): void {
+    const today = new Date().toISOString().split('T')[0];
+    const invoiceDate = invoice?.date ? invoice.date.split('T')[0] : null;
+
+    if (invoiceDate && invoiceDate !== today) {
+      this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot edit this invoice because the daily report for that day has already been calculated. Only invoices from today can be edited.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    this.isEditMode = true;
+    this.editingInvoiceId = invoice.id;
+    this.isLoading = true;
+    
+    this.invoiceService.getInvoiceById(invoice.id).subscribe({
+      next: (data: any) => {
+        this.resetForm();
+        this.isEditMode = true;
+        this.editingInvoiceId = data.id;
+        
+        const details = data.invoice_details || {};
+        
+        // Patch User Info
+        this.userInfoForm.patchValue({
+          trackingNumber: data.tracking_number,
+          customerName: details.customerName,
+          email: details.email,
+          senderCountryCode: details.senderCountryCode || '+966',
+          phone: details.phone,
+          address: details.address,
+          city: details.city,
+          zipCode: details.zipCode,
+          locationLink: details.locationLink,
+          modeOfDelivery: details.modeOfDelivery,
+          modeOfPayment: details.modeOfPayment,
+          consigneeName: details.consigneeName,
+          consigneeCountryCode: details.consigneeCountryCode || '+966',
+          consigneeMobile: details.consigneeMobile,
+          consigneeAddress: details.consigneeAddress,
+          consigneeCountry: details.consigneeCountry,
+          consigneeCity: details.consigneeCity
+        });
+
+        if (this.phoneSearchInput) {
+          this.phoneSearchInput.nativeElement.value = details.phone || '';
+        }
+
+        // Patch Items
+        this.items = (details.items || []).map((item: any) => ({
+          id: this.itemIdCounter++,
+          description: item.description,
+          quantity: item.quantity,
+          unitWeight: item.unitWeight,
+          amount: 0,
+          price: 0
+        }));
+
+        // Patch Financial Details
+        let cartons = details.cartons || [];
+        if (typeof cartons === 'string') {
+          try { cartons = JSON.parse(cartons); } catch (e) { cartons = []; }
+        }
+
+        this.financialForm.patchValue({
+          totalCartons: details.totalCartons || cartons.length || 1,
+          pricePerKg: details.pricePerKg || 0
+        });
+
+        // Clear and rebuild cartons FormArray
+        while (this.cartons.length !== 0) {
+          this.cartons.removeAt(0);
+        }
+        if (cartons.length > 0) {
+          cartons.forEach((c: any) => {
+            this.cartons.push(this.fb.group({
+              weight: [c.weight || 0, [Validators.required, Validators.min(0.01)]],
+              customsCharge: [c.customsCharge || 0, [Validators.required, Validators.min(0)]],
+              packingCharge: [c.packingCharge || 0, [Validators.required, Validators.min(0)]]
+            }));
+          });
+        } else {
+          this.cartons.push(this.createCartonGroup());
+        }
+
+        // Patch Charges
+        this.chargesForm.patchValue({
+          billCharge: details.billCharge || 0,
+          discount: details.discount || 0
+        });
+
+        this.viewMode = 'create';
+        this.isLoading = false;
+        this.calculateTotals();
+        this.cdr?.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error fetching invoice for edit', err);
+        this.toastService.show('Failed to load invoice details for editing.', 'error');
+        this.isLoading = false;
+        this.cdr?.detectChanges();
+      }
+    });
   }
 
   switchToList(): void {
@@ -408,31 +494,67 @@ export class InvoiceComponent implements OnInit {
   }
 
   // API Actions
-  loadInvoices(): void {
+  loadInvoices(officeId?: number): void {
+    if (officeId !== undefined) {
+      this.selectedOfficeId = officeId;
+    }
     this.isLoading = true;
-    this.invoiceService.getInvoices()
+
+    const params: any = {
+      page: this.currentPage,
+      per_page: this.pageSize
+    };
+    if (this.selectedOfficeId) params.office_id = this.selectedOfficeId;
+
+    this.invoiceService.getInvoices(params)
       .pipe(
         timeout(10000), // 10 second timeout
         finalize(() => {
           this.isLoading = false;
-          this.cdr.detectChanges();
+          this.cdr?.detectChanges();
         })
       )
       .subscribe({
         next: (data: any) => {
           console.log('Invoices loaded:', data);
-          this.invoices = data.invoices || [];
-          // isLoading handled by finalize
+          if (data.items) {
+            this.invoices = data.items;
+            this.totalItems = data.total;
+            this.totalPages = data.pages;
+          } else {
+            this.invoices = data.invoices || [];
+            this.totalItems = this.invoices.length;
+            this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+          }
         },
         error: (error) => {
           console.error('Error fetching invoices:', error);
           this.toastService.show('Failed to load invoices. Server may be unresponsive.', 'error');
-          // isLoading handled by finalize
         }
       });
   }
 
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadInvoices();
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadInvoices();
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadInvoices();
+    }
+  }
+
   async deleteInvoice(id: number): Promise<void> {
+    if (!id) return;
     const inv = this.invoices.find(i => i.id === id);
     const today = new Date().toISOString().split('T')[0];
     const invoiceDate = inv?.date ? inv.date.split('T')[0] : null;
@@ -469,12 +591,16 @@ export class InvoiceComponent implements OnInit {
       error: (error) => {
         console.error('Error deleting invoice:', error);
         this.toastService.show('Failed to delete invoice.', 'error');
-        this.cdr.detectChanges();
+        this.cdr?.detectChanges();
       }
     });
   }
 
   viewInvoice(id: number): void {
+    if (!id) {
+      console.warn('viewInvoice called with undefined ID');
+      return;
+    }
     this.isLoading = true;
     this.invoiceService.getInvoiceById(id).subscribe({
       next: (data: any) => {
@@ -490,18 +616,19 @@ export class InvoiceComponent implements OnInit {
 
         this.viewMode = 'details';
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.cdr?.detectChanges();
       },
       error: (err) => {
         console.error('Error loading invoice details', err);
         this.toastService.show('Failed to load invoice details.', 'error');
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.cdr?.detectChanges();
       }
     });
   }
 
   updateInvoiceStatus(id: number, event: any): void {
+    if (!id) return;
     const newStatus = event.target.value;
     this.invoiceService.updateStatus(id, newStatus).subscribe({
       next: () => {
@@ -509,7 +636,7 @@ export class InvoiceComponent implements OnInit {
         // Update local list if in list mode
         const inv = this.invoices.find(i => i.id === id);
         if (inv) inv.status = newStatus;
-        this.cdr.detectChanges();
+        this.cdr?.detectChanges();
       },
       error: (err) => {
         console.error('Error updating status', err);
@@ -608,18 +735,18 @@ export class InvoiceComponent implements OnInit {
 
     if (this.items.length === 0) {
       this.toastService.show('Please add at least one item to the invoice.', 'error');
-      this.cdr.detectChanges();
+      this.cdr?.detectChanges();
       return;
     }
 
-    const confirmed = await this.confirmationService.confirm({
-      title: 'Submit Invoice',
-      message: 'Are you sure you want to create this invoice?',
-      confirmText: 'Submit',
+    const isConfirmed = await this.confirmationService.confirm({
+      title: this.isEditMode ? 'Update Invoice' : 'Submit Invoice',
+      message: this.isEditMode ? 'Are you sure you want to update this invoice?' : 'Are you sure you want to create this invoice?',
+      confirmText: this.isEditMode ? 'Update' : 'Submit',
       cancelText: 'Cancel'
     });
 
-    if (!confirmed) return;
+    if (!isConfirmed) return;
 
     const formVal = this.userInfoForm.getRawValue(); // Use getRawValue because trackingNumber is disabled
     const finVal = this.financialForm.getRawValue();
@@ -650,20 +777,24 @@ export class InvoiceComponent implements OnInit {
     };
 
     this.isLoading = true;
-    this.invoiceService.createInvoice(invoiceData).subscribe({
+    const request = this.isEditMode 
+      ? this.invoiceService.updateInvoice(this.editingInvoiceId!, invoiceData)
+      : this.invoiceService.createInvoice(invoiceData);
+
+    request.subscribe({
       next: () => {
         this.isLoading = false;
         this.viewMode = 'list';
-        this.toastService.show('Invoice created successfully!', 'success');
+        this.toastService.show(`Invoice ${this.isEditMode ? 'updated' : 'created'} successfully!`, 'success');
         this.loadInvoices();
-        this.cdr.detectChanges();
+        this.cdr?.detectChanges();
       },
       error: (error) => {
-        console.error('Error creating invoice:', error);
-        const msg = error.error?.message || 'Failed to create invoice. Please try again.';
+        console.error(`Error ${this.isEditMode ? 'updating' : 'creating'} invoice:`, error);
+        const msg = error.error?.message || `Failed to ${this.isEditMode ? 'update' : 'create'} invoice. Please try again.`;
         this.toastService.show(msg, 'error');
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.cdr?.detectChanges();
       }
     });
   }

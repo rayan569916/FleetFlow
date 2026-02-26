@@ -12,6 +12,8 @@ import { InvoiceDetailsViewComponent } from '../invoice/invoice-details-view.com
 import { DailyBreakdownViewComponent } from './daily-breakdown-view.component';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { UiStateService } from '../../services/ui-state.service';
 
 @Component({
   selector: 'app-reports',
@@ -27,6 +29,8 @@ export class ReportsComponent implements OnInit {
   authService = inject(AuthService);
   toastService = inject(ToastService);
   invoiceService = inject(InvoiceService);
+  private router = inject(Router);
+  private uiStateService = inject(UiStateService);
 
   financialStats = toSignal(this.dashboardDataService.getFinancialStats('month'));
   efficiencyStats = toSignal(this.dashboardDataService.getEfficiencyStats());
@@ -48,9 +52,16 @@ export class ReportsComponent implements OnInit {
   financeData = signal<FinanceReportItem[]>([]);
   dailyReportsList = signal<DailyReportData[]>([]);
   selectedInvoiceDetails = signal<any | null>(null);
-  selectedDailyBreakdown = signal<{ report: DailyReportData; invoices: any[] } | null>(null);
+  selectedDailyBreakdown = signal<{ report: DailyReportData; invoices: any[]; payments: any[]; purchases: any[]; receipts: any[] } | null>(null);
+  viewMode = signal<'list' | 'invoice-detail' | 'daily-breakdown'>('list');
 
   isLoading = signal<boolean>(false);
+
+  // Pagination Signals
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(10);
+  totalItems = signal<number>(0);
+  totalPages = signal<number>(0);
 
   reportTypes = [
     // { id: 'daily', label: 'Daily Summary', icon: 'grid' },
@@ -58,7 +69,7 @@ export class ReportsComponent implements OnInit {
     { id: 'payments', label: 'Payments', icon: 'credit-card' },
     { id: 'purchases', label: 'Purchases', icon: 'shopping-cart' },
     { id: 'receipts', label: 'Receipts', icon: 'file' },
-    { id: 'daily-list', label: 'History', icon: 'documents' }
+    { id: 'daily-list', label: 'Daily Report', icon: 'documents' }
   ] as const;
 
   ngOnInit() {
@@ -75,6 +86,7 @@ export class ReportsComponent implements OnInit {
 
   onReportTypeChange() {
     this.selectedCategoryId.set(undefined);
+    this.currentPage.set(1); // Reset to first page
     if (['payments', 'purchases', 'receipts'].includes(this.reportType())) {
       this.loadCategories();
     }
@@ -97,41 +109,73 @@ export class ReportsComponent implements OnInit {
 
   loadReport() {
     const type = this.reportType();
-    // if (type === 'daily') {
-    //   this.loadDailyReport();
-    //   return;
-    // }
-
     this.isLoading.set(true);
+
     const start = this.startDate();
     const end = this.endDate();
-    const office = this.selectedOfficeId();
-    const cat = this.selectedCategoryId();
+    const officeId = this.selectedOfficeId();
+    const categoryId = this.selectedCategoryId();
+    const page = this.currentPage();
+    const per_page = this.pageSize();
 
     if (type === 'invoices') {
-      this.reportService.getInvoiceReport(start, end, office).subscribe({
-        next: (data) => {
-          this.invoiceData.set(data);
+      this.reportService.getInvoiceReport(start, end, officeId, page, per_page).subscribe({
+        next: (res) => {
+          this.invoiceData.set(res.items || []);
+          this.totalItems.set(res.total || 0);
+          this.totalPages.set(res.pages || 0);
           this.isLoading.set(false);
         },
-        error: () => this.isLoading.set(false)
+        error: (err) => {
+          console.error('Failed to load invoice report', err);
+          this.isLoading.set(false);
+        }
       });
     } else if (['payments', 'purchases', 'receipts'].includes(type)) {
-      this.reportService.getFinanceReport(type as any, start, end, office, cat).subscribe({
-        next: (data) => {
-          this.financeData.set(data);
+      this.reportService.getFinanceReport(type as any, start, end, officeId, categoryId, page, per_page).subscribe({
+        next: (res) => {
+          this.financeData.set(res.items || []);
+          this.totalItems.set(res.total || 0);
+          this.totalPages.set(res.pages || 0);
           this.isLoading.set(false);
         },
-        error: () => this.isLoading.set(false)
+        error: (err) => {
+          console.error('Failed to load finance report', err);
+          this.isLoading.set(false);
+        }
       });
     } else if (type === 'daily-list') {
-      this.reportService.getDailyReportsList(start, end, office).subscribe({
-        next: (data) => {
-          this.dailyReportsList.set(data);
+      this.reportService.getDailyReportsList(start, end, officeId, page, per_page).subscribe({
+        next: (res) => {
+          this.dailyReportsList.set(res.items || []);
+          this.totalItems.set(res.total || 0);
+          this.totalPages.set(res.pages || 0);
           this.isLoading.set(false);
         },
-        error: () => this.isLoading.set(false)
+        error: (err) => {
+          console.error('Failed to load daily reports list', err);
+          this.isLoading.set(false);
+        }
       });
+    }
+  }
+
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.loadReport();
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+      this.loadReport();
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+      this.loadReport();
     }
   }
 
@@ -139,23 +183,36 @@ export class ReportsComponent implements OnInit {
     this.selectedDailyBreakdown.set(null);
     const rowId = row?.id;
 
+    if (!rowId) {
+      console.warn('openInvoiceDetailsFromReport: row.id is undefined', row);
+      // Fallback: try to find by invoice number if possible
+      if (!row.invoice_number) return;
+    }
+
     if (rowId) {
       this.invoiceService.getInvoiceById(Number(rowId)).subscribe({
-        next: (details) => this.selectedInvoiceDetails.set(details),
+        next: (details) => {
+          this.selectedInvoiceDetails.set(details);
+          this.viewMode.set('invoice-detail');
+        },
         error: () => this.toastService.show('Failed to load invoice details', 'error')
       });
       return;
     }
 
-    this.invoiceService.getInvoices(this.selectedOfficeId()).subscribe({
+    this.invoiceService.getInvoices({ office_id: this.selectedOfficeId() }).subscribe({
       next: (res: any) => {
-        const inv = (res?.invoices || []).find((i: any) => i.invoice_number === row.invoice_number);
+        const results = res?.items || res?.invoices || [];
+        const inv = results.find((i: any) => i.invoice_number === row.invoice_number);
         if (!inv?.id) {
           this.toastService.show('Invoice details not found for this row', 'error');
           return;
         }
         this.invoiceService.getInvoiceById(Number(inv.id)).subscribe({
-          next: (details) => this.selectedInvoiceDetails.set(details),
+          next: (details) => {
+            this.selectedInvoiceDetails.set(details);
+            this.viewMode.set('invoice-detail');
+          },
           error: () => this.toastService.show('Failed to load invoice details', 'error')
         });
       },
@@ -165,24 +222,67 @@ export class ReportsComponent implements OnInit {
 
   openDailyBreakdown(row: DailyReportData) {
     this.selectedInvoiceDetails.set(null);
+    this.isLoading.set(true);
     const officeId = (row as any).office_id || this.selectedOfficeId();
+    const dateStr = row.date.split('T')[0];
 
-    this.invoiceService.getInvoices(officeId).pipe(
-      map((res: any) => (res?.invoices || []).filter((i: any) => i.date === row.date)),
-      catchError(() => of([]))
-    ).subscribe((invoiceList: any[]) => {
-      if (invoiceList.length === 0) {
-        this.selectedDailyBreakdown.set({ report: row, invoices: [] });
-        return;
-      }
-
-      const detailCalls = invoiceList.map((i: any) =>
-        this.invoiceService.getInvoiceById(i.id).pipe(catchError(() => of(null)))
-      );
-
-      forkJoin(detailCalls).subscribe((details: any) => {
-        const valid = (details as any[]).filter(Boolean);
-        this.selectedDailyBreakdown.set({ report: row, invoices: valid });
+    import('rxjs').then(({ forkJoin, of }) => {
+      import('rxjs/operators').then(({ catchError, map, switchMap, finalize }) => {
+        forkJoin({
+          invoices: this.reportService.getInvoiceReport(dateStr, dateStr, officeId, 1, 1000),
+          payments: this.reportService.getFinanceReport('payments', dateStr, dateStr, officeId, undefined, 1, 1000),
+          purchases: this.reportService.getFinanceReport('purchases', dateStr, dateStr, officeId, undefined, 1, 1000),
+          receipts: this.reportService.getFinanceReport('receipts', dateStr, dateStr, officeId, undefined, 1, 1000)
+        }).pipe(
+          catchError(err => {
+            console.error('Failed to load daily breakdown details', err);
+            this.toastService.show('Failed to load itemized details for this day.', 'error');
+            return of({ 
+              invoices: { items: [] }, 
+              payments: { items: [] }, 
+              purchases: { items: [] }, 
+              receipts: { items: [] } 
+            });
+          }),
+          switchMap((res: any) => {
+            const invoiceItems = res.invoices.items || res.invoices || [];
+            if (invoiceItems.length === 0) {
+              return of({
+                invoices: [],
+                payments: res.payments.items || res.payments || [],
+                purchases: res.purchases.items || res.purchases || [],
+                receipts: res.receipts.items || res.receipts || []
+              });
+            }
+            return forkJoin(invoiceItems.map((i: any) => {
+              if (!i.id) return of(null);
+              return this.invoiceService.getInvoiceById(i.id).pipe(catchError(() => of(null)));
+            })).pipe(
+              map((details: any) => ({
+                invoices: (details as any[]).filter(Boolean).map((d: any) => {
+                  if (typeof d.invoice_details === 'string') {
+                    try { d.invoice_details = JSON.parse(d.invoice_details); } catch (e) { }
+                  }
+                  return d;
+                }),
+                payments: res.payments.items || res.payments || [],
+                purchases: res.purchases.items || res.purchases || [],
+                receipts: res.receipts.items || res.receipts || []
+              }))
+            );
+          }),
+          finalize(() => this.isLoading.set(false))
+        ).subscribe(processed => {
+          this.selectedDailyBreakdown.set({
+            report: row,
+            invoices: processed.invoices,
+            payments: processed.payments,
+            purchases: processed.purchases,
+            receipts: processed.receipts
+          });
+          this.viewMode.set('daily-breakdown');
+          // No need to scroll if we are switching views
+        });
       });
     });
   }
@@ -190,6 +290,35 @@ export class ReportsComponent implements OnInit {
   closeDetailPanels() {
     this.selectedInvoiceDetails.set(null);
     this.selectedDailyBreakdown.set(null);
+    this.viewMode.set('list');
+  }
+
+  triggerInvoiceEdit(invoice: any): void {
+    if (invoice) {
+      this.uiStateService.setPendingEdit(invoice);
+      this.router.navigate(['/dashboard/invoice']);
+    }
+  }
+
+  triggerPaymentEdit(payment: any): void {
+    if (payment) {
+      this.uiStateService.setPendingEdit(payment);
+      this.router.navigate(['/dashboard/payment']);
+    }
+  }
+
+  triggerPurchaseEdit(purchase: any): void {
+    if (purchase) {
+      this.uiStateService.setPendingEdit(purchase);
+      this.router.navigate(['/dashboard/purchase']);
+    }
+  }
+
+  triggerReceiptEdit(receipt: any): void {
+    if (receipt) {
+      this.uiStateService.setPendingEdit(receipt);
+      this.router.navigate(['/dashboard/receipt']);
+    }
   }
 
   loadDailyReport() {

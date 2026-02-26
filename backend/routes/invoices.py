@@ -27,10 +27,32 @@ def get_invoices(current_user):
             return jsonify({'message': 'User is not assigned to an office'}), 403
 
         query = InvoiceHeader.query
+        
+        # New Filters
+        date_str = request.args.get('date')
+        if date_str:
+            target_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+            query = query.filter(InvoiceHeader.date == target_date)
+            
+        search_query = request.args.get('search')
+        if search_query:
+            query = query.filter(
+                (InvoiceHeader.invoice_number.like(f'%{search_query}%')) |
+                (InvoiceHeader.tracking_number.like(f'%{search_query}%'))
+            )
+
         if office_id is not None:
             query = query.filter(InvoiceHeader.office_id == office_id)
 
-        invoices = query.order_by(InvoiceHeader.created_at.desc()).all()
+        # Pagination
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        paginated_data = query.order_by(InvoiceHeader.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        invoices = paginated_data.items
+        total = paginated_data.total
+        pages = paginated_data.pages
+
     except Exception as e:
         return jsonify({'message': 'Database error', 'error': str(e)}), 500
     
@@ -53,7 +75,13 @@ def get_invoices(current_user):
             'office_id': inv.office_id,
             'office_name': inv.office.name if inv.office else None,
         })
-    return jsonify({'invoices': output})
+    return jsonify({
+        'items': output,
+        'total': total,
+        'page': page,
+        'pages': pages,
+        'per_page': per_page
+    })
 
 @invoices_bp.route('/customers/search', methods=['GET'])
 @role_required(['super_admin', 'ceo', 'hr', 'accountant', 'staff'])
@@ -266,22 +294,89 @@ def create_invoice(current_user):
 
     return jsonify({'message': 'Invoice created!', 'id': header.id}), 201
 
-@invoices_bp.route('/<int:id>/status', methods=['PUT'])
+@invoices_bp.route('/<int:id>', methods=['PUT'])
 @role_required(['super_admin', 'ceo', 'accountant'])
-def update_invoice_status(current_user, id):
+def update_invoice(current_user, id):
     data = request.get_json()
-    if not data or 'status' not in data:
-        return jsonify({'message': 'Missing status'}), 400
-
     invoice = InvoiceHeader.query.get(id)
     if not invoice:
         return jsonify({'message': 'Invoice not found'}), 404
     if not can_access_office(current_user, invoice.office_id):
         return jsonify({'message': 'You cannot access records from another office'}), 403
     
-    invoice.status = data['status']
-    db.session.commit()
-    return jsonify({'message': 'Invoice status updated!'})
+    # Check if invoice is from today
+    today = datetime.date.today()
+    if invoice.date != today:
+        return jsonify({'message': 'Invoices from previous days cannot be edited to ensure historical data integrity.'}), 403
+
+    try:
+        # 1. Update Header
+        if 'status' in data: invoice.status = data['status']
+        if 'tracking_number' in data: invoice.tracking_number = data.get('tracking_number')
+        if 'modeOfDelivery' in data: invoice.mode_of_delivery = data.get('modeOfDelivery')
+        if 'modeOfPayment' in data: invoice.mode_of_payment = data.get('modeOfPayment')
+
+        # 2. Update Customer Details
+        if invoice.customer:
+            c = invoice.customer
+            c.sender_name = data.get('customerName', c.sender_name)
+            c.sender_email = data.get('email', c.sender_email)
+            c.sender_country_code = data.get('senderCountryCode', c.sender_country_code)
+            c.sender_phone = data.get('phone', c.sender_phone)
+            c.sender_address = data.get('address', c.sender_address)
+            c.sender_city = data.get('city', c.sender_city)
+            c.sender_zip = data.get('zipCode', c.sender_zip)
+            c.sender_location_link = data.get('locationLink', c.sender_location_link)
+            c.consignee_name = data.get('consigneeName', c.consignee_name)
+            c.consignee_country_code = data.get('consigneeCountryCode', c.consignee_country_code)
+            c.consignee_mobile = data.get('consigneeMobile', c.consignee_mobile)
+            c.consignee_address = data.get('consigneeAddress', c.consignee_address)
+            c.consignee_country = data.get('consigneeCountry', c.consignee_country)
+            c.consignee_city = data.get('consigneeCity', c.consignee_city)
+
+        # 3. Update Items (Delete and Re-add for simplicity/reliability)
+        if 'items' in data:
+            InvoiceItem.query.filter_by(invoice_id=invoice.id).delete()
+            for item in data['items']:
+                new_item = InvoiceItem(
+                    invoice_id=invoice.id,
+                    description=item.get('description'),
+                    quantity=item.get('quantity', 1),
+                    unit_weight=item.get('unitWeight')
+                )
+                db.session.add(new_item)
+
+        # 4. Update Amount Details
+        if invoice.amount_detail:
+            cartons = data.get('cartons', []) or []
+            total_weight = data.get('totalWeight', invoice.amount_detail.total_weight)
+            total_customs = invoice.amount_detail.customs_charge
+            total_packing = invoice.amount_detail.packing_charge
+            
+            if cartons:
+                total_weight = sum(float(c.get('weight', 0) or 0) for c in cartons)
+                total_customs = sum(float(c.get('customsCharge', 0) or 0) for c in cartons)
+                total_packing = sum(float(c.get('packingCharge', 0) or 0) for c in cartons)
+
+            a = invoice.amount_detail
+            a.total_cartons = data.get('totalCartons', a.total_cartons)
+            a.total_weight = total_weight
+            a.carton_details = json.dumps(cartons) if cartons else a.carton_details
+            a.price_per_kg = data.get('pricePerKg', a.price_per_kg)
+            a.customs_charge = total_customs
+            a.bill_charge = data.get('billCharge', a.bill_charge)
+            a.packing_charge = total_packing
+            a.discount = data.get('discount', a.discount)
+            a.subtotal = data.get('subtotal', a.subtotal)
+            a.grand_total = data.get('amount', a.grand_total)
+
+        db.session.commit()
+        # Update daily report in real-time
+        update_daily_report(invoice.date, invoice.office_id)
+        return jsonify({'message': 'Invoice updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to update invoice', 'error': str(e)}), 500
 
 @invoices_bp.route('/<int:id>', methods=['DELETE'])
 @role_required(['super_admin', 'ceo']) 

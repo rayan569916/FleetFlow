@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { SettingsService } from '../../services/settings.service';
 import { DailyReportData } from '../../services/report.service';
 
@@ -13,6 +13,14 @@ import { DailyReportData } from '../../services/report.service';
 export class DailyBreakdownViewComponent {
   @Input() report: DailyReportData | null = null;
   @Input() invoices: any[] = [];
+  @Input() payments: any[] = [];
+  @Input() purchases: any[] = [];
+  @Input() receipts: any[] = [];
+  
+  @Output() editInvoice = new EventEmitter<any>();
+  @Output() editPayment = new EventEmitter<any>();
+  @Output() editPurchase = new EventEmitter<any>();
+  @Output() editReceipt = new EventEmitter<any>();
 
   settingsService = inject(SettingsService);
 }

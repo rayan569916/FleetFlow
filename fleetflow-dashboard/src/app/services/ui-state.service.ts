@@ -28,6 +28,18 @@ export class UiStateService {
     this.saveState(value);
   }
 
+  private pendingEditItem: any = null;
+
+  setPendingEdit(item: any): void {
+    this.pendingEditItem = item;
+  }
+
+  getPendingEdit(): any {
+    const item = this.pendingEditItem;
+    this.pendingEditItem = null; // Clear after retrieval
+    return item;
+  }
+
   private saveState(value: boolean): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.STORAGE_KEY, String(value));

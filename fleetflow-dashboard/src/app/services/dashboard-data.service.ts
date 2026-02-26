@@ -52,6 +52,9 @@ export class DashboardDataService {
   createPurchase(data: any): Observable<any> {
     return this.http.post(`${this.rootUrl}/finance/purchases`, data);
   }
+  updatePurchase(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.rootUrl}/finance/purchases/${id}`, data);
+  }
   deletePurchase(id: number): Observable<any> {
     return this.http.delete(`${this.rootUrl}/finance/purchases/${id}`);
   }
@@ -63,6 +66,9 @@ export class DashboardDataService {
   createReceipt(data: any): Observable<any> {
     return this.http.post(`${this.rootUrl}/finance/receipts`, data);
   }
+  updateReceipt(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.rootUrl}/finance/receipts/${id}`, data);
+  }
   deleteReceipt(id: number): Observable<any> {
     return this.http.delete(`${this.rootUrl}/finance/receipts/${id}`);
   }
@@ -73,6 +79,9 @@ export class DashboardDataService {
   }
   createPayment(data: any): Observable<any> {
     return this.http.post(`${this.rootUrl}/finance/payments`, data);
+  }
+  updatePayment(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.rootUrl}/finance/payments/${id}`, data);
   }
   deletePayment(id: number): Observable<any> {
     return this.http.delete(`${this.rootUrl}/finance/payments/${id}`);

@@ -5,6 +5,7 @@ import { DashboardDataService } from '../../services/dashboard-data.service';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Category } from '../../core/models/dashboard.models';
 import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
+import { UiStateService } from '../../services/ui-state.service';
 
 @Component({
   selector: 'app-receipt',
@@ -18,10 +19,12 @@ export class ReceiptComponent implements OnInit {
   settingsService = inject(SettingsService);
   dashboardDataService = inject(DashboardDataService);
   private confirmationService = inject(ConfirmationDialogService);
+  private uiStateService = inject(UiStateService);
 
   receipts = signal<any[]>([]);
   categories = signal<Category[]>([]);
   showForm = signal(false);
+  editingItem = signal<any | null>(null);
 
   // Pagination & Filtering Signals
   searchTerm = signal('');
@@ -46,6 +49,12 @@ export class ReceiptComponent implements OnInit {
 
   ngOnInit() {
     this.fetchCategories();
+
+    // Check for pending edit from Report
+    const pendingEdit = this.uiStateService.getPendingEdit();
+    if (pendingEdit) {
+      setTimeout(() => this.onEdit(pendingEdit), 100);
+    }
   }
 
   fetchData() {
@@ -94,26 +103,55 @@ export class ReceiptComponent implements OnInit {
     this.showForm.update(v => !v);
     if (!this.showForm()) {
       this.receiptForm.reset();
+      this.editingItem.set(null);
     }
+  }
+
+  onEdit(receipt: any) {
+    const today = new Date().toISOString().split('T')[0];
+    const receiptDate = receipt?.created_at ? receipt.created_at.split('T')[0].split(' ')[0] : null;
+
+    if (receiptDate && receiptDate !== today) {
+      this.confirmationService.alert({
+        title: 'Action Restricted',
+        message: 'You cannot edit this receipt because the daily report for that day has already been calculated. Only receipts from today can be edited.',
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    this.editingItem.set(receipt);
+    this.receiptForm.patchValue({
+      amount: receipt.amount,
+      description: receipt.description,
+      category_id: receipt.category_id
+    });
+    this.showForm.set(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async onSubmit() {
     if (this.receiptForm.valid) {
+      const isEdit = !!this.editingItem();
       const confirmed = await this.confirmationService.confirm({
-        title: 'Submit Receipt',
-        message: 'Are you sure you want to record this receipt?',
-        confirmText: 'Submit',
+        title: isEdit ? 'Update Receipt' : 'Submit Receipt',
+        message: isEdit ? 'Are you sure you want to update this receipt record?' : 'Are you sure you want to record this receipt?',
+        confirmText: isEdit ? 'Update' : 'Submit',
         cancelText: 'Cancel'
       });
 
       if (!confirmed) return;
 
-      this.dashboardDataService.createReceipt(this.receiptForm.value).subscribe({
+      const request = isEdit 
+        ? this.dashboardDataService.updateReceipt(this.editingItem().id, this.receiptForm.value)
+        : this.dashboardDataService.createReceipt(this.receiptForm.value);
+
+      request.subscribe({
         next: () => {
           this.fetchData();
           this.toggleForm();
         },
-        error: (err: any) => console.error('Failed to create receipt', err)
+        error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} receipt`, err)
       });
     }
   }

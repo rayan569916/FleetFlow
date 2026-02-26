@@ -58,6 +58,18 @@ export class AuthService {
         return this.http.get<any[]>(`${this.apiUrl}/offices`);
     }
 
+    getUsers(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/users`);
+    }
+
+    updateUser(userId: number, userData: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/users/${userId}`, userData);
+    }
+
+    deleteUser(userId: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/users/${userId}`);
+    }
+
     logout() {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_role');

@@ -18,6 +18,7 @@ export interface DailyReportData {
 }
 
 export interface InvoiceReportItem {
+    id: number;
     date: string;
     invoice_number: string;
     tracking_number: string;
@@ -32,6 +33,7 @@ export interface FinanceReportItem {
     id: number;
     amount: number;
     description: string;
+    category_id: number;
     category_name: string;
     office_id: number;
     office_name: string;
@@ -62,23 +64,29 @@ export class ReportService {
         return this.http.post(`${this.apiUrl}/daily/save`, data);
     }
 
-    getInvoiceReport(startDate: string, endDate: string, officeId?: number): Observable<InvoiceReportItem[]> {
+    getInvoiceReport(startDate: string, endDate: string, officeId?: number, page?: number, per_page?: number): Observable<any> {
         const params: any = { start_date: startDate, end_date: endDate };
         if (officeId) params.office_id = officeId;
-        return this.http.get<InvoiceReportItem[]>(`${this.apiUrl}/invoices`, { params });
+        if (page) params.page = page;
+        if (per_page) params.per_page = per_page;
+        return this.http.get<any>(`${this.apiUrl}/invoices`, { params });
     }
 
-    getFinanceReport(type: 'payments' | 'purchases' | 'receipts', startDate: string, endDate: string, officeId?: number, categoryId?: number): Observable<FinanceReportItem[]> {
+    getFinanceReport(type: 'payments' | 'purchases' | 'receipts', startDate: string, endDate: string, officeId?: number, categoryId?: number, page?: number, per_page?: number): Observable<any> {
         const params: any = { start_date: startDate, end_date: endDate };
         if (officeId) params.office_id = officeId;
         if (categoryId) params.category_id = categoryId;
-        return this.http.get<FinanceReportItem[]>(`${this.apiUrl}/${type}`, { params });
+        if (page) params.page = page;
+        if (per_page) params.per_page = per_page;
+        return this.http.get<any>(`${this.apiUrl}/${type}`, { params });
     }
 
-    getDailyReportsList(startDate: string, endDate: string, officeId?: number): Observable<DailyReportData[]> {
+    getDailyReportsList(startDate: string, endDate: string, officeId?: number, page?: number, per_page?: number): Observable<any> {
         const params: any = { start_date: startDate, end_date: endDate };
         if (officeId) params.office_id = officeId;
-        return this.http.get<DailyReportData[]>(`${this.apiUrl}/daily-list`, { params });
+        if (page) params.page = page;
+        if (per_page) params.per_page = per_page;
+        return this.http.get<any>(`${this.apiUrl}/daily-list`, { params });
     }
 
     getCategories(type: 'purchase' | 'receipt' | 'payment'): Observable<Category[]> {
