@@ -1,4 +1,9 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from './guards/role.guard';
+
+const ALL_ROLES = ['Super_admin', 'management', 'shop_manager', 'driver'];
+const NON_DRIVER = ['Super_admin', 'management', 'shop_manager'];
+const ADMIN_ONLY = ['Super_admin', 'management'];
 
 export const routes: Routes = [
   {
@@ -15,83 +20,123 @@ export const routes: Routes = [
       },
       {
         path: 'payment',
-        loadComponent: () => import('./dashboard/payment/payment.component').then(m => m.PaymentComponent)
+        loadComponent: () => import('./dashboard/payment/payment.component').then(m => m.PaymentComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'receipt',
-        loadComponent: () => import('./dashboard/receipt/receipt.component').then(m => m.ReceiptComponent)
+        loadComponent: () => import('./dashboard/receipt/receipt.component').then(m => m.ReceiptComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'purchase',
-        loadComponent: () => import('./dashboard/purchase/purchase.component').then(m => m.PurchaseComponent)
+        loadComponent: () => import('./dashboard/purchase/purchase.component').then(m => m.PurchaseComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'shipments',
-        loadComponent: () => import('./dashboard/shipment/shipment.component').then(c => c.ShipmentComponent)
+        loadComponent: () => import('./dashboard/shipment/shipment.component').then(c => c.ShipmentComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'overview',
-        loadComponent: () => import('./dashboard/overview/dashboard-overview.component').then(c => c.DashboardOverviewComponent)
+        loadComponent: () => import('./dashboard/overview/dashboard-overview.component').then(c => c.DashboardOverviewComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'tracking',
-        loadComponent: () => import('./dashboard/tracking/tracking.component').then(c => c.TrackingComponent)
+        loadComponent: () => import('./dashboard/tracking/tracking.component').then(c => c.TrackingComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'live-tracking',
-        loadComponent: () => import('./dashboard/live-tracking/live-tracking.component').then(c => c.LiveTrackingComponent)
+        loadComponent: () => import('./dashboard/live-tracking/live-tracking.component').then(c => c.LiveTrackingComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'drivers',
-        loadComponent: () => import('./dashboard/drivers/drivers.component').then(m => m.DriversComponent)
+        loadComponent: () => import('./dashboard/drivers/drivers.component').then(m => m.DriversComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'drivers/add',
-        loadComponent: () => import('./dashboard/drivers/add-driver/add-driver.component').then(m => m.AddDriverComponent)
+        loadComponent: () => import('./dashboard/drivers/add-driver/add-driver.component').then(m => m.AddDriverComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'drivers/:id/profile',
-        loadComponent: () => import('./dashboard/drivers/driver-profile/driver-profile.component').then(m => m.DriverProfileComponent)
+        loadComponent: () => import('./dashboard/drivers/driver-profile/driver-profile.component').then(m => m.DriverProfileComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'drivers/:id/route',
-        loadComponent: () => import('./dashboard/drivers/driver-route/driver-route.component').then(m => m.DriverRouteComponent)
+        loadComponent: () => import('./dashboard/drivers/driver-route/driver-route.component').then(m => m.DriverRouteComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'reports',
-        loadComponent: () => import('./dashboard/reports/reports.component').then(m => m.ReportsComponent)
+        loadComponent: () => import('./dashboard/reports/reports.component').then(m => m.ReportsComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'income',
-        loadComponent: () => import('./dashboard/income/income.component').then(m => m.IncomeComponent)
+        loadComponent: () => import('./dashboard/income/income.component').then(m => m.IncomeComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'invoice',
-        loadComponent: () => import('./dashboard/invoice/invoice.component').then((c) => c.InvoiceComponent)
+        loadComponent: () => import('./dashboard/invoice/invoice.component').then((c) => c.InvoiceComponent),
+        canActivate: [roleGuard],
+        data: { roles: ALL_ROLES }
       },
       {
         path: 'register',
-        loadComponent: () => import('./auth/sign-up/sign-up').then((c) => c.SignUpComponent)
+        loadComponent: () => import('./auth/sign-up/sign-up').then((c) => c.SignUpComponent),
+        canActivate: [roleGuard],
+        data: { roles: ADMIN_ONLY }
       },
       {
         path: 'settings',
-        loadComponent: () => import('./dashboard/settings/settings.component').then(m => m.SettingsComponent)
+        loadComponent: () => import('./dashboard/settings/settings.component').then(m => m.SettingsComponent),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'users',
-        loadComponent: () => import('./dashboard/users/users.component').then(m => m.UsersComponent)
+        loadComponent: () => import('./dashboard/users/users.component').then(m => m.UsersComponent),
+        canActivate: [roleGuard],
+        data: { roles: ADMIN_ONLY }
       },
       {
         path: 'daily-report',
-        loadComponent: () => import('./dashboard/daily-report/daily-report').then((c) => c.DailyReport)
+        loadComponent: () => import('./dashboard/daily-report/daily-report').then((c) => c.DailyReport),
+        canActivate: [roleGuard],
+        data: { roles: NON_DRIVER }
       },
       {
         path: 'unit-price',
-        loadComponent: () => import('./dashboard/unit-price/unit-price').then((c) => c.UnitPrice)
+        loadComponent: () => import('./dashboard/unit-price/unit-price').then((c) => c.UnitPrice),
+        canActivate: [roleGuard],
+        data: { roles: ADMIN_ONLY }
       },
       {
         path: 'cargo-items',
-        loadComponent: () => import('./dashboard/cargo-items/cargo-items').then((c) => c.CargoItems)
+        loadComponent: () => import('./dashboard/cargo-items/cargo-items').then((c) => c.CargoItems),
+        canActivate: [roleGuard],
+        data: { roles: ADMIN_ONLY }
       },
       { path: 'vehicles', redirectTo: 'overview' },
       { path: 'maintenance', redirectTo: 'overview' },
@@ -111,4 +156,3 @@ export const routes: Routes = [
     loadComponent: () => import('./barcode/barcode').then((c) => c.ScannerComponent)
   }
 ];
-

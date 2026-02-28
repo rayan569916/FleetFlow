@@ -12,14 +12,14 @@ from sqlalchemy import func
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/stats', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant', 'staff'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_stats(current_user):
     period = request.args.get('period', 'today')
     requested_office_id = request.args.get('office_id', type=int)
     office_id = get_effective_read_office_id(current_user, requested_office_id)
     if office_id is not None and not validate_office_id(office_id):
         return jsonify({'message': 'Invalid office ID'}), 400
-    if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+    if office_id is None and current_user.office_id is None and current_user.role.name not in ['Super_admin', 'management']:
         return jsonify({'message': 'User is not assigned to an office'}), 403
     
     # Calculated stats based on real models
@@ -50,13 +50,13 @@ def get_stats(current_user):
     })
 
 @dashboard_bp.route('/recent-activity', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant', 'staff'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_recent_activity(current_user):
     requested_office_id = request.args.get('office_id', type=int)
     office_id = get_effective_read_office_id(current_user, requested_office_id)
     if office_id is not None and not validate_office_id(office_id):
         return jsonify({'message': 'Invalid office ID'}), 400
-    if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+    if office_id is None and current_user.office_id is None and current_user.role.name not in ['Super_admin', 'management']:
         return jsonify({'message': 'User is not assigned to an office'}), 403
 
     # Fetch recent invoices and shipments as activity
@@ -121,7 +121,7 @@ def get_recent_activity(current_user):
     return jsonify(activity)
 
 @dashboard_bp.route('/trends', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant', 'staff'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_trends(current_user):
     # Mock trend data for charts
     trends = [

@@ -25,7 +25,7 @@ def get_paginated_list(model, serializer, current_user):
 
     if office_id is not None and not validate_office_id(office_id):
         return jsonify({'message': 'Invalid office ID'}), 400
-    if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+    if office_id is None and current_user.office_id is None and current_user.role.name not in ['Super_admin', 'management']:
         return jsonify({'message': 'User is not assigned to an office'}), 403
 
     query = model.query
@@ -126,30 +126,30 @@ def serialize_payment(p):
 
 # Category Routes
 @finance_bp.route('/purchase-categories', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_purchase_categories(current_user):
     from models.finance import PurchaseCategory
     return jsonify([{'id': c.id, 'name': c.name} for c in PurchaseCategory.query.all()])
 
 @finance_bp.route('/receipt-categories', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_receipt_categories(current_user):
     from models.finance import ReceiptCategory
     return jsonify([{'id': c.id, 'name': c.name} for c in ReceiptCategory.query.all()])
 
 @finance_bp.route('/payment-categories', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_payment_categories(current_user):
     from models.finance import PaymentCategory
     return jsonify([{'id': c.id, 'name': c.name} for c in PaymentCategory.query.all()])
 
 # Purchase Routes
 @finance_bp.route('/purchases', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_purchases(current_user): return get_paginated_list(Purchase, serialize_purchase, current_user)
 
 @finance_bp.route('/purchases', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def create_purchase(current_user):
     data = request.get_json()
     office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
@@ -169,22 +169,22 @@ def create_purchase(current_user):
     return jsonify({'message': 'Purchase created'}), 201
 
 @finance_bp.route('/purchases/<int:id>', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def update_purchase(current_user, id):
     data = request.get_json()
     return update_item(Purchase, current_user, id, data)
 
 @finance_bp.route('/purchases/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def delete_purchase(current_user, id): return delete_item(Purchase, current_user, id)
 
 # Receipt Routes
 @finance_bp.route('/receipts', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_receipts(current_user): return get_paginated_list(Receipt, serialize_receipt, current_user)
 
 @finance_bp.route('/receipts', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def create_receipt(current_user):
     data = request.get_json()
     office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
@@ -204,22 +204,22 @@ def create_receipt(current_user):
     return jsonify({'message': 'Receipt created'}), 201
 
 @finance_bp.route('/receipts/<int:id>', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def update_receipt(current_user, id):
     data = request.get_json()
     return update_item(Receipt, current_user, id, data)
 
 @finance_bp.route('/receipts/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def delete_receipt(current_user, id): return delete_item(Receipt, current_user, id)
 
 # Payment Routes
 @finance_bp.route('/payments', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_payments(current_user): return get_paginated_list(Payment, serialize_payment, current_user)
 
 @finance_bp.route('/payments', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def create_payment(current_user):
     data = request.get_json()
     office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
@@ -239,11 +239,11 @@ def create_payment(current_user):
     return jsonify({'message': 'Payment created'}), 201
 
 @finance_bp.route('/payments/<int:id>', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def update_payment(current_user, id):
     data = request.get_json()
     return update_item(Payment, current_user, id, data)
 
 @finance_bp.route('/payments/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def delete_payment(current_user, id): return delete_item(Payment, current_user, id)

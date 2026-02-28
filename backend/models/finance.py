@@ -1,6 +1,6 @@
 from extensions import db
 import datetime
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, Index
 
 class PurchaseCategory(db.Model):
     __tablename__ = 'purchase_categories'
@@ -19,39 +19,48 @@ class PaymentCategory(db.Model):
 
 class Purchase(db.Model):
     __tablename__ = 'purchases'
+    __table_args__ = (
+        Index('ix_purchases_office_created', 'office_id', 'created_at'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('purchase_categories.id'), nullable=False)
-    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
     category = db.relationship('PurchaseCategory', backref=db.backref('purchases', lazy=True))
     office = db.relationship('Office', backref=db.backref('purchases', lazy=True))
     creator = db.relationship('User', backref='purchases_created')
 
 class Receipt(db.Model):
     __tablename__ = 'receipts'
+    __table_args__ = (
+        Index('ix_receipts_office_created', 'office_id', 'created_at'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('receipt_categories.id'), nullable=False)
-    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
     category = db.relationship('ReceiptCategory', backref=db.backref('receipts', lazy=True))
     office = db.relationship('Office', backref=db.backref('receipts', lazy=True))
     creator = db.relationship('User', backref='receipts_created')
 
 class Payment(db.Model):
     __tablename__ = 'payments'
+    __table_args__ = (
+        Index('ix_payments_office_created', 'office_id', 'created_at'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
     category_id = db.Column(db.Integer, db.ForeignKey('payment_categories.id'), nullable=False)
-    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
     category = db.relationship('PaymentCategory', backref=db.backref('payments', lazy=True))
     office = db.relationship('Office', backref=db.backref('payments', lazy=True))
     creator = db.relationship('User', backref='payments_created')
@@ -60,6 +69,7 @@ class DailyReport(db.Model):
     __tablename__ = 'daily_reports'
     __table_args__ = (
         UniqueConstraint('date', 'office_id', name='uq_daily_reports_date_office'),
+        Index('ix_daily_reports_office_date', 'office_id', 'date'),
     )
 
     id = db.Column(db.Integer, primary_key=True)

@@ -25,7 +25,12 @@ export class SidebarComponent {
   private authService = inject(AuthService);
 
   readonly navGroups = computed<NavGroup[]>(() => {
-    const isAdminOrCEO = this.authService.isSuperAdminOrCEO();
+    // If the user is a driver, the sidebar shouldn't render, but returning empty ensures nothing breaks
+    if (this.authService.isDriver()) {
+        return [];
+    }
+    
+    const fullAccess = this.authService.hasFullAccess();
     const allItems = SIDEBAR_ITEMS;
 
     const groups: NavGroup[] = [
@@ -44,10 +49,10 @@ export class SidebarComponent {
       {
         label: 'System',
         items: allItems.filter(i => {
-          if (['settings'].includes(i.id)) return true;
-          if (i.id === 'register') return isAdminOrCEO;
-          if (i.id === 'unit-price') return isAdminOrCEO;
-          if (i.id === 'cargo-items') return isAdminOrCEO;
+          if (['settings'].includes(i.id)) return true; // Maybe restrict settings to fullAccess later, for now left as is
+          if (i.id === 'register') return fullAccess;
+          if (i.id === 'unit-price') return fullAccess;
+          if (i.id === 'cargo-items') return fullAccess;
           return false;
         })
       }

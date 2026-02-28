@@ -36,7 +36,7 @@ def role_required(allowed_roles):
     return decorator
 
 def is_super_user(user):
-    return bool(user and user.role and user.role.name == SUPER_ROLE)
+    return bool(user and user.role and user.role.name in ['Super_admin', 'management'])
 
 def get_effective_read_office_id(current_user, requested_office_id=None):
     """

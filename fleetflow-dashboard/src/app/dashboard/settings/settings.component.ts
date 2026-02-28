@@ -20,7 +20,7 @@ export class SettingsComponent {
     private router = inject(Router);
 
     // Role-based visibility signals
-    isAdminOrCEO = this.authService.isSuperAdminOrCEO;
+    isAdminOrCEO = this.authService.hasFullAccess;
 
     // Settings Signal
     settings: Signal<AppSettings> = this.settingsService.settings;

@@ -14,13 +14,13 @@ from utils.auth import (
 shipments_bp = Blueprint('shipments', __name__)
 
 @shipments_bp.route('', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant', 'driver', 'staff'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def get_shipments(current_user):
     requested_office_id = request.args.get('office_id', type=int)
     office_id = get_effective_read_office_id(current_user, requested_office_id)
     if office_id is not None and not validate_office_id(office_id):
         return jsonify({'message': 'Invalid office ID'}), 400
-    if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+    if office_id is None and current_user.office_id is None and current_user.role.name not in ['Super_admin', 'management']:
         return jsonify({'message': 'User is not assigned to an office'}), 403
 
     query = Shipment.query
@@ -42,7 +42,7 @@ def get_shipments(current_user):
     return jsonify(output)
 
 @shipments_bp.route('', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def create_shipment(current_user):
     data = request.get_json()
     office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
@@ -63,7 +63,7 @@ def create_shipment(current_user):
     return jsonify({'message': 'Shipment created'}), 201
 
 @shipments_bp.route('/<int:id>', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def update_shipment(current_user, id):
     data = request.get_json()
     shipment = Shipment.query.get(id)
@@ -84,7 +84,7 @@ def update_shipment(current_user, id):
     return jsonify({'message': 'Shipment updated'})
 
 @shipments_bp.route('/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
 def delete_shipment(current_user, id):
     shipment = Shipment.query.get(id)
     if not shipment:

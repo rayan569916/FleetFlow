@@ -103,7 +103,7 @@
             </div>
           </ng-container>
 
-          <div class="space-y-1.5">
+          <div class="space-y-1.5" *ngIf="authService.currentUserRole() === 'super_admin'">
             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
               >Office</label
             >

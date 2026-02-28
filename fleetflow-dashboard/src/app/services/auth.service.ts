@@ -84,9 +84,17 @@ export class AuthService {
         this.router.navigate(['/login']);
     }
 
-    isSuperAdminOrCEO = computed(() => {
+    hasFullAccess = computed(() => {
         const role = this.currentUserRole();
-        return role === 'super_admin' || role === 'ceo';
+        return role === 'Super_admin' || role === 'management';
+    });
+
+    isShopManager = computed(() => {
+        return this.currentUserRole() === 'shop_manager';
+    });
+
+    isDriver = computed(() => {
+        return this.currentUserRole() === 'driver';
     });
 
     getToken(): string | null {

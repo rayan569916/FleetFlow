@@ -6,7 +6,7 @@ from utils.auth import role_required
 unit_price_bp = Blueprint('unit_price', __name__)
 
 @unit_price_bp.route('/list_unit_price', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant', 'driver', 'staff'])
+@role_required(['Super_admin', 'management'])
 def list_unit_price(current_user):
     try:
         unit_prices = Unit_price.query.all()
@@ -25,7 +25,7 @@ def list_unit_price(current_user):
         return jsonify({'error': str(e)}), 500
 
 @unit_price_bp.route('/countries', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant', 'staff', 'driver'])
+@role_required(['Super_admin', 'management'])
 def list_countries(current_user):
     try:
         countries = Country.query.all()
@@ -34,7 +34,7 @@ def list_countries(current_user):
         return jsonify({'error': str(e)}), 500
 
 @unit_price_bp.route('', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management'])
 def create_unit_price(current_user):
     data = request.get_json() or {}
 
@@ -86,7 +86,7 @@ def create_unit_price(current_user):
         return jsonify({'message': 'Failed to create unit price', 'error': str(e)}), 500
 
 @unit_price_bp.route('/<int:id>', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management'])
 def update_unit_price(current_user, id):
     data = request.get_json() or {}
     unit_price = Unit_price.query.get(id)

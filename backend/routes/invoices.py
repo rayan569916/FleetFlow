@@ -15,7 +15,7 @@ from utils.reports_util import update_daily_report
 invoices_bp = Blueprint('invoices', __name__)
 
 @invoices_bp.route('', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def get_invoices(current_user):
     try:
         requested_office_id = request.args.get('office_id', type=int)
@@ -23,7 +23,7 @@ def get_invoices(current_user):
 
         if office_id is not None and not validate_office_id(office_id):
             return jsonify({'message': 'Invalid office ID'}), 400
-        if office_id is None and current_user.office_id is None and current_user.role.name != 'super_admin':
+        if office_id is None and current_user.office_id is None and current_user.role.name not in ['Super_admin', 'management']:
             return jsonify({'message': 'User is not assigned to an office'}), 403
 
         query = InvoiceHeader.query
@@ -84,7 +84,7 @@ def get_invoices(current_user):
     })
 
 @invoices_bp.route('/customers/search', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'staff'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def search_customers(current_user):
     phone = request.args.get('phone', '')
     if not phone:
@@ -132,7 +132,7 @@ def search_customers(current_user):
         return jsonify({'message': 'Search error', 'error': str(e)}), 500
 
 @invoices_bp.route('/<int:id>', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def get_invoice(current_user, id):
     inv = InvoiceHeader.query.get(id)
     if not inv:
@@ -203,7 +203,7 @@ def get_invoice(current_user, id):
     })
 
 @invoices_bp.route('', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def create_invoice(current_user):
     data = request.get_json()
     if not data or 'invoice_number' not in data or 'amount' not in data or 'date' not in data:
@@ -295,7 +295,7 @@ def create_invoice(current_user):
     return jsonify({'message': 'Invoice created!', 'id': header.id}), 201
 
 @invoices_bp.route('/<int:id>', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def update_invoice(current_user, id):
     data = request.get_json()
     invoice = InvoiceHeader.query.get(id)
@@ -379,7 +379,7 @@ def update_invoice(current_user, id):
         return jsonify({'message': 'Failed to update invoice', 'error': str(e)}), 500
 
 @invoices_bp.route('/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo']) 
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver']) 
 def delete_invoice(current_user, id):
     inv = InvoiceHeader.query.get(id)
     if not inv:

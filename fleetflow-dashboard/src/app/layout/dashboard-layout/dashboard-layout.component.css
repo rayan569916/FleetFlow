@@ -35,8 +35,6 @@
   display: none;
 }
 
-
-
 .grid-row-1 {
   display: grid;
   grid-template-columns: 3fr 1fr 4fr;
@@ -75,10 +73,8 @@
   .content-shell {
     margin-left: 0;
     padding: 1.5rem;
-    /* Increased padding slightly for better touch targets */
   }
 
-  /* Ensure header remains visible and fixed/sticky if needed, or just accessible */
   app-header {
     display: block;
     width: 100%;
@@ -86,6 +82,69 @@
 
   .app-shell.sidebar-expanded .content-shell {
     margin-left: 0;
-    /* Sidebar covers content on mobile */
+  }
+}
+
+/* ===== DRIVER LAYOUT ===== */
+.driver-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background:
+    linear-gradient(165deg, rgba(35, 2, 58, 0.96), rgba(81, 18, 124, 0.9)),
+    radial-gradient(circle at 76% 0%, rgba(242, 210, 27, 0.14), transparent 34%);
+  color: var(--brand-text, #fff);
+}
+
+.driver-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.driver-logo {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.driver-logout-btn {
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.driver-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.driver-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .driver-content {
+    padding: 0.5rem;
+  }
+
+  .driver-header {
+    padding: 0.5rem 0.75rem;
   }
 }

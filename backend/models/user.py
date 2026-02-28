@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False) # super_admin, ceo, hr, accountant, driver, staff
+    name = db.Column(db.String(50), unique=True, nullable=False) # Super_admin, management, shop_manager, driver
     
     users = db.relationship('User', backref='role', lazy=True)
 

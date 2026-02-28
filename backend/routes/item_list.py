@@ -10,7 +10,7 @@ from utils.auth import (
 item_list_bp = Blueprint("item_list", __name__)
 
 @item_list_bp.route("/get_item_list", methods=["GET"])
-@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
+@role_required(['Super_admin', 'management'])
 def get_item_list(current_user):
     try:
         search = request.args.get('search', '')
@@ -39,7 +39,7 @@ def get_item_list(current_user):
         return jsonify({'message': 'Database error', 'error': str(e)}), 500
 
 @item_list_bp.route("/categories", methods=["GET"])
-@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
+@role_required(['Super_admin', 'management'])
 def get_categories(current_user):
     try:
         categories = Item_category.query.all()
@@ -48,7 +48,7 @@ def get_categories(current_user):
         return jsonify({'message': 'Error fetching categories', 'error': str(e)}), 500
 
 @item_list_bp.route("/create", methods=["POST"])
-@role_required(['super_admin', 'ceo', 'accountant', 'staff'])
+@role_required(['Super_admin', 'management'])
 def create_item(current_user):
     data = request.get_json()
     if not data or 'item_name' not in data or 'category_id' not in data:
@@ -75,7 +75,7 @@ def create_item(current_user):
         return jsonify({'message': 'Error creating item', 'error': str(e)}), 500
 
 @item_list_bp.route("/update/<int:id>", methods=["PUT"])
-@role_required(['super_admin', 'ceo', 'accountant', 'staff'])
+@role_required(['Super_admin', 'management'])
 def update_item(current_user, id):
     data = request.get_json()
     item = Item_list.query.get(id)
@@ -103,7 +103,7 @@ def update_item(current_user, id):
         return jsonify({'message': 'Error updating item', 'error': str(e)}), 500
 
 @item_list_bp.route("/delete/<int:id>", methods=["DELETE"])
-@role_required(['super_admin', 'ceo'])
+@role_required(['Super_admin', 'management'])
 def delete_item(current_user, id):
     item = Item_list.query.get(id)
     if not item:

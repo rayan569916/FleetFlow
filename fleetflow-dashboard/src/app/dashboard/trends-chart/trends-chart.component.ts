@@ -5,6 +5,7 @@ import { SettingsService } from '../../services/settings.service';
 import { ReportService, DailyReportData } from '../../services/report.service';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { Office } from '../../core/models/dashboard.models';
 
 @Component({
   selector: 'app-trends-chart',
@@ -17,21 +18,43 @@ import { Router } from '@angular/router';
 export class TrendsChartComponent implements OnInit {
   settingsService = inject(SettingsService);
   private reportService = inject(ReportService);
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
 
   dailyReport = signal<DailyReportData | null>(null);
   isLoading = signal<boolean>(true);
+  offices = signal<Office[]>([]);
+  selectedOfficeId = signal<number | null>(null);
 
   private router = inject(Router);
 
   ngOnInit(): void {
+    if (this.authService.hasFullAccess()) {
+      this.loadOffices();
+    }
+    this.loadDailyReport();
+  }
+
+  loadOffices(): void {
+    this.authService.getOffices().subscribe({
+      next: (data) => {
+        this.offices.set(data);
+      },
+      error: (err) => console.error('Error loading offices:', err)
+    });
+  }
+
+  onOfficeChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const value = target.value ? parseInt(target.value, 10) : null;
+    this.selectedOfficeId.set(value);
     this.loadDailyReport();
   }
 
   loadDailyReport(): void {
     this.isLoading.set(true);
     const today = new Date().toISOString().split('T')[0];
-    this.reportService.getDailyReport(today).subscribe({
+    const officeId = this.selectedOfficeId();
+    this.reportService.getDailyReport(today, officeId ?? undefined).subscribe({
       next: (data) => {
         this.dailyReport.set(data);
         this.isLoading.set(false);

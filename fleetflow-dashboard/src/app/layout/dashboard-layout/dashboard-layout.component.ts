@@ -1,8 +1,9 @@
 import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { UiStateService } from '../../services/ui-state.service';
 import { DashboardDataService } from '../../services/dashboard-data.service';
+import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { ConfirmationDialogComponent } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
@@ -21,12 +22,21 @@ import { ConfirmationDialogComponent } from '../../shared/components/confirmatio
   styleUrl: './dashboard-layout.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardLayoutComponent {
+export class DashboardLayoutComponent implements OnInit {
   private uiStateService = inject(UiStateService);
   private router = inject(Router);
   private dashboardDataService = inject(DashboardDataService);
+  private authService = inject(AuthService);
 
+  readonly isDriver = this.authService.isDriver;
   readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
+
+  ngOnInit(): void {
+    // If driver, redirect to invoice page immediately
+    if (this.isDriver()) {
+      this.router.navigate(['/dashboard/invoice']);
+    }
+  }
 
   toggleSidebar(): void {
     this.uiStateService.toggleSidebar();
@@ -61,5 +71,9 @@ export class DashboardLayoutComponent {
 
   navigateToDailyReport(): void {
     this.router.navigate(['/dashboard/daily-report']);
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }

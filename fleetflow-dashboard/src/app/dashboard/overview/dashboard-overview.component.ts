@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { DashboardDataService } from '../../services/dashboard-data.service';
@@ -21,6 +21,7 @@ import { CardComponent } from '../../shared/ui/card/card.component';
   ],
   templateUrl: './dashboard-overview.component.html',
   styleUrl: './dashboard-overview.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardOverviewComponent {
   private dashboardDataService = inject(DashboardDataService);

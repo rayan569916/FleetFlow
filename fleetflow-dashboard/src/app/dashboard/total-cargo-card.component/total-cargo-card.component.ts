@@ -1,4 +1,4 @@
-import { Component, input, output, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, inject } from '@angular/core';
 import { IncomePeriod, IncomeSnapshot } from '../../core/models/dashboard.models';
 import { INCOME_PERIOD_OPTIONS } from '../../core/constants/dashboard.constants';
 import { CardComponent } from '../../shared/ui/card/card.component';
@@ -11,6 +11,7 @@ import { SettingsService } from '../../services/settings.service';
   imports: [CardComponent,CommonModule],
   templateUrl: './total-cargo-card.component.html',
   styleUrl: './total-cargo-card.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TotalCargoCardComponent {
   private reportService = inject(ReportService);

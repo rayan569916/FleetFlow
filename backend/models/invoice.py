@@ -1,17 +1,21 @@
 from extensions import db
 import datetime
+from sqlalchemy import Index
 
 class InvoiceHeader(db.Model):
     __tablename__ = 'invoice_headers'
+    __table_args__ = (
+        Index('ix_invoice_headers_office_date', 'office_id', 'date'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     invoice_number = db.Column(db.String(50), unique=True, nullable=False)
-    date = db.Column(db.Date, nullable=False)
+    date = db.Column(db.Date, nullable=False, index=True)
     status = db.Column(db.String(20), default='Pending') # Pending, Paid, Canceled
     tracking_number = db.Column(db.String(50), nullable=True)
     mode_of_delivery = db.Column(db.String(50))
     mode_of_payment = db.Column(db.String(50))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False, index=True)
+    office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     
     # Relationships
