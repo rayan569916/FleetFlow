@@ -99,7 +99,20 @@ export class ReceiptComponent implements OnInit {
     });
   }
 
-  toggleForm() {
+  async toggleForm(forceClose = false): Promise<void> {
+    if (this.showForm() && !forceClose) {
+      const hasUnsaved = this.receiptForm.dirty || !!this.editingItem();
+      if (hasUnsaved) {
+        const confirmed = await this.confirmationService.confirm({
+          title: 'Unsaved Changes',
+          message: 'You have an unsaved receipt form. Discard changes?',
+          confirmText: 'Discard',
+          cancelText: 'Stay'
+        });
+        if (!confirmed) return;
+      }
+    }
+
     this.showForm.update(v => !v);
     if (!this.showForm()) {
       this.receiptForm.reset();
@@ -149,7 +162,7 @@ export class ReceiptComponent implements OnInit {
       request.subscribe({
         next: () => {
           this.fetchData();
-          this.toggleForm();
+          this.toggleForm(true);
         },
         error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} receipt`, err)
       });
@@ -185,5 +198,17 @@ export class ReceiptComponent implements OnInit {
         error: (err: any) => console.error('Failed to delete receipt', err)
       });
     }
+  }
+
+  async canDeactivate(): Promise<boolean> {
+    if (!this.showForm()) return true;
+    if (!this.receiptForm.dirty && !this.editingItem()) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have an unsaved receipt form. Leave this page and discard changes?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
   }
 }

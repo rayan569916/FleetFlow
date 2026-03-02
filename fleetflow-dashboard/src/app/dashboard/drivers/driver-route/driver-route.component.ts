@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardDataService } from '../../../services/dashboard-data.service';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 
 @Component({
   selector: 'app-driver-route',
@@ -14,6 +15,7 @@ export class DriverRouteComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private dashboardDataService = inject(DashboardDataService);
+  private confirmationService = inject(ConfirmationDialogService);
 
   driver: any = null;
 
@@ -62,7 +64,16 @@ export class DriverRouteComponent implements OnInit {
     alert('Route updated locally.');
   }
 
-  cancelEdit() {
+  async cancelEdit() {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved route changes. Discard them?',
+      confirmText: 'Discard',
+      cancelText: 'Stay'
+    });
+
+    if (!confirmed) return;
+
     this.isEditing = false;
     this.stops = JSON.parse(JSON.stringify(this.originalStops));
   }
@@ -123,5 +134,16 @@ export class DriverRouteComponent implements OnInit {
     const hours = Math.floor(etaMinutes / 60);
     const minutes = etaMinutes % 60;
     this.eta = `${hours}h ${minutes}m`;
+  }
+
+  async canDeactivate(): Promise<boolean> {
+    if (!this.isEditing) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'Route edit is still in progress. Leave this page and discard changes?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
   }
 }

@@ -4,15 +4,47 @@ from models.invoice import InvoiceHeader, InvoiceAmountDetail
 from models.finance import Payment, Receipt, Purchase
 from models.shipment import Shipment
 from models.fleet import Driver
+from models.user import User, Role, Office
 from services.dashboard_services import DashboardService
 from utils.auth import role_required, get_effective_read_office_id, validate_office_id
 import datetime
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
+@dashboard_bp.route('/drivers', methods=['GET'])
+@role_required(['Super_admin', 'super_admin', 'management', 'shop_manager'])
+def get_driver_users(current_user):
+    """
+    Returns driver users (from users table) for the dashboard Active Drivers card.
+    - Super_admin/management: can see all offices (or filter with office_id)
+    - shop_manager: limited to their own office by get_effective_read_office_id
+    """
+    requested_office_id = request.args.get('office_id', type=int)
+    office_id = get_effective_read_office_id(current_user, requested_office_id)
+    if office_id is not None and not validate_office_id(office_id):
+        return jsonify({'message': 'Invalid office ID'}), 400
+    if office_id is None and current_user.office_id is None and current_user.role.name not in ['Super_admin', 'super_admin', 'management']:
+        return jsonify({'message': 'User is not assigned to an office'}), 403
+
+    query = User.query.options(joinedload(User.role), joinedload(User.office)).join(Role)
+    query = query.filter(func.lower(Role.name) == 'driver')
+
+    if office_id is not None:
+        query = query.filter(User.office_id == office_id)
+
+    users = query.order_by(User.full_name.asc()).all()
+    return jsonify([{
+        'id': u.id,
+        'full_name': u.full_name,
+        'username': u.username,
+        'office_id': u.office_id,
+        'office_name': u.office.name if u.office else None,
+    } for u in users])
+
 @dashboard_bp.route('/stats', methods=['GET'])
-@role_required(['Super_admin', 'management', 'shop_manager'])
+@role_required(['Super_admin', 'super_admin', 'management', 'shop_manager'])
 def get_stats(current_user):
     period = request.args.get('period', 'today')
     requested_office_id = request.args.get('office_id', type=int)
@@ -50,7 +82,7 @@ def get_stats(current_user):
     })
 
 @dashboard_bp.route('/recent-activity', methods=['GET'])
-@role_required(['Super_admin', 'management', 'shop_manager'])
+@role_required(['Super_admin', 'super_admin', 'management', 'shop_manager'])
 def get_recent_activity(current_user):
     requested_office_id = request.args.get('office_id', type=int)
     office_id = get_effective_read_office_id(current_user, requested_office_id)
@@ -121,7 +153,7 @@ def get_recent_activity(current_user):
     return jsonify(activity)
 
 @dashboard_bp.route('/trends', methods=['GET'])
-@role_required(['Super_admin', 'management', 'shop_manager'])
+@role_required(['Super_admin', 'super_admin', 'management', 'shop_manager'])
 def get_trends(current_user):
     # Mock trend data for charts
     trends = [

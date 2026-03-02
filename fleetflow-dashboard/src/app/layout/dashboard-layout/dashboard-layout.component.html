@@ -25,7 +25,11 @@
   <!-- Driver Layout: Full-screen mobile-optimized, no sidebar or header -->
   <div class="driver-layout">
     <div class="driver-header">
-      <span class="driver-logo">🚛 FleetFlow</span>
+      <div class="flex items-center gap-2">
+        <img src="captain_cargo_logo_yellow.svg" alt="Logo" class="h-10 w-auto shrink-0" />
+        <span class="driver-logo">Captain Cargo</span>
+      </div>
+
       <button class="driver-logout-btn" (click)="logout()">Logout</button>
     </div>
     <div class="driver-content">

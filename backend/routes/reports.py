@@ -3,6 +3,7 @@ from extensions import db
 from models.invoice import InvoiceHeader, InvoiceAmountDetail
 from models.finance import Purchase, Receipt, Payment, DailyReport
 from utils.auth import role_required, get_effective_read_office_id, get_effective_write_office_id, validate_office_id
+from utils.reports_util import recalculate_daily_reports_range
 import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -31,7 +32,7 @@ def get_report_data_for_date(target_date, office_id):
     bank_transfer_swipe_sum_query = db.session.query(func.sum(InvoiceAmountDetail.grand_total)).\
         join(InvoiceHeader).\
         filter(InvoiceHeader.date == target_date).\
-        filter(InvoiceHeader.mode_of_payment.in_(['bank_transfer', 'swipe']))
+        filter(func.lower(InvoiceHeader.mode_of_payment).in_(['bank_transfer', 'swipe', 'bank transfer', 'direct bank transfer', 'direct_bank_transfer']))
     if office_id is not None:
         bank_transfer_swipe_sum_query = bank_transfer_swipe_sum_query.filter(InvoiceHeader.office_id == office_id)
     bank_transfer_swipe_sum = bank_transfer_swipe_sum_query.scalar() or 0.0
@@ -179,6 +180,54 @@ def ensure_office_report(target_date, office_id):
         current_catchup_date += datetime.timedelta(days=1)
     
     return DailyReport.query.filter_by(date=target_date, office_id=office_id).first()
+
+@reports_bp.route('/daily/recalculate', methods=['POST'])
+@role_required(['Super_admin', 'super_admin', 'management'])
+def recalculate_daily_reports(current_user):
+    """
+    Admin-only backfill to fix incorrect stored daily_reports values.
+
+    Body:
+      {
+        "start_date": "YYYY-MM-DD",
+        "end_date": "YYYY-MM-DD",
+        "office_id": 1            // optional, omit to recalc ALL offices
+      }
+    """
+    from models.user import Office
+    data = request.get_json() or {}
+    start_date_str = data.get('start_date')
+    end_date_str = data.get('end_date')
+    requested_office_id = data.get('office_id', None)
+
+    if not start_date_str or not end_date_str:
+        return jsonify({'message': 'start_date and end_date are required (YYYY-MM-DD)'}), 400
+
+    try:
+        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except Exception:
+        return jsonify({'message': 'Invalid date format, expected YYYY-MM-DD'}), 400
+
+    results = []
+    if requested_office_id is not None:
+        office_id = get_effective_write_office_id(current_user, int(requested_office_id))
+        if not validate_office_id(office_id):
+            return jsonify({'message': 'Invalid office ID'}), 400
+        results.append(recalculate_daily_reports_range(start_date, end_date, office_id))
+    else:
+        offices = Office.query.all()
+        for off in offices:
+            results.append(recalculate_daily_reports_range(start_date, end_date, off.id))
+
+    total_days = sum(r.get('updated_days', 0) for r in results)
+    return jsonify({
+        'message': 'Daily reports recalculated',
+        'start_date': str(start_date),
+        'end_date': str(end_date),
+        'offices': results,
+        'updated_days_total': total_days
+    }), 200
 
 @reports_bp.route('/daily/save', methods=['POST'])
 @role_required(['Super_admin', 'management', 'shop_manager'])

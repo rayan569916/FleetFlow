@@ -106,6 +106,39 @@ select:-webkit-autofill {
   transition: background-color 5000s ease-in-out 0s;
 }
 
+/* Unified focus highlight for forms (purple instead of yellow) */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand-purple-600) !important;
+  box-shadow: 0 0 0 2px rgba(124, 28, 154, 0.25) !important;
+  outline: none !important;
+}
+
+/* Override utility focus colors used across templates */
+.focus\:ring-yellow-500:focus,
+.focus\:ring-yellow-400\/50:focus,
+.focus\:ring-yellow-500\/20:focus,
+.focus\:ring-indigo-500:focus,
+.focus\:ring-indigo-500\/20:focus {
+  --tw-ring-color: rgba(124, 28, 154, 0.25) !important;
+}
+
+.focus\:border-yellow-500:focus,
+.focus\:border-indigo-500:focus {
+  border-color: var(--brand-purple-600) !important;
+}
+
+.focus-within\:border-yellow-400:focus-within,
+.focus-within\:border-indigo-500:focus-within {
+  border-color: var(--brand-purple-600) !important;
+}
+
+.focus-within\:ring-yellow-100:focus-within,
+.focus-within\:ring-indigo-500:focus-within {
+  --tw-ring-color: rgba(124, 28, 154, 0.22) !important;
+}
+
 /* Global App Shell Styles that were duplicated across components */
 .content-shell {
   padding: 2rem;

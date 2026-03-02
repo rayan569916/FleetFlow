@@ -52,6 +52,8 @@ export class App {
   }
 
   private handleNavigation(event: any, direction: number) {
+    if (event.defaultPrevented) return;
+
     const target = event.target as HTMLElement;
 
     // Check if the target is an input-like element

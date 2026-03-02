@@ -99,17 +99,21 @@ export class DashboardDataService {
   }
 
   // --- Drivers ---
-  // Replaces previous hardcoded method
+  // Dashboard Active Drivers: show real driver users (users.role = driver)
   getDrivers(): Observable<Driver[]> {
-    return this.http.get<any[]>(`${this.rootUrl}/fleet/drivers`).pipe(
-      map(drivers => drivers.map(d => ({
-        id: d.id.toString(),
-        name: d.name,
-        initials: d.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
-        contact: d.contact_number,
-        status: d.status.toLowerCase() === 'active' ? 'active' : 'inactive',
-        avatarUrl: '' // Placeholder
-      })))
+    return this.http.get<any[]>(`${this.apiUrl}/drivers`).pipe(
+      map(users => users.map((u): Driver => {
+        const name = String(u.full_name || u.username || 'Driver');
+        const initials = name.split(' ').filter(Boolean).map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+        return {
+          id: String(u.id),
+          name,
+          initials: initials || 'DR',
+          contact: String(u.username || ''),
+          status: 'active',
+          avatarUrl: ''
+        };
+      }))
     );
   }
   createDriver(data: any): Observable<any> {

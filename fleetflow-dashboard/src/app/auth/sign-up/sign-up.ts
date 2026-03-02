@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { passwordMatchValidator } from './password-match.validator';
@@ -9,22 +9,36 @@ import { ToastService } from '../../services/toast.service';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
 import { UiStateService } from '../../services/ui-state.service';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 
 @Component({
   selector: 'app-sign-up',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './sign-up.html',
   styleUrl: './sign-up.css',
 })
 export class SignUpComponent implements OnInit {
+  private static readonly STRONG_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
+
   signupForm!: FormGroup;
   isLoading = false;
   successMessage: string | null = null;
   errorMessage: string | null = null;
+  showPassword = signal(false);
+  showConfirmPassword = signal(false);
+  submitAttempted = signal(false);
   roles = signal<any[]>([]);
   offices = signal<any[]>([]);
   users = signal<any[]>([]);
   editingUser = signal<any | null>(null);
+
+  currentPage = signal(1);
+  pageSize = 10;
+  totalItems = signal(0);
+  totalPages = signal(1);
+
+  selectedOfficeFilterId = signal<number>(0);
+  selectedRoleFilterId = signal<number>(0);
 
   private uiStateService = inject(UiStateService);
   sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
@@ -33,7 +47,8 @@ export class SignUpComponent implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private confirmationService: ConfirmationDialogService
   ) { }
 
 
@@ -45,10 +60,33 @@ export class SignUpComponent implements OnInit {
     this.fetchUsers();
   }
 
+  togglePasswordVisibility(): void {
+    this.showPassword.update(v => !v);
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword.update(v => !v);
+  }
+
   private fetchUsers(): void {
-    this.authService.getUsers().subscribe({
+    const office_id = this.selectedOfficeFilterId() || undefined;
+    const role_id = this.selectedRoleFilterId() || undefined;
+
+    this.authService.getUsers({
+      page: this.currentPage(),
+      per_page: this.pageSize,
+      office_id,
+      role_id
+    }).subscribe({
       next: (data) => {
-        this.users.set(data.users);
+        this.users.set(data.users || []);
+        this.totalItems.set(Number(data.total || 0));
+        this.totalPages.set(Number(data.pages || 1) || 1);
+
+        if (this.currentPage() > this.totalPages()) {
+          this.currentPage.set(this.totalPages());
+          this.fetchUsers();
+        }
       },
       error: (err) => console.error('Failed to fetch users', err)
     });
@@ -77,13 +115,12 @@ export class SignUpComponent implements OnInit {
   }
 
   private buildForm(): void {
-    const STRONG_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     this.signupForm = this.formBuilder.group({
       fullName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       role: ['', Validators.required],
       officeId: ['', Validators.required],
-      password: ['', [Validators.required, Validators.pattern(STRONG_PASSWORD)]],
+      password: ['', [Validators.required, Validators.pattern(SignUpComponent.STRONG_PASSWORD)]],
       ConfirmPassword: ['', [Validators.required]]
     }, {
       validators: passwordMatchValidator
@@ -91,6 +128,7 @@ export class SignUpComponent implements OnInit {
   }
 
   onSubmit() {
+    this.submitAttempted.set(true);
     if (this.signupForm.invalid) {
       this.signupForm.markAllAsTouched();
       return;
@@ -102,7 +140,7 @@ export class SignUpComponent implements OnInit {
       full_name: formData.fullName,
       role_id: formData.role, // This will now be the numeric ID from the select
       office_id: Number(formData.officeId),
-      password: formData.password
+      password: String(formData.password || '').trim()
     };
 
     this.isLoading = true;
@@ -144,6 +182,7 @@ export class SignUpComponent implements OnInit {
 
   onEdit(user: any): void {
     this.editingUser.set(user);
+    this.submitAttempted.set(false);
     const roleId = this.roles().find((r: any) => r.name === user.role)?.id;
     this.signupForm.patchValue({
       fullName: user.full_name,
@@ -154,7 +193,7 @@ export class SignUpComponent implements OnInit {
       ConfirmPassword: ''
     });
     // Remove password requirement when editing
-    this.signupForm.get('password')?.setValidators([Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)]);
+    this.signupForm.get('password')?.setValidators([Validators.pattern(SignUpComponent.STRONG_PASSWORD)]);
     this.signupForm.get('ConfirmPassword')?.setValidators([]);
     this.signupForm.get('password')?.updateValueAndValidity();
     this.signupForm.get('ConfirmPassword')?.updateValueAndValidity();
@@ -163,25 +202,81 @@ export class SignUpComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  onDelete(userId: number): void {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.authService.deleteUser(userId).subscribe({
-        next: () => {
-          this.toastService.show('User deleted successfully!', 'success');
-          this.fetchUsers();
-        },
-        error: (err) => {
-          this.toastService.show(err.error?.message || 'Delete failed', 'error');
-        }
-      });
-    }
+  onFilterChange(): void {
+    this.currentPage.set(1);
+    this.fetchUsers();
+  }
+
+  async onDelete(userId: number): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete User',
+      message: 'Are you sure you want to delete this user? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
+
+    this.authService.deleteUser(userId).subscribe({
+      next: () => {
+        this.toastService.show('User deleted successfully!', 'success');
+        this.fetchUsers();
+      },
+      error: (err) => {
+        this.toastService.show(err.error?.message || 'Delete failed', 'error');
+      }
+    });
   }
 
   resetForm(): void {
     this.editingUser.set(null);
     this.signupForm.reset();
     this.buildForm(); // Re-apply validators
+    this.showPassword.set(false);
+    this.showConfirmPassword.set(false);
+    this.submitAttempted.set(false);
     this.successMessage = null;
     this.errorMessage = null;
+  }
+
+  async cancelEdit(): Promise<void> {
+    const hasUnsaved = this.signupForm.dirty || !!this.editingUser();
+    if (hasUnsaved) {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved registration changes. Discard them?',
+        confirmText: 'Discard',
+        cancelText: 'Stay'
+      });
+      if (!confirmed) return;
+    }
+    this.resetForm();
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+      this.fetchUsers();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+      this.fetchUsers();
+    }
+  }
+
+  mathMin = Math.min;
+
+  async canDeactivate(): Promise<boolean> {
+    if (!this.signupForm?.dirty && !this.editingUser()) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved registration changes. Leave this page and discard them?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
   }
 }

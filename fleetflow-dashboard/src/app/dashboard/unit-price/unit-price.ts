@@ -19,6 +19,7 @@ export class UnitPrice implements OnInit {
   unitPrices = signal<UnitPriceInterface[]>([]);
   isFormOpen = signal(false);
   editingId = signal<number | null>(null);
+  private initialFormModel = '';
 
   formModel: Omit<UnitPriceInterface, 'id'> = {
     country: '',
@@ -38,6 +39,7 @@ export class UnitPrice implements OnInit {
   openAddForm(): void {
     this.editingId.set(null);
     this.formModel = { country: '', sea_price: 0, air_price: 0, bill_charge: 0, packing_charge: 0 };
+    this.initialFormModel = JSON.stringify(this.formModel);
     this.isFormOpen.set(true);
   }
 
@@ -50,12 +52,24 @@ export class UnitPrice implements OnInit {
       bill_charge: entry.bill_charge,
       packing_charge: entry.packing_charge,
     };
+    this.initialFormModel = JSON.stringify(this.formModel);
     this.isFormOpen.set(true);
   }
 
-  closeForm(): void {
+  async closeForm(skipConfirm = false): Promise<void> {
+    if (!skipConfirm && this.isFormOpen() && JSON.stringify(this.formModel) !== this.initialFormModel) {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved unit price changes. Discard them?',
+        confirmText: 'Discard',
+        cancelText: 'Stay'
+      });
+      if (!confirmed) return;
+    }
+
     this.isFormOpen.set(false);
     this.editingId.set(null);
+    this.initialFormModel = '';
   }
 
   async saveForm(): Promise<void> {
@@ -88,7 +102,7 @@ export class UnitPrice implements OnInit {
             prev.map((item) => (item.id === id ? { ...item, ...(updated || payload) } : item))
           );
           this.toastService.show('Unit price updated successfully', 'success');
-          this.closeForm();
+          this.closeForm(true);
         },
         error: (err: any) => {
           const errMsg = err?.error?.message || 'Failed to update unit price';
@@ -103,7 +117,7 @@ export class UnitPrice implements OnInit {
             this.unitPrices.update((prev) => [...prev, created]);
           }
           this.toastService.show('Unit price created successfully', 'success');
-          this.closeForm();
+          this.closeForm(true);
         },
         error: (err: any) => {
           const errMsg = err?.error?.message || 'Failed to create unit price';
@@ -111,5 +125,17 @@ export class UnitPrice implements OnInit {
         }
       });
     }
+  }
+
+  async canDeactivate(): Promise<boolean> {
+    if (!this.isFormOpen()) return true;
+    if (JSON.stringify(this.formModel) === this.initialFormModel) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved unit price changes. Leave this page and discard them?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
   }
 }

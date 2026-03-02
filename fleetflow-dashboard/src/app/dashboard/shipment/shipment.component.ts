@@ -42,15 +42,24 @@ export class ShipmentComponent implements OnInit {
     });
   }
 
-  toggleCreateMode() {
+  async toggleCreateMode(): Promise<void> {
+    if (this.isCreating) {
+      const hasUnsaved = this.shipmentForm.dirty || this.isEditing;
+      if (hasUnsaved) {
+        const confirmed = await this.confirmationService.confirm({
+          title: 'Unsaved Changes',
+          message: 'You have an unsaved shipment form. Discard changes?',
+          confirmText: 'Discard',
+          cancelText: 'Stay'
+        });
+        if (!confirmed) return;
+      }
+    }
+
     this.isCreating = !this.isCreating;
     this.isEditing = false;
     this.editingId = null;
-    if (!this.isCreating) {
-      this.shipmentForm.reset({ status: 'Pending' });
-    } else {
-      this.shipmentForm.reset({ status: 'Pending' });
-    }
+    this.shipmentForm.reset({ status: 'Pending' });
   }
 
   editShipment(shipment: Shipment) {
@@ -146,5 +155,17 @@ export class ShipmentComponent implements OnInit {
         error: (err: any) => console.error('Error deleting shipment', err)
       });
     }
+  }
+
+  async canDeactivate(): Promise<boolean> {
+    if (!this.isCreating) return true;
+    if (!this.shipmentForm.dirty && !this.isEditing) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have an unsaved shipment form. Leave this page and discard changes?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
   }
 }

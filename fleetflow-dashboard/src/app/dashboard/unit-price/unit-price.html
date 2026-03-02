@@ -91,8 +91,16 @@
   </div>
 
   <div class="unit-price-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full table-fixed text-left">
+    <div>
+      <table class="w-full table-fixed text-left unit-price-table">
+        <colgroup>
+          <col style="width: 24%" />
+          <col style="width: 14%" />
+          <col style="width: 14%" />
+          <col style="width: 14%" />
+          <col style="width: 14%" />
+          <col style="width: 20%" />
+        </colgroup>
         <thead>
           <tr class="bg-slate-50 border-b border-slate-200">
             <th
@@ -103,22 +111,26 @@
             <th
               class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
             >
-              Sea Cargo
+              <span class="hidden sm:inline">Sea Cargo</span>
+              <span class="sm:hidden">Sea</span>
             </th>
             <th
               class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
             >
-              Air Cargo
+              <span class="hidden sm:inline">Air Cargo</span>
+              <span class="sm:hidden">Air</span>
             </th>
             <th
               class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
             >
-              Billing Charge
+              <span class="hidden sm:inline">Billing Charge</span>
+              <span class="sm:hidden">Bill</span>
             </th>
             <th
               class="w-1/5 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
             >
-              Packing Charge
+              <span class="hidden sm:inline">Packing Charge</span>
+              <span class="sm:hidden">Pack</span>
             </th>
             <th
               class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
@@ -150,7 +162,7 @@
               <td class="px-6 py-4 text-center align-middle">
                 <button
                   (click)="openEditForm(unitPrice)"
-                  class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition mx-auto"
+                  class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition mx-auto whitespace-nowrap"
                 >
                   Edit
                 </button>

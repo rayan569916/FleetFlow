@@ -13,6 +13,11 @@ interface LoginResponse {
     office_name: string | null;
 }
 
+export interface OfficePayload {
+    name: string;
+    location?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -58,8 +63,16 @@ export class AuthService {
         return this.http.get<any[]>(`${this.apiUrl}/offices`);
     }
 
-    getUsers(): Observable<any> {
-        return this.http.get<any>(`${this.apiUrl}/users`);
+    createOffice(payload: OfficePayload): Observable<any> {
+        return this.http.post(`${this.apiUrl}/offices`, payload);
+    }
+
+    updateOffice(officeId: number, payload: OfficePayload): Observable<any> {
+        return this.http.put(`${this.apiUrl}/offices/${officeId}`, payload);
+    }
+
+    getUsers(params?: { page?: number; per_page?: number; office_id?: number; role_id?: number }): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/users`, { params: params as any });
     }
 
     updateUser(userId: number, userData: any): Observable<any> {
@@ -86,7 +99,7 @@ export class AuthService {
 
     hasFullAccess = computed(() => {
         const role = this.currentUserRole();
-        return role === 'Super_admin' || role === 'management';
+        return role === 'Super_admin' || role === 'super_admin' || role === 'management';
     });
 
     isShopManager = computed(() => {

@@ -45,6 +45,7 @@ export class InvoiceComponent implements OnInit {
   successMessage: string | null = null;
   currentUserRole: string | null = null;
   @ViewChild('phoneSearchInput') phoneSearchInput!: ElementRef;
+  @ViewChild('itemDescriptionInput') itemDescriptionInput!: ElementRef<HTMLInputElement>;
   isEditMode = false;
   editingInvoiceId: number | null = null;
 
@@ -66,6 +67,7 @@ export class InvoiceComponent implements OnInit {
   private itemSearchSubject = new Subject<string>();
   suggestedItems: CargoItem[] = [];
   showItemDropdown = false;
+  activeItemSuggestionIndex = -1;
 
   // Pagination Signals
   currentPage = 1;
@@ -91,8 +93,13 @@ export class InvoiceComponent implements OnInit {
     { label: 'Bahrain (+973)', code: '+973' },
     { label: 'India (+91)', code: '+91' },
     { label: 'Pakistan (+92)', code: '+92' },
-    { label: 'Bangladesh (+880)', code: '+880' }
+    { label: 'Bangladesh (+880)', code: '+880' },
+    { label: 'Sri Lanka (+94)', code: '+94'},
+    { label: 'Nepal (+977)', code: '+977'},
+    { label:'Philippines (+63)', code: '+63'},
+    { label: 'Indonesia (+62)', code: '+62'}
   ];
+  
 
   constructor(
     private fb: FormBuilder,
@@ -188,6 +195,7 @@ export class InvoiceComponent implements OnInit {
     ).subscribe(res => {
       this.suggestedItems = res.items || [];
       this.showItemDropdown = this.suggestedItems.length > 0;
+      this.activeItemSuggestionIndex = this.suggestedItems.length > 0 ? 0 : -1;
       this.cdr.detectChanges();
     });
   }
@@ -199,13 +207,61 @@ export class InvoiceComponent implements OnInit {
     this.itemForm.patchValue({ description: search }, { emitEvent: false });
   }
 
+  onItemDescriptionKeydown(event: KeyboardEvent): void {
+    if (!this.showItemDropdown || this.suggestedItems.length === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.activeItemSuggestionIndex =
+        (this.activeItemSuggestionIndex + 1) % this.suggestedItems.length;
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.activeItemSuggestionIndex =
+        (this.activeItemSuggestionIndex - 1 + this.suggestedItems.length) % this.suggestedItems.length;
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      const selected =
+        this.suggestedItems[this.activeItemSuggestionIndex] || this.suggestedItems[0];
+      if (selected) {
+        this.selectItem(selected);
+      }
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showItemDropdown = false;
+      this.activeItemSuggestionIndex = -1;
+    }
+  }
+
   selectItem(item: CargoItem): void {
     this.itemForm.patchValue({
       description: item.item_name
     });
     this.showItemDropdown = false;
+    this.activeItemSuggestionIndex = -1;
     this.suggestedItems = [];
     this.cdr.detectChanges();
+  }
+
+  onPhoneInput(controlName: 'phone' | 'consigneeMobile', event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = (input.value || '').replace(/\D+/g, '');
+    if (input.value !== digitsOnly) {
+      input.value = digitsOnly;
+    }
+    this.userInfoForm.patchValue({ [controlName]: digitsOnly }, { emitEvent: false });
   }
 
   loadCountries(): void {
@@ -485,7 +541,26 @@ export class InvoiceComponent implements OnInit {
     });
   }
 
-  switchToList(): void {
+  async switchToList(): Promise<void> {
+    if (this.viewMode === 'create') {
+      const hasUnsavedChanges = this.isEditMode
+        || this.userInfoForm?.dirty
+        || this.itemForm?.dirty
+        || this.financialForm?.dirty
+        || this.chargesForm?.dirty
+        || this.items.length > 0;
+
+      if (hasUnsavedChanges) {
+        const confirmed = await this.confirmationService.confirm({
+          title: 'Unsaved Changes',
+          message: 'You have an unsaved invoice. Go back to list and discard changes?',
+          confirmText: 'Leave',
+          cancelText: 'Stay'
+        });
+        if (!confirmed) return;
+      }
+    }
+
     this.viewMode = 'list';
     this.errorMessage = null;
     this.successMessage = null;
@@ -578,7 +653,7 @@ export class InvoiceComponent implements OnInit {
     if (!confirmed) return;
 
     // Check permissions locally (backend also enforces this)
-    if (this.currentUserRole !== 'super_admin' && this.currentUserRole !== 'ceo') {
+    if (this.currentUserRole !== 'Super_admin' && this.currentUserRole !== 'ceo') {
       this.toastService.show('Only Super Admin and CEO can delete invoices.', 'error');
       return;
     }
@@ -647,7 +722,7 @@ export class InvoiceComponent implements OnInit {
     });
   }
 
-  addItem(): void {
+  addItem(refocusDescription = false): void {
     if (this.itemForm.valid) {
       const newItem: InvoiceItem = {
         id: this.itemIdCounter++,
@@ -659,6 +734,13 @@ export class InvoiceComponent implements OnInit {
       };
       this.items.push(newItem);
       this.itemForm.reset({ quantity: 1, description: '', unitWeight: null });
+      this.itemForm.markAsPristine();
+
+      if (refocusDescription && this.itemDescriptionInput?.nativeElement) {
+        setTimeout(() => {
+          this.itemDescriptionInput.nativeElement.focus();
+        }, 0);
+      }
       // Total calculation is now triggered by financialForm
     } else {
       this.itemForm.markAllAsTouched();
@@ -728,13 +810,16 @@ export class InvoiceComponent implements OnInit {
     if (this.userInfoForm.invalid || this.financialForm.invalid) {
       this.userInfoForm.markAllAsTouched();
       this.financialForm.markAllAsTouched();
-      this.toastService.show('Please fill in all required information.', 'error');
+      const message = this.buildValidationMessage();
+      this.toastService.show(message, 'error');
+      this.scrollToFirstInvalidField();
       this.cdr.detectChanges();
       return;
     }
 
     if (this.items.length === 0) {
-      this.toastService.show('Please add at least one item to the invoice.', 'error');
+      this.toastService.show('Add at least one item in Add Items section before submitting.', 'error');
+      this.scrollToItemsSection();
       this.cdr?.detectChanges();
       return;
     }
@@ -853,5 +938,78 @@ export class InvoiceComponent implements OnInit {
 
   printInvoice(): void {
     window.print();
+  }
+
+  private buildValidationMessage(): string {
+    const issues: string[] = [];
+
+    if (this.userInfoForm.get('phone')?.invalid) {
+      issues.push('Sender mobile must be digits only (6 to 14 numbers).');
+    }
+    if (this.userInfoForm.get('consigneeMobile')?.invalid) {
+      issues.push('Receiver mobile must be digits only (6 to 14 numbers).');
+    }
+    if (this.userInfoForm.get('modeOfDelivery')?.invalid) {
+      issues.push('Select mode of delivery.');
+    }
+    if (this.userInfoForm.get('modeOfPayment')?.invalid) {
+      issues.push('Select mode of payment.');
+    }
+    if (this.financialForm.get('totalCartons')?.invalid) {
+      issues.push('Total cartons must be at least 1.');
+    }
+    if (this.financialForm.get('pricePerKg')?.invalid) {
+      issues.push('Price per Kg must be greater than 0.');
+    }
+    if (this.cartons.controls.some((c) => c.invalid)) {
+      issues.push('Complete all carton fields: weight, customs charge, and packing charge.');
+    }
+
+    if (issues.length === 0) {
+      return 'Please complete all required fields in Invoice Information and Billing Details.';
+    }
+    return issues.slice(0, 3).join(' ');
+  }
+
+  private scrollToFirstInvalidField(): void {
+    setTimeout(() => {
+      const firstInvalid = document.querySelector(
+        '.invoice-container .ng-invalid[formcontrolname], .invoice-container input.ng-invalid, .invoice-container select.ng-invalid, .invoice-container textarea.ng-invalid'
+      ) as HTMLElement | null;
+
+      if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid.focus();
+      }
+    }, 0);
+  }
+
+  private scrollToItemsSection(): void {
+    setTimeout(() => {
+      const section = document.querySelector('.items-section') as HTMLElement | null;
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 0);
+  }
+
+  async canDeactivate(): Promise<boolean> {
+    if (this.viewMode !== 'create') return true;
+
+    const hasUnsavedChanges = this.isEditMode
+      || this.userInfoForm?.dirty
+      || this.itemForm?.dirty
+      || this.financialForm?.dirty
+      || this.chargesForm?.dirty
+      || this.items.length > 0;
+
+    if (!hasUnsavedChanges) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have an unsaved invoice. Leave this page and discard changes?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
   }
 }

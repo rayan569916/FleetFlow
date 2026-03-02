@@ -76,9 +76,28 @@ def register(current_user):
 def get_users(current_user):
     # Use joinedload to prevent N+1 queries for role and office
     query = User.query.options(joinedload(User.role), joinedload(User.office))
+
+    # Pagination
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=10, type=int)
+    per_page = max(1, min(per_page, 100))
+
+    # Filters (admin/management can filter across offices/roles)
+    role_id = request.args.get('role_id', type=int)
+    office_id = request.args.get('office_id', type=int)
+
     if not is_super_user(current_user):
         query = query.filter_by(office_id=current_user.office_id)
-    users = query.order_by(User.full_name).all()
+        # Non-super users shouldn't be able to filter other offices
+        office_id = current_user.office_id
+
+    if role_id:
+        query = query.filter(User.role_id == role_id)
+    if office_id:
+        query = query.filter(User.office_id == office_id)
+
+    paginated = query.order_by(User.full_name).paginate(page=page, per_page=per_page, error_out=False)
+    users = paginated.items
     output = [{
         'id': u.id,
         'username': u.username,
@@ -88,7 +107,13 @@ def get_users(current_user):
         'full_name': u.full_name,
         'created_at': u.created_at
     } for u in users]
-    return jsonify({'users': output})
+    return jsonify({
+        'users': output,
+        'page': paginated.page,
+        'per_page': paginated.per_page,
+        'total': paginated.total,
+        'pages': paginated.pages
+    })
 
 @auth_bp.route('/roles', methods=['GET'])
 def get_roles():
@@ -135,7 +160,56 @@ def delete_user(current_user, user_id):
     return jsonify({'message': 'User deleted successfully!'})
 
 @auth_bp.route('/offices', methods=['GET'])
-@role_required(['Super_admin', 'management'])
+@role_required(['Super_admin', 'super_admin', 'management'])
 def get_offices(current_user):
     offices = Office.query.order_by(Office.name.asc()).all()
     return jsonify([{'id': o.id, 'name': o.name, 'location': o.location} for o in offices])
+
+@auth_bp.route('/offices', methods=['POST'])
+@role_required(['Super_admin', 'super_admin', 'management'])
+def create_office(current_user):
+    data = request.get_json() or {}
+
+    name = (data.get('name') or '').strip()
+    location = (data.get('location') or '').strip()
+
+    if not name:
+        return jsonify({'message': 'Office name is required'}), 400
+
+    existing_office = Office.query.filter(db.func.lower(Office.name) == name.lower()).first()
+    if existing_office:
+        return jsonify({'message': 'Office name already exists'}), 400
+
+    office = Office(name=name, location=location or None)
+    db.session.add(office)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Office created successfully!',
+        'office': {'id': office.id, 'name': office.name, 'location': office.location}
+    }), 201
+
+@auth_bp.route('/offices/<int:office_id>', methods=['PUT'])
+@role_required(['Super_admin', 'super_admin', 'management'])
+def update_office(current_user, office_id):
+    office = Office.query.get_or_404(office_id)
+    data = request.get_json() or {}
+
+    name = (data.get('name') or '').strip()
+    location = (data.get('location') or '').strip()
+
+    if not name:
+        return jsonify({'message': 'Office name is required'}), 400
+
+    existing_office = Office.query.filter(db.func.lower(Office.name) == name.lower()).first()
+    if existing_office and existing_office.id != office.id:
+        return jsonify({'message': 'Office name already exists'}), 400
+
+    office.name = name
+    office.location = location or None
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Office updated successfully!',
+        'office': {'id': office.id, 'name': office.name, 'location': office.location}
+    })

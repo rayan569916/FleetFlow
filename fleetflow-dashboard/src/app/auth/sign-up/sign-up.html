@@ -26,17 +26,17 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start ">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
       <!-- Registration Form (Left Column) -->
       <div class="lg:col-span-4 animate-slide-up">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sticky top-8">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 h-full flex flex-col">
           <div class="flex items-center gap-3 mb-6">
             <h2 class="text-xl font-bold text-slate-800">
               {{ editingUser() ? 'Edit User' : 'New Registration' }}
             </h2>
           </div>
 
-          <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-4">
+          <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-4 flex-1 flex flex-col">
             <!-- Alert Section -->
             <div
               *ngIf="successMessage"
@@ -65,6 +65,15 @@
                     signupForm.get('fullName')?.touched && signupForm.get('fullName')?.invalid
                   "
                 />
+                <p
+                  *ngIf="
+                    (editingUser() || signupForm.get('fullName')?.touched || submitAttempted()) &&
+                    signupForm.get('fullName')?.invalid
+                  "
+                  class="text-[10px] text-rose-500 mt-1 font-semibold"
+                >
+                  Full name is required.
+                </p>
               </div>
 
               <div>
@@ -80,6 +89,15 @@
                     signupForm.get('email')?.touched && signupForm.get('email')?.invalid
                   "
                 />
+                <p
+                  *ngIf="
+                    (editingUser() || signupForm.get('email')?.touched || submitAttempted()) &&
+                    signupForm.get('email')?.invalid
+                  "
+                  class="text-[10px] text-rose-500 mt-1 font-semibold"
+                >
+                  Enter a valid email/username.
+                </p>
               </div>
 
               <div>
@@ -96,6 +114,15 @@
                     {{ role.displayName }}
                   </option>
                 </select>
+                <p
+                  *ngIf="
+                    (editingUser() || signupForm.get('role')?.touched || submitAttempted()) &&
+                    signupForm.get('role')?.invalid
+                  "
+                  class="text-[10px] text-rose-500 mt-1 font-semibold"
+                >
+                  Role is required.
+                </p>
               </div>
 
               <div>
@@ -112,19 +139,83 @@
                     {{ office.name }}
                   </option>
                 </select>
+                <p
+                  *ngIf="
+                    (editingUser() || signupForm.get('officeId')?.touched || submitAttempted()) &&
+                    signupForm.get('officeId')?.invalid
+                  "
+                  class="text-[10px] text-rose-500 mt-1 font-semibold"
+                >
+                  Office is required.
+                </p>
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                <input
-                  type="password"
-                  formControlName="password"
-                  placeholder="••••••••"
-                  class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400"
-                  [class.border-rose-400]="
-                    signupForm.get('password')?.touched && signupForm.get('password')?.invalid
+
+                <div class="relative">
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    formControlName="password"
+                    placeholder="••••••••"
+                    class="w-full px-4 py-2 pr-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400"
+                    [class.border-rose-400]="
+                      signupForm.get('password')?.touched && signupForm.get('password')?.invalid
+                    "
+                  />
+
+                  <!-- Eye Icon Button -->
+                  <button
+                    type="button"
+                    (click)="togglePasswordVisibility()"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition"
+                    [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                  >
+                    <!-- Eye Icon -->
+                    <svg
+                      *ngIf="!showPassword()"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+
+                    <!-- Eye Off Icon -->
+                    <svg
+                      *ngIf="showPassword()"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M17.94 17.94A10.94 10.94 0 0112 20C5 20 1 12 1 12a21.86 21.86 0 015.06-7.94"
+                      ></path>
+                      <path
+                        d="M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.86 21.86 0 01-4.3 6.38"
+                      ></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <p
+                  *ngIf="
+                    (editingUser() || signupForm.get('password')?.touched || submitAttempted()) &&
+                    signupForm.get('password')?.invalid
                   "
-                />
+                  class="text-[10px] text-rose-500 mt-1 font-semibold"
+                >
+                  <span *ngIf="!editingUser()">Password is required and must be strong.</span>
+                  <span *ngIf="editingUser()">If provided, password must be strong.</span>
+                </p>
                 <p class="text-[10px] text-slate-400 mt-1" *ngIf="!editingUser()">
                   Min 8 chars, 1 upper, 1 special
                 </p>
@@ -134,23 +225,84 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1"
-                  >Confirm Password</label
-                >
-                <input
-                  type="password"
-                  formControlName="ConfirmPassword"
-                  placeholder="••••••••"
-                  class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400"
-                  [class.border-rose-400]="
-                    signupForm.get('ConfirmPassword')?.touched &&
+                <label class="block text-sm font-medium text-slate-700 mb-1">
+                  Confirm Password
+                </label>
+
+                <div class="relative">
+                  <input
+                    [type]="showConfirmPassword() ? 'text' : 'password'"
+                    formControlName="ConfirmPassword"
+                    placeholder="••••••••"
+                    class="w-full px-4 py-2 pr-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400"
+                    [class.border-rose-400]="
+                      signupForm.get('ConfirmPassword')?.touched &&
+                      (signupForm.get('ConfirmPassword')?.invalid ||
+                        signupForm.errors?.['mismatch'])
+                    "
+                  />
+
+                  <!-- Eye Icon -->
+                  <button
+                    type="button"
+                    (click)="toggleConfirmPasswordVisibility()"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer transition"
+                    [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
+                  >
+                    <!-- Show Icon -->
+                    <svg
+                      *ngIf="!showConfirmPassword()"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+
+                    <!-- Hide Icon -->
+                    <svg
+                      *ngIf="showConfirmPassword()"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M17.94 17.94A10.94 10.94 0 0112 20C5 20 1 12 1 12a21.86 21.86 0 015.06-7.94"
+                      ></path>
+                      <path
+                        d="M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.86 21.86 0 01-4.3 6.38"
+                      ></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <p
+                  *ngIf="
+                    (editingUser() || signupForm.get('ConfirmPassword')?.touched || submitAttempted()) &&
                     (signupForm.get('ConfirmPassword')?.invalid || signupForm.errors?.['mismatch'])
                   "
-                />
+                  class="text-[10px] text-rose-500 mt-1 font-semibold"
+                >
+                  <span *ngIf="signupForm.errors?.['mismatch']">Passwords do not match.</span>
+                  <span *ngIf="!signupForm.errors?.['mismatch'] && !editingUser()"
+                    >Confirm password is required.</span
+                  >
+                  <span *ngIf="!signupForm.errors?.['mismatch'] && editingUser()"
+                    >If provided, confirm password is required.</span
+                  >
+                </p>
               </div>
             </div>
 
-            <div class="flex flex-col gap-2 pt-4">
+            <div class="flex flex-col gap-2 pt-4 mt-auto">
               <button
                 type="submit"
                 [disabled]="signupForm.invalid || isLoading"
@@ -182,7 +334,7 @@
               <button
                 *ngIf="editingUser()"
                 type="button"
-                (click)="resetForm()"
+                (click)="cancelEdit()"
                 class="w-full py-2.5 px-4 border border-slate-200 rounded-xl text-slate-500 font-medium hover:bg-slate-50 transition-all"
               >
                 Cancel Edit
@@ -197,6 +349,42 @@
         <div
           class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]"
         >
+          <!-- Filters -->
+          <div
+            class="bg-slate-50 px-6 py-4 border-b border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-3"
+          >
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1"
+                >Filter by Office</label
+              >
+              <select
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-slate-700 font-medium outline-none focus:ring-2 focus:ring-yellow-500"
+                [ngModel]="selectedOfficeFilterId()"
+                (ngModelChange)="selectedOfficeFilterId.set($event); onFilterChange()"
+              >
+                <option [ngValue]="0">All Offices</option>
+                <option *ngFor="let office of offices()" [ngValue]="office.id">
+                  {{ office.name }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1"
+                >Filter by Role</label
+              >
+              <select
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-slate-700 font-medium outline-none focus:ring-2 focus:ring-yellow-500"
+                [ngModel]="selectedRoleFilterId()"
+                (ngModelChange)="selectedRoleFilterId.set($event); onFilterChange()"
+              >
+                <option [ngValue]="0">All Roles</option>
+                <option *ngFor="let role of roles()" [ngValue]="role.id">
+                  {{ role.displayName }}
+                </option>
+              </select>
+            </div>
+          </div>
+
           <div class="overflow-x-auto">
             <table class="w-full table-fixed text-left">
               <thead>
@@ -252,13 +440,10 @@
                       class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase"
                       [ngClass]="{
                         'bg-yellow-100 text-yellow-800':
-                          user.role === 'ceo' || user.role === 'super_admin',
-                        'bg-blue-100 text-blue-800': user.role === 'manager',
-                        'bg-slate-100 text-slate-800': user.role === 'cashier',
+                          user.role === 'ceo' || user.role === 'Super_admin',
+                        'bg-blue-100 text-blue-800': user.role === 'shop_manager',
+                        'bg-slate-100 text-slate-800': user.role === 'management',
                         'bg-green-100 text-green-800': user.role === 'driver',
-                        'bg-purple-100 text-purple-800': user.role === 'accountant',
-                        'bg-pink-100 text-pink-800': user.role === 'hr',
-                        'bg-orange-100 text-orange-800': user.role === 'staff',
                       }"
                     >
                       {{ user.role?.replace('_', ' ') }}
@@ -316,6 +501,43 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div
+            class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between"
+            *ngIf="totalItems() > 0"
+          >
+            <div class="text-sm text-slate-500">
+              Showing
+              <span class="font-medium">{{ (currentPage() - 1) * pageSize + 1 }}</span>
+              to
+              <span class="font-medium">{{
+                mathMin(currentPage() * pageSize, totalItems())
+              }}</span>
+              of <span class="font-medium">{{ totalItems() }}</span> users
+            </div>
+            <div class="flex gap-2">
+              <button
+                (click)="prevPage()"
+                [disabled]="currentPage() === 1"
+                class="px-3 py-1.5 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Previous
+              </button>
+              <div
+                class="flex items-center px-3 py-1.5 border border-slate-200 rounded-lg bg-white text-sm font-medium text-slate-700"
+              >
+                Page {{ currentPage() }} of {{ totalPages() }}
+              </div>
+              <button
+                (click)="nextPage()"
+                [disabled]="currentPage() === totalPages()"
+                class="px-3 py-1.5 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>

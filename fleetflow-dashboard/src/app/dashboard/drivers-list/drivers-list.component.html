@@ -8,7 +8,7 @@
   </div>
 
   <div class="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
-    @for (driver of drivers(); track trackById($index)) {
+    @for (driver of activeDrivers; track trackById($index)) {
     <article
       class="group flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-3 transition-all duration-200 hover:border-indigo-100 hover:bg-white hover:shadow-md cursor-pointer">
       <div

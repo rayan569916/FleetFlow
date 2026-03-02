@@ -439,7 +439,7 @@
     <div class="profile-row group">
       <div class="relative">
         <div class="profile-avatar">
-          <span>U</span>
+          <span>{{ avatarInitial() }}</span>
         </div>
         <div class="status-dot"></div>
       </div>
@@ -449,8 +449,8 @@
         [class.opacity-0]="!expanded()"
         [class.w-0]="!expanded()"
       >
-        <span class="profile-name">Admin User</span>
-        <span class="profile-email">admin&#64;captaincargo.com</span>
+        <span class="profile-name">{{ displayName() || 'User' }}</span>
+        <span class="profile-email">{{ username() || '' }}</span>
       </div>
 
       <div class="ml-auto" [class.hidden]="!expanded()">

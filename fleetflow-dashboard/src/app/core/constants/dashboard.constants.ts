@@ -28,6 +28,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { id: 'invoice', label: 'Billing Invoice', icon: 'file', route: '/dashboard/invoice' },
   { id: 'settings', label: 'Settings', icon: 'settings', route: '/dashboard/settings' },
   { id: 'register', label: 'Register User', icon: 'users', route: '/dashboard/register' },
+  { id: 'offices', label: 'Create Office', icon: 'settings', route: '/dashboard/offices' },
   { id: 'unit-price', label: 'Unit Price', icon: 'dollar-sign', route: '/dashboard/unit-price' },
   { id: 'logout', label: 'Logout', icon: 'logout', route: '' },
   { id: 'cargo-items', label: 'Cargo Items', icon: 'box', route: '/dashboard/cargo-items' },

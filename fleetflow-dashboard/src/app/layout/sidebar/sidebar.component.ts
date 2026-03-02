@@ -24,6 +24,10 @@ export class SidebarComponent {
   private uiStateService = inject(UiStateService);
   private authService = inject(AuthService);
 
+  readonly displayName = this.authService.currentUserFullName;
+  readonly username = this.authService.currentUserName;
+  readonly avatarInitial = computed(() => (this.displayName() || this.username() || 'U').trim().charAt(0).toUpperCase());
+
   readonly navGroups = computed<NavGroup[]>(() => {
     // If the user is a driver, the sidebar shouldn't render, but returning empty ensures nothing breaks
     if (this.authService.isDriver()) {
@@ -51,6 +55,7 @@ export class SidebarComponent {
         items: allItems.filter(i => {
           if (['settings'].includes(i.id)) return true; // Maybe restrict settings to fullAccess later, for now left as is
           if (i.id === 'register') return fullAccess;
+          if (i.id === 'offices') return fullAccess;
           if (i.id === 'unit-price') return fullAccess;
           if (i.id === 'cargo-items') return fullAccess;
           return false;

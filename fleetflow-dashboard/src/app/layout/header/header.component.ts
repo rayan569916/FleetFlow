@@ -67,7 +67,8 @@ export class HeaderComponent implements OnInit {
       'receipt': 'Receipt',
       'purchase': 'Purchase',
       'register': 'Register User',
-      'users': 'User Management'
+      'users': 'User Management',
+      'offices': 'Office Management'
     };
 
     return mappings[cleanPath] || cleanPath.charAt(0).toUpperCase() + cleanPath.slice(1);

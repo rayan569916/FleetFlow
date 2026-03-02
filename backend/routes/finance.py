@@ -165,7 +165,7 @@ def create_purchase(current_user):
     db.session.add(new_purchase)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(datetime.date.today(), office_id)
+    update_daily_report(new_purchase.created_at, office_id)
     return jsonify({'message': 'Purchase created'}), 201
 
 @finance_bp.route('/purchases/<int:id>', methods=['PUT'])
@@ -200,7 +200,7 @@ def create_receipt(current_user):
     db.session.add(new_receipt)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(datetime.date.today(), office_id)
+    update_daily_report(new_receipt.created_at, office_id)
     return jsonify({'message': 'Receipt created'}), 201
 
 @finance_bp.route('/receipts/<int:id>', methods=['PUT'])
@@ -235,7 +235,7 @@ def create_payment(current_user):
     db.session.add(new_payment)
     db.session.commit()
     # Update daily report in real-time
-    update_daily_report(datetime.date.today(), office_id)
+    update_daily_report(new_payment.created_at, office_id)
     return jsonify({'message': 'Payment created'}), 201
 
 @finance_bp.route('/payments/<int:id>', methods=['PUT'])

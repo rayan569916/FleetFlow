@@ -99,7 +99,20 @@ export class PaymentComponent implements OnInit {
     });
   }
 
-  toggleForm() {
+  async toggleForm(forceClose = false): Promise<void> {
+    if (this.showForm() && !forceClose) {
+      const hasUnsaved = this.paymentForm.dirty || !!this.editingItem();
+      if (hasUnsaved) {
+        const confirmed = await this.confirmationService.confirm({
+          title: 'Unsaved Changes',
+          message: 'You have an unsaved payment form. Discard changes?',
+          confirmText: 'Discard',
+          cancelText: 'Stay'
+        });
+        if (!confirmed) return;
+      }
+    }
+
     this.showForm.update(v => !v);
     if (!this.showForm()) {
       this.paymentForm.reset();
@@ -149,7 +162,7 @@ export class PaymentComponent implements OnInit {
       request.subscribe({
         next: () => {
           this.fetchData();
-          this.toggleForm();
+          this.toggleForm(true);
         },
         error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} payment`, err)
       });
@@ -185,5 +198,17 @@ export class PaymentComponent implements OnInit {
         error: (err: any) => console.error('Failed to delete payment', err)
       });
     }
+  }
+
+  async canDeactivate(): Promise<boolean> {
+    if (!this.showForm()) return true;
+    if (!this.paymentForm.dirty && !this.editingItem()) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have an unsaved payment form. Leave this page and discard changes?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
   }
 }

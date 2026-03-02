@@ -32,8 +32,8 @@
       class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px]"
       *ngIf="invoices.length > 0; else noInvoices"
     >
-      <div class="overflow-x-auto">
-        <table class="w-full text-left">
+      <div class="overflow-x-auto invoice-list-scroll">
+        <table class="w-full text-left invoice-list-table">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
               <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
@@ -88,7 +88,8 @@
                 <!-- Status Dropdown (only for admins/accountants) -->
                 <select
                   *ngIf="
-                    currentUserRole === 'super_admin' ||
+                    currentUserRole === 'Super_admin' ||
+                      currentUserRole === 'super_admin' ||
                       currentUserRole === 'ceo' ||
                       currentUserRole === 'accountant';
                     else statusBadge
@@ -156,7 +157,11 @@
                     </svg>
                   </button>
                   <button
-                    *ngIf="currentUserRole === 'super_admin' || currentUserRole === 'ceo'"
+                    *ngIf="
+                      currentUserRole === 'Super_admin' ||
+                      currentUserRole === 'super_admin' ||
+                      currentUserRole === 'ceo'
+                    "
                     class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
                     (click)="$event.stopPropagation(); deleteInvoice(inv.id!)"
                     title="Delete Invoice"
@@ -251,9 +256,9 @@
     <div class="invoice-header">
       <h1>{{ isEditMode ? 'Edit Billing Invoice' : 'New Billing Invoice' }}</h1>
       <div class="header-actions">
-        <button class="btn btn-secondary" (click)="switchToList()">Back to List</button>
-        <button class="btn btn-primary" (click)="printInvoice()">Print</button>
-        <button class="btn btn-secondary" (click)="resetFormBasedOnButton()">Reset</button>
+        <button class="btn btn-secondary btn-back" (click)="switchToList()">Back to List</button>
+        <button class="btn btn-primary btn-print" (click)="printInvoice()">Print</button>
+        <button class="btn btn-secondary btn-reset" (click)="resetFormBasedOnButton()">Reset</button>
       </div>
     </div>
 
@@ -363,10 +368,14 @@
               <!-- Phone -->
               <div class="floating-group">
                 <input
-                  type="tel"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="14"
                   formControlName="phone"
                   placeholder=" "
                   class="floating-input text-black"
+                  (input)="onPhoneInput('phone', $event)"
                   [class.error]="
                     userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched
                   "
@@ -408,6 +417,9 @@
               <div class="floating-group">
                 <input
                   type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="14"
                   formControlName="zipCode"
                   placeholder=" "
                   class="floating-input text-black"
@@ -479,10 +491,14 @@
 
               <div class="floating-group">
                 <input
-                  type="tel"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="14"
                   formControlName="consigneeMobile"
                   placeholder=" "
                   class="floating-input text-black"
+                  (input)="onPhoneInput('consigneeMobile', $event)"
                   [class.error]="
                     userInfoForm.get('consigneeMobile')?.invalid &&
                     userInfoForm.get('consigneeMobile')?.touched
@@ -582,14 +598,16 @@
       <h2>Add Items</h2>
       <form [formGroup]="itemForm">
         <div class="flex gap-1">
-          <div class="floating-group search-container relative">
+          <div class="floating-group search-container relative item-autocomplete-input">
             <input
+              #itemDescriptionInput
               type="text"
               formControlName="description"
               placeholder=" "
               class="floating-input text-black"
               (input)="onItemSearch($event)"
-              (focus)="showItemDropdown = suggestedItems.length > 0"
+              (focus)="showItemDropdown = suggestedItems.length > 0; activeItemSuggestionIndex = suggestedItems.length > 0 ? 0 : -1"
+              (keydown)="onItemDescriptionKeydown($event)"
               [class.error]="
                 itemForm.get('description')?.invalid && itemForm.get('description')?.touched
               "
@@ -602,9 +620,11 @@
               class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2 duration-200"
             >
               <div
-                *ngFor="let item of suggestedItems"
+                *ngFor="let item of suggestedItems; let i = index"
                 (click)="selectItem(item)"
-                class="px-4 py-3 hover:bg-yellow-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+                (mouseenter)="activeItemSuggestionIndex = i"
+                class="px-4 py-3 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+                [ngClass]="i === activeItemSuggestionIndex ? 'bg-purple-100 text-purple-900' : 'hover:bg-yellow-50'"
               >
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-bold text-slate-800">{{ item.item_name }}</span>
@@ -644,7 +664,14 @@
           </div>
 
           <div class="flex items-center">
-            <button type="button" class="btn btn-primary btn-large" (click)="addItem()">Add</button>
+            <button
+              type="button"
+              class="btn btn-primary btn-large"
+              (click)="addItem(true)"
+              (keydown.enter)="addItem(true); $event.preventDefault()"
+            >
+              Add
+            </button>
           </div>
         </div>
       </form>
@@ -694,7 +721,7 @@
         <p>No items added yet. Add items to create the invoice.</p>
       </div> -->
     </div>
-    <div class="flex grid-cols-2 gap-5">
+    <div class="invoice-bottom-row">
       <!-- FINANCIAL DETAILS SECTION below Items -->
       <div class="section financial-details-section flex-1">
         <h3 class="sub-heading">Billing Details</h3>
@@ -856,7 +883,7 @@
           </div>
         </div>
         <!-- ACTION BUTTONS -->
-        <div class="section action-buttons mt-5">
+        <div class="section action-buttons mt-5 no-print">
           <button
             type="button"
             class="btn btn-primary btn-large"

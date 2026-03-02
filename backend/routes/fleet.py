@@ -45,11 +45,11 @@ def serialize_live_tracking(lt):
 
 # Driver Routes
 @fleet_bp.route('/drivers', methods=['GET'])
-@role_required(['Super_admin', 'management', 'shop_manager'])
+@role_required(['Super_admin', 'super_admin', 'management', 'shop_manager'])
 def get_drivers(current_user): return get_all(Driver, serialize_driver, current_user)
 
 @fleet_bp.route('/drivers', methods=['POST'])
-@role_required(['Super_admin', 'management', 'shop_manager'])
+@role_required(['Super_admin', 'super_admin', 'management', 'shop_manager'])
 def create_driver(current_user):
     data = request.get_json()
     office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)

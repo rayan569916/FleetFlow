@@ -15,8 +15,12 @@ import { CardComponent } from '../../shared/ui/card/card.component';
 export class DriversListComponent {
   readonly drivers = input.required<Driver[]>();
 
+  get activeDrivers(): Driver[] {
+    return this.drivers().filter((driver) => driver.status === 'active');
+  }
+
   get activeCount(): number {
-    return this.drivers().filter((driver) => driver.status === 'active').length;
+    return this.activeDrivers.length;
   }
 
   trackById(index: number): number {

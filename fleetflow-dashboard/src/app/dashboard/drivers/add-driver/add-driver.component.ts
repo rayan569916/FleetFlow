@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { inject } from '@angular/core';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 
 @Component({
     selector: 'app-add-driver',
@@ -14,6 +15,8 @@ import { inject } from '@angular/core';
 export class AddDriverComponent {
     private fb = inject(FormBuilder);
     private router = inject(Router);
+    private confirmationService = inject(ConfirmationDialogService);
+    private isSubmitting = false;
 
     driverForm = this.fb.group({
         name: ['', Validators.required],
@@ -30,9 +33,21 @@ export class AddDriverComponent {
 
     onSubmit() {
         if (this.driverForm.valid) {
+            this.isSubmitting = true;
             console.log('Driver Data:', this.driverForm.value);
             alert('Driver added successfully! (Mock)');
             this.router.navigate(['/dashboard/drivers']);
         }
+    }
+
+    async canDeactivate(): Promise<boolean> {
+        if (this.isSubmitting || !this.driverForm.dirty) return true;
+
+        return this.confirmationService.confirm({
+            title: 'Unsaved Changes',
+            message: 'You have an unsaved driver form. Leave this page and discard changes?',
+            confirmText: 'Leave',
+            cancelText: 'Stay'
+        });
     }
 }

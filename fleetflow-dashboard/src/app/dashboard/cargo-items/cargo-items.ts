@@ -25,6 +25,7 @@ export class CargoItems implements OnInit {
   isFormOpen = signal(false);
   editingId = signal<number | null>(null);
   isLoading = signal(false);
+  private initialFormModel = '';
 
   // Search and Filter
   searchTerm = '';
@@ -86,6 +87,7 @@ export class CargoItems implements OnInit {
   openAddForm(): void {
     this.editingId.set(null);
     this.formModel = { item_name: '', category_id: this.categories()[0]?.id || 0 };
+    this.initialFormModel = JSON.stringify(this.formModel);
     this.isFormOpen.set(true);
   }
 
@@ -95,12 +97,24 @@ export class CargoItems implements OnInit {
       item_name: item.item_name,
       category_id: item.category_id
     };
+    this.initialFormModel = JSON.stringify(this.formModel);
     this.isFormOpen.set(true);
   }
 
-  closeForm(): void {
+  async closeForm(skipConfirm = false): Promise<void> {
+    if (!skipConfirm && this.isFormOpen() && JSON.stringify(this.formModel) !== this.initialFormModel) {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved cargo item changes. Discard them?',
+        confirmText: 'Discard',
+        cancelText: 'Stay'
+      });
+      if (!confirmed) return;
+    }
+
     this.isFormOpen.set(false);
     this.editingId.set(null);
+    this.initialFormModel = '';
   }
 
   async saveForm(): Promise<void> {
@@ -124,7 +138,7 @@ export class CargoItems implements OnInit {
         next: () => {
           this.toastService.show('Item updated successfully', 'success');
           this.loadItems();
-          this.closeForm();
+          this.closeForm(true);
         },
         error: () => this.toastService.show('Failed to update item', 'error')
       });
@@ -133,7 +147,7 @@ export class CargoItems implements OnInit {
         next: () => {
           this.toastService.show('Item created successfully', 'success');
           this.loadItems();
-          this.closeForm();
+          this.closeForm(true);
         },
         error: () => this.toastService.show('Failed to create item', 'error')
       });
@@ -182,4 +196,16 @@ export class CargoItems implements OnInit {
   }
 
   mathMin = Math.min;
+
+  async canDeactivate(): Promise<boolean> {
+    if (!this.isFormOpen()) return true;
+    if (JSON.stringify(this.formModel) === this.initialFormModel) return true;
+
+    return this.confirmationService.confirm({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved cargo item changes. Leave this page and discard them?',
+      confirmText: 'Leave',
+      cancelText: 'Stay'
+    });
+  }
 }
