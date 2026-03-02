@@ -19,7 +19,10 @@ export interface Invoice {
     providedIn: 'root'
 })
 export class InvoiceService {
-    private apiUrl = `${environment.apiBaseUrl}/api/invoices`;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
+    private apiUrl = `${this.apiRoot}/invoices`;
     private http = inject(HttpClient);
 
     getInvoices(params: any = {}): Observable<any> {

@@ -20,7 +20,10 @@ export interface ItemCategory {
 })
 export class CargoItemsService {
     private http = inject(HttpClient);
-    private baseApiUrl = `${environment.apiBaseUrl}/api/item_list`;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
+    private baseApiUrl = `${this.apiRoot}/item_list`;
     
     getCargoItemsList(search: string = '', categoryId?: number): Observable<{items: CargoItem[]}> {
         let params = new HttpParams();

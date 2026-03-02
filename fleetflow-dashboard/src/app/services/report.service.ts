@@ -51,7 +51,10 @@ export interface Category {
 })
 export class ReportService {
     private http = inject(HttpClient);
-    private apiUrl = `${environment.apiBaseUrl}/api/reports`;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
+    private apiUrl = `${this.apiRoot}/reports`;
 
     getDailyReport(date?: string, officeId?: number): Observable<DailyReportData> {
         const params: any = {};

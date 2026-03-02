@@ -22,7 +22,10 @@ export interface OfficePayload {
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = `${environment.apiBaseUrl}/api/auth`;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
+    private apiUrl = `${this.apiRoot}/auth`;
 
     // Signal to hold the current user's role
     currentUserRole = signal<string | null>(localStorage.getItem('user_role'));

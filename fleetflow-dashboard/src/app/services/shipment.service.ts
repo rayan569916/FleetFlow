@@ -18,7 +18,10 @@ export interface Shipment {
     providedIn: 'root'
 })
 export class ShipmentService {
-    private apiUrl = `${environment.apiBaseUrl}/shipments`;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
+    private apiUrl = `${this.apiRoot}/shipments`;
     private http = inject(HttpClient);
 
     getShipments(): Observable<Shipment[]> {

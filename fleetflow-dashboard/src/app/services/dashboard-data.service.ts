@@ -10,7 +10,10 @@ import { environment } from '../../environments/environment';
 export class DashboardDataService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = `${environment.apiBaseUrl}/api/dashboard`;
+  private apiRoot = environment.apiBaseUrl.endsWith('/api')
+    ? environment.apiBaseUrl
+    : `${environment.apiBaseUrl}/api`;
+  private apiUrl = `${this.apiRoot}/dashboard`;
 
   private readonly incomePeriodSubject = new BehaviorSubject<IncomePeriod>('today');
   readonly incomePeriod$ = this.incomePeriodSubject.asObservable();
@@ -43,7 +46,7 @@ export class DashboardDataService {
     return this.http.get<any[]>(`${this.rootUrl}/fleet/live-tracking`);
   }
 
-  private get rootUrl() { return `${environment.apiBaseUrl}/api`; }
+  private get rootUrl() { return `${this.apiRoot}`; }
 
   // --- Purchases ---
   getPurchases(params: any = {}): Observable<any> {

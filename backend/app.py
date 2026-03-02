@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
-from extensions import db, cors
+from extensions import db
+from flask_cors import CORS
 from config import Config
 from routes import register_routes
 from dotenv import load_dotenv
@@ -14,7 +15,11 @@ def create_app():
 
     # Initialize extensions
     db.init_app(app)
-    # cors.init_app(app, resources={r"/*": {"origins": app.config['CORS_ORIGINS']}}, supports_credentials=True)
+    # Restrict CORS to known frontend origins only (no wildcard).
+    CORS(app, origins=[
+        "http://localhost:4200",
+        "https://app.captaincargo.co"
+    ])
     migrate.init_app(app, db)
     # Register routes
     register_routes(app)
@@ -59,4 +64,4 @@ if __name__ == '__main__':
     with app.app_context():
         # db.create_all() # Uncomment if you want automatic table creation
         pass
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False)

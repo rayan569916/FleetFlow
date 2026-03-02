@@ -20,7 +20,9 @@ export interface User {
 export class UserService {
     private http = inject(HttpClient);
     private authService = inject(AuthService);
-    private apiUrl = environment.apiBaseUrl;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
 
     constructor() { }
 
@@ -31,6 +33,6 @@ export class UserService {
     }
 
     getUsers(): Observable<{ users: User[] }> {
-        return this.http.get<{ users: User[] }>(`${this.apiUrl}/api/auth/users`, { headers: this.getHeaders() });
+        return this.http.get<{ users: User[] }>(`${this.apiRoot}/auth/users`, { headers: this.getHeaders() });
     }
 }

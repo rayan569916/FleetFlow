@@ -9,7 +9,10 @@ import { environment } from '../../environments/environment';
 })
 export class TransactionService {
     private http = inject(HttpClient);
-    private apiUrl = `${environment.apiBaseUrl}/api/transactions`;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
+    private apiUrl = `${this.apiRoot}/transactions`;
 
     getTransactions(type: string): Observable<Entry[]> {
         return this.http.get<Entry[]>(`${this.apiUrl}`, {

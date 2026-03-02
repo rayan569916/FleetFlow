@@ -1,27 +1,28 @@
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'your_secret_key_here')
+    # IMPORTANT: use strong secret value in production via environment variables.
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 
-    database_url = os.environ.get('DATABASE_URL', '').strip()
-    if database_url:
-        SQLALCHEMY_DATABASE_URI = database_url
+    DB_HOST = os.getenv("DB_HOST")
+    DB_PORT = os.getenv("DB_PORT", 25060)
+    DB_USER = os.getenv("DB_USER")
+    DB_PASSWORD = os.getenv("DB_PASSWORD")
+    DB_NAME = os.getenv("DB_NAME")
+
+    # Optional single-URL override for platform-based deployments.
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
+    if DATABASE_URL:
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
     else:
-        db_host = os.environ.get('DB_HOST', 'host.docker.internal')
-        db_port = os.environ.get('DB_PORT', '3306')
-        db_user = os.environ.get('DB_USER', 'root')
-        db_password = os.environ.get('DB_PASSWORD', '')
-        db_name = os.environ.get('DB_NAME', 'fleetflow_db')
         SQLALCHEMY_DATABASE_URI = (
-            f'mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+            f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
         )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_recycle': 280,
-        'pool_pre_ping': True,
+        "pool_recycle": 280,
+        "pool_pre_ping": True,
     }
-    # CORS_ORIGINS = ["http://localhost:4200","http://192.168.1.110:4200"]

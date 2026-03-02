@@ -19,7 +19,10 @@ export interface UnitPriceInterface {
 
 
 export class UnitPriceService {
-    private apiUrl = `${environment.apiBaseUrl}/api/unit_price`;
+    private apiRoot = environment.apiBaseUrl.endsWith('/api')
+        ? environment.apiBaseUrl
+        : `${environment.apiBaseUrl}/api`;
+    private apiUrl = `${this.apiRoot}/unit_price`;
     private http = inject(HttpClient);
 
     getUnitPrice(): Observable<UnitPriceInterface[]> {
