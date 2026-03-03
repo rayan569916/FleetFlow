@@ -2,6 +2,10 @@ import os
 
 
 class Config:
+    """
+    Development configuration.
+    Uses DB_* env vars (same contract as production), but keeps debug-friendly defaults.
+    """
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 
     DB_HOST = os.getenv("DB_HOST")
@@ -20,7 +24,6 @@ class Config:
         )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 280,
         "pool_pre_ping": True,
@@ -28,3 +31,4 @@ class Config:
             "ssl": {}
         }
     }
+

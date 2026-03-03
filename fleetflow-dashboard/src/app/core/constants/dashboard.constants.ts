@@ -55,7 +55,7 @@ export const offices: ReadonlyArray<Office> = [
 
 export const modeOfDeliveryOptions: ReadonlyArray<DeliveryOption> = [
   { label: 'Air', value: 'air' },
-  { label: 'Water/Ship', value: 'water' }
+  { label: 'Ship', value: 'water' }
 ];
 
 export const modeOfPaymentOptions = [

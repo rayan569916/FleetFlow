@@ -10,7 +10,7 @@ from utils.auth import (
 item_list_bp = Blueprint("item_list", __name__)
 
 @item_list_bp.route("/get_item_list", methods=["GET"])
-@role_required(['Super_admin', 'management'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def get_item_list(current_user):
     try:
         search = request.args.get('search', '')

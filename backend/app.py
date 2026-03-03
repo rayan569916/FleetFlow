@@ -1,7 +1,9 @@
 from flask import Flask, jsonify
 from extensions import db
 from flask_cors import CORS
-from config import Config
+# from config import Config
+# from config_development import Config
+from config_local import Config
 from routes import register_routes
 from dotenv import load_dotenv
 from flask_migrate import Migrate
@@ -18,7 +20,8 @@ def create_app():
     # Restrict CORS to known frontend origins only (no wildcard).
     CORS(app, origins=[
         "http://localhost:4200",
-        "https://app.captaincargo.co"
+        "https://app.captaincargo.co",
+        "http://64.227.153.54"
     ])
     migrate.init_app(app, db)
     # Register routes
@@ -64,4 +67,5 @@ if __name__ == '__main__':
     with app.app_context():
         # db.create_all() # Uncomment if you want automatic table creation
         pass
+    # For local development only
     app.run(host='0.0.0.0', port=5000, debug=False)

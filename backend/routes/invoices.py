@@ -44,6 +44,11 @@ def get_invoices(current_user):
         if office_id is not None:
             query = query.filter(InvoiceHeader.office_id == office_id)
 
+        # Driver must only see invoices they created.
+        user_role_name = (current_user.role.name if current_user.role else '').lower()
+        if user_role_name == 'driver':
+            query = query.filter(InvoiceHeader.creator_id == current_user.id)
+
         # Pagination
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
@@ -102,11 +107,18 @@ def search_customers(current_user):
             InvoiceCustomerDetail.sender_address,
             InvoiceCustomerDetail.sender_city,
             InvoiceCustomerDetail.sender_zip,
-            InvoiceCustomerDetail.sender_country_code
+            InvoiceCustomerDetail.sender_country_code,
+            InvoiceCustomerDetail.sender_location_link,
+            InvoiceCustomerDetail.consignee_name,
+            InvoiceCustomerDetail.consignee_country_code,
+            InvoiceCustomerDetail.consignee_mobile,
+            InvoiceCustomerDetail.consignee_address,
+            InvoiceCustomerDetail.consignee_country,
+            InvoiceCustomerDetail.consignee_city,
         ).join(InvoiceHeader).filter(InvoiceCustomerDetail.sender_phone.like(f'%{phone}%'))
         
-        if office_id is not None:
-            query = query.filter(InvoiceHeader.office_id == office_id)
+        # if office_id is not None:
+        #     query = query.filter(InvoiceHeader.office_id == office_id)
         
         customers = query.distinct().all()
         
@@ -121,7 +133,14 @@ def search_customers(current_user):
                     'address': c.sender_address,
                     'city': c.sender_city,
                     'zipCode': c.sender_zip,
-                    'senderCountryCode': c.sender_country_code
+                    'senderCountryCode': c.sender_country_code,
+                    'senderLocationLink': c.sender_location_link,
+                    'consigneeName': c.consignee_name,
+                    'consigneeCountryCode': c.consignee_country_code,
+                    'consigneeMobile': c.consignee_mobile,
+                    'consigneeAddress': c.consignee_address,
+                    'consigneeCountry': c.consignee_country,
+                    'consigneeCity': c.consignee_city,
                 })
                 seen_phones.add(c.sender_phone)
                 if len(output) >= 10: # Limit result count

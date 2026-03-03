@@ -90,8 +90,8 @@
                   *ngIf="
                     currentUserRole === 'Super_admin' ||
                       currentUserRole === 'super_admin' ||
-                      currentUserRole === 'ceo' ||
-                      currentUserRole === 'accountant';
+                      currentUserRole === 'shop_manager' ||
+                      currentUserRole === 'management';
                     else statusBadge
                   "
                   [value]="inv.status"
@@ -160,7 +160,7 @@
                     *ngIf="
                       currentUserRole === 'Super_admin' ||
                       currentUserRole === 'super_admin' ||
-                      currentUserRole === 'ceo'
+                      currentUserRole === 'management'
                     "
                     class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
                     (click)="$event.stopPropagation(); deleteInvoice(inv.id!)"
@@ -258,7 +258,9 @@
       <div class="header-actions">
         <button class="btn btn-secondary btn-back" (click)="switchToList()">Back to List</button>
         <button class="btn btn-primary btn-print" (click)="printInvoice()">Print</button>
-        <button class="btn btn-secondary btn-reset" (click)="resetFormBasedOnButton()">Reset</button>
+        <button class="btn btn-secondary btn-reset" (click)="resetFormBasedOnButton()">
+          Reset
+        </button>
       </div>
     </div>
 
@@ -606,7 +608,10 @@
               placeholder=" "
               class="floating-input text-black"
               (input)="onItemSearch($event)"
-              (focus)="showItemDropdown = suggestedItems.length > 0; activeItemSuggestionIndex = suggestedItems.length > 0 ? 0 : -1"
+              (focus)="
+                showItemDropdown = suggestedItems.length > 0;
+                activeItemSuggestionIndex = suggestedItems.length > 0 ? 0 : -1
+              "
               (keydown)="onItemDescriptionKeydown($event)"
               [class.error]="
                 itemForm.get('description')?.invalid && itemForm.get('description')?.touched
@@ -624,7 +629,11 @@
                 (click)="selectItem(item)"
                 (mouseenter)="activeItemSuggestionIndex = i"
                 class="px-4 py-3 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
-                [ngClass]="i === activeItemSuggestionIndex ? 'bg-purple-100 text-purple-900' : 'hover:bg-yellow-50'"
+                [ngClass]="
+                  i === activeItemSuggestionIndex
+                    ? 'bg-purple-100 text-purple-900'
+                    : 'hover:bg-yellow-50'
+                "
               >
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-bold text-slate-800">{{ item.item_name }}</span>

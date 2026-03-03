@@ -42,10 +42,10 @@ export class SidebarComponent {
         label: 'Overview',
         items: allItems.filter(i => i.id === 'dashboard')
       },
-      {
-        label: 'Fleet Management',
-        items: allItems.filter(i => ['tracking', 'shipments', 'live-tracking', 'drivers'].includes(i.id))
-      },
+      // {
+      //   label: 'Fleet Management',
+      //   items: allItems.filter(i => ['tracking', 'shipments', 'live-tracking', 'drivers'].includes(i.id))
+      // },
       {
         label: 'Finance',
         items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'receipt', 'purchase'].includes(i.id))

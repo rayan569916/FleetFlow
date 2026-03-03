@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models.invoice import InvoiceHeader, InvoiceAmountDetail
 from models.finance import Purchase, Receipt, Payment, DailyReport
+# from models.user import User
 from utils.auth import role_required, get_effective_read_office_id, get_effective_write_office_id, validate_office_id
 from utils.reports_util import recalculate_daily_reports_range
 import datetime
@@ -299,7 +300,11 @@ def get_invoice_report(current_user):
 
     office_id = get_effective_read_office_id(current_user, requested_office_id)
     
+
+    # current_user.username
+    
     from models.user import User, Office
+
     query = db.session.query(
         InvoiceHeader.id,
         InvoiceHeader.date,
@@ -320,6 +325,7 @@ def get_invoice_report(current_user):
         query = query.filter(InvoiceHeader.date <= end_date)
     if office_id is not None:
         query = query.filter(InvoiceHeader.office_id == office_id)
+
 
     # Pagination
     page = request.args.get('page', 1, type=int)

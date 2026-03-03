@@ -174,7 +174,13 @@ export class InvoiceComponent implements OnInit {
       address: customer.address,
       city: customer.city,
       zipCode: customer.zipCode,
-      senderCountryCode: customer.senderCountryCode || '+966'
+      senderCountryCode: customer.senderCountryCode || '+966',
+      consigneeName: customer.consigneeName,
+      consigneeCountryCode: customer.consigneeCountryCode || '+966',
+      consigneeMobile: customer.consigneeMobile,
+      consigneeAddress: customer.consigneeAddress,
+      consigneeCountry: customer.consigneeCountry,
+      consigneeCity: customer.consigneeCity,
     });
     this.showCustomerDropdown = false;
     this.foundCustomers = [];
@@ -653,8 +659,8 @@ export class InvoiceComponent implements OnInit {
     if (!confirmed) return;
 
     // Check permissions locally (backend also enforces this)
-    if (this.currentUserRole !== 'Super_admin' && this.currentUserRole !== 'ceo') {
-      this.toastService.show('Only Super Admin and CEO can delete invoices.', 'error');
+    if (this.currentUserRole !== 'Super_admin' && this.currentUserRole !== 'management') {
+      this.toastService.show('Only Super Admin and Management can delete invoices.', 'error');
       return;
     }
 

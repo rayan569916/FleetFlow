@@ -192,7 +192,7 @@ def login():
     })
 
 @app.route('/register', methods=['POST'])
-@role_required(['super_admin', 'ceo'])
+@role_required(['super_admin', 'management'])
 def register(current_user):
     data = request.get_json()
     
@@ -202,7 +202,7 @@ def register(current_user):
     if User.query.filter_by(username=data['username']).first():
         return jsonify({'message': 'Username already exists'}), 400
 
-    valid_roles = ['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff']
+    valid_roles = ['super_admin', 'management', 'hr', 'accountant', 'driver', 'staff']
     if data['role'] not in valid_roles:
          return jsonify({'message': 'Invalid role'}), 400
 
@@ -215,7 +215,7 @@ def register(current_user):
     return jsonify({'message': 'User registered successfully!'}), 201
 
 @app.route('/users', methods=['GET'])
-@role_required(['super_admin', 'ceo'])
+@role_required(['super_admin', 'management'])
 def get_users(current_user):
     users = User.query.all()
     output = []
@@ -231,7 +231,7 @@ def get_users(current_user):
 
 # Invoice Routes
 @app.route('/invoices', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
+@role_required(['super_admin','driver','shop_manager', 'management'])
 def get_invoices(current_user):
     print("DEBUG: Entering get_invoices...")
     try:
@@ -253,7 +253,7 @@ def get_invoices(current_user):
     return jsonify({'invoices': output})
 
 @app.route('/invoices/<int:id>', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'hr', 'accountant', 'driver', 'staff'])
+@role_required(['super_admin','driver','shop_manager', 'management'])
 def get_invoice(current_user, id):
     invoice = Invoice.query.get(id)
     if not invoice:
@@ -278,7 +278,7 @@ def get_invoice(current_user, id):
     })
 
 @app.route('/invoices', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin','shop_manager', 'management'])
 def create_invoice(current_user):
     data = request.get_json()
     if not data or 'invoice_number' not in data or 'amount' not in data or 'date' not in data:
@@ -302,7 +302,7 @@ def create_invoice(current_user):
     return jsonify({'message': 'Invoice created!'}), 201
 
 @app.route('/invoices/<int:id>/status', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def update_invoice_status(current_user, id):
     data = request.get_json()
     if not data or 'status' not in data:
@@ -317,7 +317,7 @@ def update_invoice_status(current_user, id):
     return jsonify({'message': 'Invoice status updated!'})
 
 @app.route('/invoices/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo']) 
+@role_required(['super_admin', 'management']) 
 def delete_invoice(current_user, id):
     invoice = Invoice.query.get(id)
     if not invoice:
@@ -357,11 +357,11 @@ def serialize_live_tracking(lt):
 
 # Purchase Routes
 @app.route('/purchases', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def get_purchases(current_user): return get_all(Purchase, serialize_purchase)
 
 @app.route('/purchases', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def create_purchase(current_user):
     data = request.get_json()
     new_purchase = Purchase(
@@ -373,16 +373,16 @@ def create_purchase(current_user):
     return jsonify({'message': 'Purchase created'}), 201
 
 @app.route('/purchases/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def delete_purchase(current_user, id): return delete_item(Purchase, id)
 
 # Receipt Routes
 @app.route('/receipts', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def get_receipts(current_user): return get_all(Receipt, serialize_receipt)
 
 @app.route('/receipts', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def create_receipt(current_user):
     data = request.get_json()
     new_receipt = Receipt(
@@ -394,16 +394,16 @@ def create_receipt(current_user):
     return jsonify({'message': 'Receipt created'}), 201
 
 @app.route('/receipts/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def delete_receipt(current_user, id): return delete_item(Receipt, id)
 
 # Payment Routes
 @app.route('/payments', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def get_payments(current_user): return get_all(Payment, serialize_payment)
 
 @app.route('/payments', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def create_payment(current_user):
     data = request.get_json()
     new_payment = Payment(
@@ -415,16 +415,16 @@ def create_payment(current_user):
     return jsonify({'message': 'Payment created'}), 201
 
 @app.route('/payments/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def delete_payment(current_user, id): return delete_item(Payment, id)
 
 # Driver Routes
 @app.route('/drivers', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'hr', 'driver', 'staff'])
+@role_required(['super_admin', 'management', 'hr', 'driver', 'staff'])
 def get_drivers(current_user): return get_all(Driver, serialize_driver)
 
 @app.route('/drivers', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'hr'])
+@role_required(['super_admin', 'management', 'hr'])
 def create_driver(current_user):
     data = request.get_json()
     new_driver = Driver(
@@ -468,7 +468,7 @@ def get_tracking(tracking_number):
 
 # Live Tracking Routes
 @app.route('/live-tracking', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'driver', 'staff'])
+@role_required(['super_admin', 'management', 'driver', 'staff'])
 def get_live_tracking(current_user):
     # Return latest location for all active drivers
     live_data = LiveTracking.query.all()
@@ -501,7 +501,7 @@ def health_check():
 
 # Shipment Routes
 @app.route('/shipments', methods=['GET'])
-@role_required(['super_admin', 'ceo', 'accountant', 'driver', 'staff'])
+@role_required(['super_admin', 'management', 'accountant', 'driver', 'staff'])
 def get_shipments(current_user):
     shipments = Shipment.query.order_by(Shipment.created_at.desc()).all()
     output = []
@@ -518,7 +518,7 @@ def get_shipments(current_user):
     return jsonify(output)
 
 @app.route('/shipments', methods=['POST'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def create_shipment(current_user):
     data = request.get_json()
     new_shipment = Shipment(
@@ -534,7 +534,7 @@ def create_shipment(current_user):
     return jsonify({'message': 'Shipment created'}), 201
 
 @app.route('/shipments/<int:id>', methods=['PUT'])
-@role_required(['super_admin', 'ceo', 'accountant'])
+@role_required(['super_admin', 'management', 'accountant'])
 def update_shipment(current_user, id):
     data = request.get_json()
     shipment = Shipment.query.get(id)
@@ -553,7 +553,7 @@ def update_shipment(current_user, id):
     return jsonify({'message': 'Shipment updated'})
 
 @app.route('/shipments/<int:id>', methods=['DELETE'])
-@role_required(['super_admin', 'ceo'])
+@role_required(['super_admin', 'management'])
 def delete_shipment(current_user, id): return delete_item(Shipment, id)
 
 if __name__ == '__main__':

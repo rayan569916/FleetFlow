@@ -6,7 +6,7 @@ from utils.auth import role_required
 unit_price_bp = Blueprint('unit_price', __name__)
 
 @unit_price_bp.route('/list_unit_price', methods=['GET'])
-@role_required(['Super_admin', 'management'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def list_unit_price(current_user):
     try:
         unit_prices = Unit_price.query.all()
@@ -25,7 +25,7 @@ def list_unit_price(current_user):
         return jsonify({'error': str(e)}), 500
 
 @unit_price_bp.route('/countries', methods=['GET'])
-@role_required(['Super_admin', 'management'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def list_countries(current_user):
     try:
         countries = Country.query.all()
