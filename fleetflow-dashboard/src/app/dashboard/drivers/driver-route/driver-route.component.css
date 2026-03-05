@@ -1,0 +1,26 @@
+.map-pattern {
+    background-image:
+        linear-gradient(rgba(203, 213, 225, 0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(203, 213, 225, 0.5) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.vehicle-marker {
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

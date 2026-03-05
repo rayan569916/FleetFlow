@@ -1,4 +1,4 @@
-# FleetFlow Dashboard (Angular + Tailwind)
+# Captain Cargo Dashboard (Angular + Tailwind)
 
 Production-style Angular dashboard implementation matching the provided logistics dashboard layout and behavior.
 

@@ -1,0 +1,256 @@
+<div class="space-y-6 animate-in fade-in duration-500">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Cargo Items</h1>
+      <p class="text-slate-100 mt-1">Manage standard cargo items and categories.</p>
+    </div>
+    <button
+      (click)="openAddForm()"
+      class="px-4 py-2 bg-[var(--brand-yellow-500)] text-black rounded-xl font-medium hover:bg-yellow-400 transition shadow-lg shadow-yellow-200/50 flex items-center gap-2"
+    > 
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Add Item
+    </button>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div
+    class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/10"
+  >
+    <div class="md:col-span-2 relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        placeholder="Search by item name..."
+        class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-700"
+      />
+    </div>
+    <div class="md:col-span-2">
+      <select
+        [(ngModel)]="selectedCategoryId"
+        (change)="onFilterChange()"
+        class="block w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-700"
+      >
+        <option [value]="0">All Categories</option>
+        <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.category_name }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Card -->
+  <div
+    *ngIf="isFormOpen()"
+    class="item-card p-6 rounded-2xl shadow-sm border border-slate-200 bg-white animate-in slide-in-from-top-4 duration-300"
+  >
+    <h2 class="text-xl font-bold text-slate-800 mb-4">
+      {{ editingId() !== null ? 'Edit Cargo Item' : 'Add New Cargo Item' }}
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Item Name *</label>
+        <input
+          type="text"
+          [(ngModel)]="formModel.item_name"
+          class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+          placeholder="e.g. Cotton T-Shirt"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Category *</label>
+        <select
+          [(ngModel)]="formModel.category_id"
+          class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+        >
+          <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.category_name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button
+        (click)="closeForm()"
+        class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="saveForm()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition"
+      >
+        {{ editingId() !== null ? 'Update Item' : 'Save Item' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <div class="item-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden bg-white">
+    <div class="overflow-x-auto">
+      <table class="w-full table-fixed text-left">
+        <colgroup>
+          <col style="width: 33.3333%" />
+          <col style="width: 33.3333%" />
+          <col style="width: 33.3333%" />
+        </colgroup>
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200">
+            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle">
+              Item Name
+            </th>
+            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle">
+              Category
+            </th>
+            <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr
+            *ngFor="let item of paginatedItems"
+            class="hover:bg-slate-50/50 transition-colors group"
+          >
+            <td class="px-6 py-4 text-center align-middle">
+              <span class="text-sm font-semibold text-slate-800 truncate block">{{
+                item.item_name
+              }}</span>
+            </td>
+            <td class="px-6 py-4 text-center align-middle">
+              <span
+                class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 truncate max-w-full inline-block"
+              >
+                {{ item.category_name }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-center align-middle">
+              <div class="flex justify-center gap-2">
+                <button
+                  (click)="openEditForm(item)"
+                  class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button
+                  (click)="deleteItem(item.id)"
+                  class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="paginatedItems.length === 0 && !isLoading()">
+            <td colspan="3" class="px-6 py-12 text-center text-slate-500">
+              No items found matching your criteria.
+            </td>
+          </tr>
+          <tr *ngIf="isLoading()">
+            <td colspan="3" class="px-6 py-12 text-center text-indigo-500 font-medium">
+              Loading cargo items...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div
+      class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between"
+      *ngIf="cargoItemList().length > 0"
+    >
+      <div class="text-sm text-slate-500">
+        Showing <span class="font-medium">{{ (currentPage() - 1) * itemsPerPage + 1 }}</span> to
+        <span class="font-medium">{{
+          mathMin(currentPage() * itemsPerPage, cargoItemList().length)
+        }}</span>
+        of <span class="font-medium">{{ cargoItemList().length }}</span> items
+      </div>
+      <div class="flex gap-2">
+        <button
+          (click)="prevPage()"
+          [disabled]="currentPage() === 1"
+          class="p-2 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div
+          class="flex items-center px-4 py-2 border border-slate-200 rounded-lg bg-white text-sm font-medium text-slate-700"
+        >
+          Page {{ currentPage() }} of {{ totalPages }}
+        </div>
+        <button
+          (click)="nextPage()"
+          [disabled]="currentPage() === totalPages"
+          class="p-2 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

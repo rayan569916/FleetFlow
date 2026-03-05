@@ -1,21 +1,28 @@
-<div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <!-- Use your FleetFlow Logo here -->
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-slate-900">
-            {{ isLogin ? 'Sign in to FleetFlow' : 'Create your account' }}
-        </h2>
+<div
+  class="min-h-screen bg-gradient-to-br from-[#26092F] via-[#3B0D49] to-[#26092F] flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+>
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="flex justify-center mb-6">
+      <!-- Company Logo -->
+      <img src="captain_cargo_logo_yellow.svg" alt="Captain Cargo Logo" class="h-24 w-auto" />
     </div>
+    <h2 class="text-center text-3xl font-extrabold text-white tracking-tight">
+      {{ isLogin ? 'Sign in to Captain Cargo' : 'Create your account' }}
+    </h2>
+    <p class="mt-2 text-center text-sm text-slate-400">Transportation Management System</p>
+  </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow-sm border border-slate-200 sm:rounded-xl sm:px-10">
-            <app-login *ngIf="isLogin"></app-login>
-            <app-sign-up *ngIf="!isLogin"></app-sign-up>
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div
+      class="bg-white/95 backdrop-blur-md py-8 px-4 shadow-2xl shadow-black/50 border border-white/10 sm:rounded-xl sm:px-10 relative overflow-hidden"
+    >
+      <!-- Decorative top accent -->
+      <div
+        class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#F2D21B] via-[#4F1262] to-[#F2D21B]"
+      ></div>
 
-            <div class="mt-6 text-center">
-                <button (click)="toggleMode()" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                    {{ isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in" }}
-                </button>
-            </div>
-        </div>
+      <app-login *ngIf="isLogin"></app-login>
+      <app-sign-up *ngIf="!isLogin"></app-sign-up>
     </div>
+  </div>
 </div>

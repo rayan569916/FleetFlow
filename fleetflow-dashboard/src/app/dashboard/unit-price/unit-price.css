@@ -1,0 +1,38 @@
+.unit-price-card {
+  background: rgba(255, 248, 223, 0.97);
+  border: 1px solid rgba(242, 210, 27, 0.35);
+}
+
+.unit-price-table {
+  table-layout: fixed;
+}
+
+.unit-price-table th,
+.unit-price-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  letter-spacing: 0.04em;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .unit-price-table th,
+  .unit-price-table td {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    font-size: 12px !important;
+  }
+}

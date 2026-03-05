@@ -1,33 +1,114 @@
+:host {
+  display: block;
+}
+
 .sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
+  position: relative;
   z-index: 30;
   display: flex;
   height: 100vh;
   width: 80px;
   flex-direction: column;
   overflow: hidden;
-  background: linear-gradient(180deg, #7c3aed, #5b21b6);
-  box-shadow: 4px 0 24px rgba(124, 58, 237, 0.15);
+  color: var(--brand-text);
+  background:
+    linear-gradient(180deg, #26092f 0%, #3b0d49 52%, #26092f 100%),
+    radial-gradient(circle at 15% -12%, rgba(255, 228, 111, 0.16), transparent 46%);
+  border-right: 2px solid rgba(242, 210, 27, 0.55);
+  box-shadow: 10px 0 32px rgba(10, 0, 18, 0.5);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s ease;
 }
 
 .sidebar.expanded {
-  width: 260px;
+  width: 248px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  padding: 0;
+  border-bottom: 1px solid rgba(242, 210, 27, 0.35);
+  background: linear-gradient(180deg, rgba(79, 18, 98, 0.34), rgba(59, 13, 73, 0.32));
+  transition: padding 0.3s ease;
+}
+
+.sidebar.expanded .sidebar-header {
+  padding: 0 1.5rem;
+  justify-content: flex-start;
+}
+
+.sidebar-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  overflow: hidden;
+}
+
+.sidebar.expanded .sidebar-header-inner {
+  justify-content: flex-start;
+  overflow: visible;
 }
 
 .sidebar-logo {
-  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  transition: all 0.3s ease;
 }
 
-.sidebar.expanded .sidebar-logo {
-  opacity: 1;
-  transition-delay: 0.18s;
+.sidebar-toggle {
+  padding: 0.5rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: rgba(255, 245, 205, 0.8);
+  transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  color: #ffe87f;
+  background: rgba(242, 210, 27, 0.18);
+}
+
+.brand-mark {
+  height: 2.25rem;
+  width: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: linear-gradient(150deg, #f7d929, #f3bb14);
+  color: #4f1262;
+  border: 2px solid rgba(255, 244, 198, 0.35);
+  box-shadow: 0 8px 18px rgba(242, 210, 27, 0.38);
+}
+
+.brand-title {
+  color: #ffea96;
+  font-family: 'Cinzel', serif;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .nav-item {
   position: relative;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
 }
 
 .nav-item::before {
@@ -39,16 +120,75 @@
   height: 0;
   transform: translateY(-50%);
   border-radius: 0 4px 4px 0;
-  background-color: #fcd34d;
+  background-color: var(--brand-yellow-500);
   transition: height 0.25s ease;
 }
 
 .nav-item:hover::before,
-.nav-item.active::before {
+.nav-item-active::before {
   height: 70%;
 }
 
+.nav-item-active {
+  color: #3b0d49;
+  background: linear-gradient(90deg, rgba(242, 210, 27, 0.92), rgba(255, 231, 101, 0.82));
+  box-shadow: inset 0 0 0 1px rgba(79, 18, 98, 0.2);
+}
+
+.nav-item-inactive {
+  color: rgba(255, 245, 218, 0.85);
+}
+
+.nav-item-inactive:hover {
+  color: #fff3bb;
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.active-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 2rem;
+  width: 4px;
+  border-radius: 0 999px 999px 0;
+  transform: translateY(-50%);
+  background: #f2d21b;
+  box-shadow: 0 0 18px rgba(242, 210, 27, 0.6);
+  transition: opacity 0.3s;
+}
+
+.nav-group-label {
+  margin-bottom: 0.75rem;
+  padding: 0 0.75rem;
+  color: rgba(255, 232, 136, 0.86);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.3s;
+}
+
+.nav-icon {
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.nav-icon-active {
+  color: #4f1262;
+}
+
 .nav-text {
+  position: relative;
+  z-index: 10;
+  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
   opacity: 0;
 }
 
@@ -57,13 +197,102 @@
   transition-delay: 0.18s;
 }
 
+.sidebar-nav {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar-nav::-webkit-scrollbar,
+.sidebar-nav.custom-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.sidebar-profile {
+  padding: 1rem;
+  border-top: 1px solid rgba(242, 210, 27, 0.42);
+  background: linear-gradient(180deg, rgba(79, 18, 98, 0.42), rgba(38, 9, 47, 0.5));
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.profile-row:hover {
+  background: rgba(242, 210, 27, 0.15);
+}
+
+.profile-avatar {
+  height: 2.5rem;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #3b0d49;
+  font-weight: 700;
+  background: linear-gradient(130deg, #f2d21b, #ffd84f);
+  border: 2px solid rgba(255, 250, 234, 0.35);
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  height: 0.75rem;
+  width: 0.75rem;
+  border-radius: 999px;
+  border: 2px solid #3b0d49;
+  background: #35d07f;
+}
+
+.profile-name {
+  color: #fff4c1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.group:hover .profile-name {
+  color: var(--brand-yellow-500);
+}
+
+.profile-email {
+  color: rgba(248, 235, 201, 0.8);
+  font-size: 0.74rem;
+}
+
+.logout-btn {
+  padding: 0.38rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgba(255, 236, 176, 0.84);
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #4f1262;
+  background: rgba(255, 225, 106, 0.92);
+}
+
 @media (max-width: 768px) {
   .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
     transform: translateX(-100%);
   }
 
   .sidebar.expanded {
-    width: 260px;
+    width: 248px;
     transform: translateX(0);
   }
 }

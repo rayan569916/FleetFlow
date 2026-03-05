@@ -1,3 +1,12 @@
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(165deg, rgba(35, 2, 58, 0.96), rgba(81, 18, 124, 0.9)),
+    radial-gradient(circle at 76% 0%, rgba(242, 210, 27, 0.14), transparent 34%);
+}
+
 .app-shell::before {
   content: '';
   position: fixed;
@@ -5,25 +14,25 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(252, 211, 77, 0.03) 0%, transparent 50%);
+    radial-gradient(circle at 20% 20%, rgba(242, 210, 27, 0.05) 0%, transparent 42%),
+    radial-gradient(circle at 80% 80%, rgba(132, 40, 196, 0.08) 0%, transparent 56%);
 }
 
 .content-shell {
   position: relative;
   z-index: 1;
-  margin-left: 80px;
-  max-width: 1600px;
-  padding: 2rem;
-  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  width: 100%;
+  color: var(--brand-text);
 }
 
 .mobile-overlay {
   display: none;
-}
-
-.app-shell.sidebar-expanded .content-shell {
-  margin-left: 260px;
 }
 
 .grid-row-1 {
@@ -43,14 +52,6 @@
 }
 
 @media (max-width: 1200px) {
-  .content-shell {
-    margin-left: 80px;
-  }
-
-  .app-shell.sidebar-expanded .content-shell {
-    margin-left: 260px;
-  }
-
   .grid-row-1 {
     grid-template-columns: 1fr;
   }
@@ -62,7 +63,7 @@
     inset: 0;
     z-index: 20;
     border: 0;
-    background: rgba(15, 23, 42, 0.3);
+    background: rgba(20, 4, 34, 0.62);
   }
 
   .mobile-overlay.open {
@@ -71,10 +72,79 @@
 
   .content-shell {
     margin-left: 0;
-    padding: 1rem;
+    padding: 1.5rem;
+  }
+
+  app-header {
+    display: block;
+    width: 100%;
   }
 
   .app-shell.sidebar-expanded .content-shell {
     margin-left: 0;
+  }
+}
+
+/* ===== DRIVER LAYOUT ===== */
+.driver-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background:
+    linear-gradient(165deg, rgba(35, 2, 58, 0.96), rgba(81, 18, 124, 0.9)),
+    radial-gradient(circle at 76% 0%, rgba(242, 210, 27, 0.14), transparent 34%);
+  color: var(--brand-text, #fff);
+}
+
+.driver-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.driver-logo {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.driver-logout-btn {
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.driver-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.driver-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .driver-content {
+    padding: 0.5rem;
+  }
+
+  .driver-header {
+    padding: 0.5rem 0.75rem;
   }
 }

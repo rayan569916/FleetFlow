@@ -4,7 +4,6 @@ export interface NavItem {
   id: string;
   label: string;
   icon: string;
-  active?: boolean;
   route?: string;
 }
 
@@ -12,8 +11,9 @@ export interface ActivityLog {
   id: string;
   title: string;
   meta: string;
-  icon: string;
+  type: string;
   timestamp: string;
+  amount?: number;
 }
 
 export interface Driver {
@@ -52,6 +52,7 @@ export interface InvoiceItem {
   quantity: number;
   price: number;
   amount: number;
+  unitWeight?: number;
 }
 
 export interface ChartPoint {
@@ -80,6 +81,27 @@ export interface SelectOption<T = string> {
   value: T;
 }
 
-export interface DeliveryOption extends SelectOption<'air' | 'water'> {}
+export interface DeliveryOption extends SelectOption<'air' | 'water'> { }
 
-export interface PaymentOption extends SelectOption<'swipe' | 'bank_transfer' | 'cash'> {}
+export interface LiveTrackingParams {
+  driver_id: number;
+  latitude: number;
+  longitude: number;
+  last_updated?: string;
+  speed?: number;
+  heading?: number;
+  driver_name?: string;
+}
+
+export interface PaymentOption extends SelectOption<'swipe' | 'bank_transfer' | 'cash'> { }
+
+export interface InvoiceRecord {
+  grandTotal: number;
+  modeOfPayment: 'swipe' | 'bank_transfer' | 'cash';
+  totalWeight: number;
+  date: string;
+}
+export interface Category {
+  id: number;
+  name: string;
+}

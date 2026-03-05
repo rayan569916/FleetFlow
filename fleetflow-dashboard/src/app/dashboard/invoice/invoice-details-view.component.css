@@ -1,0 +1,19 @@
+.invoice-paper {
+  color: #1f2937;
+}
+
+.invoice-paper .text-gray-500 {
+  color: #4b5563 !important;
+}
+
+.invoice-paper .text-gray-600 {
+  color: #374151 !important;
+}
+
+.invoice-paper .text-gray-700 {
+  color: #374151 !important;
+}
+
+.invoice-paper .text-gray-800 {
+  color: #111827 !important;
+}

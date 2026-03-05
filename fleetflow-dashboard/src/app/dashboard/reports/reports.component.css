@@ -1,0 +1,42 @@
+/* Print Styles */
+@media print {
+
+    /* Hide non-printable elements */
+    :host-context(app-root) app-sidebar,
+    :host-context(app-root) app-header,
+    .no-print,
+    button {
+        display: none !important;
+    }
+
+    /* Reset layout for print */
+    :host {
+        display: block;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Ensure background colors are printed */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Layout adjustments for paper */
+    .grid {
+        display: block !important;
+    }
+
+    .grid>* {
+        margin-bottom: 2rem;
+        page-break-inside: avoid;
+    }
+
+    /* Chart placeholders */
+    .h-64,
+    .h-48 {
+        border: 1px solid #eee;
+        background-color: #f9fafb;
+    }
+}

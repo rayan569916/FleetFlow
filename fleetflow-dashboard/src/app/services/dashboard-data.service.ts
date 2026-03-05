@@ -1,45 +1,165 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, map, Observable, of } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, map, Observable, switchMap, shareReplay, forkJoin } from 'rxjs';
 
-import { DRIVER_LIST, INCOME_DATA, RECENT_ACTIVITY, TREND_DATA_2024 } from '../core/constants/dashboard.constants';
-import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, TrendPoint } from '../core/models/dashboard.models';
+import { ActivityLog, Driver, IncomePeriod, IncomeSnapshot, TrendPoint, LiveTrackingParams, Category } from '../core/models/dashboard.models';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardDataService {
-  private readonly incomePeriodSubject = new BehaviorSubject<IncomePeriod>('today');
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private apiRoot = environment.apiBaseUrl.endsWith('/api')
+    ? environment.apiBaseUrl
+    : `${environment.apiBaseUrl}/api`;
+  private apiUrl = `${this.apiRoot}/dashboard`;
 
+  private readonly incomePeriodSubject = new BehaviorSubject<IncomePeriod>('today');
   readonly incomePeriod$ = this.incomePeriodSubject.asObservable();
 
   getRecentActivity(): Observable<ActivityLog[]> {
-    return of(RECENT_ACTIVITY);
+    return this.http.get<ActivityLog[]>(`${this.apiUrl}/recent-activity`);
   }
 
-  getDrivers(): Observable<Driver[]> {
-    return of(DRIVER_LIST);
-  }
+
 
   getSelectedIncome(): Observable<IncomeSnapshot> {
-    return this.incomePeriod$.pipe(map((period) => INCOME_DATA[period]));
+    return this.incomePeriod$.pipe(
+      switchMap(period => this.http.get<IncomeSnapshot>(`${this.apiUrl}/stats`, {
+        params: { period }
+      })),
+      shareReplay(1)
+    );
   }
 
   getYearlyTrends(): Observable<TrendPoint[]> {
-    return this.incomePeriod$.pipe(
-      map((period) => {
-        const multiplier = period === 'today' ? 1 : period === 'week' ? 1.03 : period === 'month' ? 1.06 : 1.1;
-        return TREND_DATA_2024.map((point) => {
-          const scaledValue = Math.round(point.value * multiplier);
-          return {
-            ...point,
-            value: scaledValue,
-            label: this.formatCurrencyShort(scaledValue)
-          };
-        });
-      })
+    return this.http.get<TrendPoint[]>(`${this.apiUrl}/trends`).pipe(
+      map(points => points.map(point => ({
+        ...point,
+        label: this.formatCurrencyShort(point.value) // Ensure label is formatted on frontend if backend doesn't provide it
+      })))
     );
+  }
+
+  getLiveTrackingLocations(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.rootUrl}/fleet/live-tracking`);
+  }
+
+  private get rootUrl() { return `${this.apiRoot}`; }
+
+  // --- Purchases ---
+  getPurchases(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/finance/purchases`, { params });
+  }
+  createPurchase(data: any): Observable<any> {
+    return this.http.post(`${this.rootUrl}/finance/purchases`, data);
+  }
+  updatePurchase(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.rootUrl}/finance/purchases/${id}`, data);
+  }
+  deletePurchase(id: number): Observable<any> {
+    return this.http.delete(`${this.rootUrl}/finance/purchases/${id}`);
+  }
+
+  // --- Receipts ---
+  getReceipts(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/finance/receipts`, { params });
+  }
+  createReceipt(data: any): Observable<any> {
+    return this.http.post(`${this.rootUrl}/finance/receipts`, data);
+  }
+  updateReceipt(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.rootUrl}/finance/receipts/${id}`, data);
+  }
+  deleteReceipt(id: number): Observable<any> {
+    return this.http.delete(`${this.rootUrl}/finance/receipts/${id}`);
+  }
+
+  // --- Payments ---
+  getPayments(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/finance/payments`, { params });
+  }
+  createPayment(data: any): Observable<any> {
+    return this.http.post(`${this.rootUrl}/finance/payments`, data);
+  }
+  updatePayment(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.rootUrl}/finance/payments/${id}`, data);
+  }
+  deletePayment(id: number): Observable<any> {
+    return this.http.delete(`${this.rootUrl}/finance/payments/${id}`);
+  }
+
+  // --- Categories ---
+  getPurchaseCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.rootUrl}/finance/purchase-categories`);
+  }
+  getReceiptCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.rootUrl}/finance/receipt-categories`);
+  }
+  getPaymentCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.rootUrl}/finance/payment-categories`);
+  }
+
+  // --- Drivers ---
+  // Dashboard Active Drivers: show real driver users (users.role = driver)
+  getDrivers(): Observable<Driver[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/drivers`).pipe(
+      map(users => users.map((u): Driver => {
+        const name = String(u.full_name || u.username || 'Driver');
+        const initials = name.split(' ').filter(Boolean).map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+        return {
+          id: String(u.id),
+          name,
+          initials: initials || 'DR',
+          contact: String(u.username || ''),
+          status: 'active',
+          avatarUrl: ''
+        };
+      }))
+    );
+  }
+  createDriver(data: any): Observable<any> {
+    return this.http.post(`${this.rootUrl}/fleet/drivers`, data);
+  }
+
+  // --- Tracking ---
+  getTrackingInfo(trackingNumber: string): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/shipments/tracking/${trackingNumber}`);
   }
 
   setIncomePeriod(period: IncomePeriod): void {
     this.incomePeriodSubject.next(period);
+  }
+
+  getFinancialStats(period: string): Observable<any> {
+    return forkJoin({
+      stats: this.http.get<any>(`${this.apiUrl}/stats`, { params: { period } }),
+      trends: this.http.get<any[]>(`${this.apiUrl}/trends`)
+    }).pipe(
+      map(({ stats, trends }) => ({
+        revenue: stats?.revenue ?? 0,
+        expenses: stats?.expenses ?? 0,
+        profit: stats?.profit ?? 0,
+        growth: stats?.growth ?? 0,
+        history: (trends ?? []).map(t => Number((t?.value ?? 0) / 1000))
+      }))
+    );
+  }
+
+  getEfficiencyStats(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/stats`, { params: { period: 'today' } }).pipe(
+      map(stats => {
+        const revenue = Number(stats?.revenue ?? 0);
+        const profit = Number(stats?.profit ?? 0);
+        const expenses = Number(stats?.expenses ?? 0);
+        const overall = revenue > 0 ? Math.max(0, Math.min(100, Math.round((profit / revenue) * 100))) : 0;
+        return {
+          overall,
+          maintenanceCost: expenses
+        };
+      })
+    );
   }
 
   private formatCurrencyShort(value: number): string {

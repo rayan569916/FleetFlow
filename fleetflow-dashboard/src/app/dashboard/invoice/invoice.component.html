@@ -1,459 +1,918 @@
-<div class="min-h-screen bg-slate-50 app-shell" [class.sidebar-expanded]="(sidebarExpanded$ | async) ?? false">
-  <button class="mobile-overlay" [class.open]="(sidebarExpanded$ | async) ?? false" (click)="closeSidebar()"
-    aria-label="Close sidebar"></button>
-  <app-sidebar [expanded]="(sidebarExpanded$ | async) ?? false" />
+<div class="invoice-wrapper">
+  <!-- MESSAGES REMOVED (Replaced by Toast) -->
 
-  <main class="content-shell">
-    <app-header (menuClicked)="toggleSidebar()" />
-
-    <div class="invoice-wrapper">
-<div class="invoice-container">
-  <div class="invoice-header">
-    <h1>Billing Invoice</h1>
-    <div class="header-actions">
-      <button class="btn btn-primary" (click)="printInvoice()">Print</button>
-      <button class="btn btn-secondary" (click)="resetForm()">Reset</button>
+  <!-- LIST VIEW -->
+  <div *ngIf="viewMode === 'list'" class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Invoices</h1>
+        <p class="text-slate-100 mt-1">Manage and track billing records.</p>
+      </div>
+      <button
+        (click)="switchToCreate()"
+        class="px-4 py-2 bg-[var(--brand-yellow-500)] text-slate-900 rounded-xl font-medium hover:bg-yellow-400 transition shadow-lg shadow-yellow-200/50 flex items-center gap-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New Invoice
+      </button>
     </div>
-  </div>
 
-  <!-- USER INFORMATION SECTION -->
-  <div class="section user-info-section">
-    <h2>Invoice Information</h2>
-    <form [formGroup]="userInfoForm" class="user-info-form">
-      
-      <!-- Two-Column Layout: Sender and Consignee -->
-      <div class="form-two-columns">
-        <!-- SENDER/SHIPPER INFORMATION (LEFT) -->
-        <div class="form-column">
-          <h3 class="sub-heading">Sender / Shipper Information</h3>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="customerName">Sender Name *</label>
-              <input 
-                type="text"
-                id="customerName"
-                formControlName="customerName"
-                placeholder="Enter sender name"
-                class="form-input"
-                [class.error]="userInfoForm.get('customerName')?.invalid && userInfoForm.get('customerName')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('customerName')?.invalid && userInfoForm.get('customerName')?.touched">
-                Please enter a valid sender name (min 2 characters)
-              </span>
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Phone Number *</label>
-              <input 
-                type="tel"
-                id="phone"
-                formControlName="phone"
-                placeholder="Enter phone number"
-                class="form-input"
-                [class.error]="userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched">
-                Please enter a valid phone number (min 10 digits)
-              </span>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group full-width">
-              <label for="address">Address *</label>
-              <input 
-                type="text"
-                id="address"
-                formControlName="address"
-                placeholder="Enter complete address"
-                class="form-input"
-                [class.error]="userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched">
-                Please enter a valid address (min 5 characters)
-              </span>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="city">City *</label>
-              <input 
-                type="text"
-                id="city"
-                formControlName="city"
-                placeholder="Enter city"
-                class="form-input"
-                [class.error]="userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched">
-                City is required
-              </span>
-            </div>
-
-            <div class="form-group">
-              <label for="zipCode">Zip Code *</label>
-              <input 
-                type="text"
-                id="zipCode"
-                formControlName="zipCode"
-                placeholder="Enter zip code"
-                class="form-input"
-                [class.error]="userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched">
-                Zip code is required
-              </span>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group full-width">
-              <label for="email">Email *</label>
-              <input 
-                type="email"
-                id="email"
-                formControlName="email"
-                placeholder="Enter email address"
-                class="form-input"
-                [class.error]="userInfoForm.get('email')?.invalid && userInfoForm.get('email')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('email')?.invalid && userInfoForm.get('email')?.touched">
-                Please enter a valid email address
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- CONSIGNEE INFORMATION (RIGHT) -->
-        <div class="form-column">
-          <h3 class="sub-heading">Consignee Information</h3>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="consigneeName">Consignee Name *</label>
-              <input 
-                type="text"
-                id="consigneeName"
-                formControlName="consigneeName"
-                placeholder="Enter consignee name"
-                class="form-input"
-                [class.error]="userInfoForm.get('consigneeName')?.invalid && userInfoForm.get('consigneeName')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('consigneeName')?.invalid && userInfoForm.get('consigneeName')?.touched">
-                Please enter a valid consignee name (min 2 characters)
-              </span>
-            </div>
-
-            <div class="form-group">
-              <label for="consigneeMobile">Mobile Number *</label>
-              <input 
-                type="tel"
-                id="consigneeMobile"
-                formControlName="consigneeMobile"
-                placeholder="Enter mobile number"
-                class="form-input"
-                [class.error]="userInfoForm.get('consigneeMobile')?.invalid && userInfoForm.get('consigneeMobile')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('consigneeMobile')?.invalid && userInfoForm.get('consigneeMobile')?.touched">
-                Please enter a valid mobile number (min 10 digits)
-              </span>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group full-width">
-              <label for="consigneeAddress">Consignee Address *</label>
-              <input 
-                type="text"
-                id="consigneeAddress"
-                formControlName="consigneeAddress"
-                placeholder="Enter consignee complete address"
-                class="form-input"
-                [class.error]="userInfoForm.get('consigneeAddress')?.invalid && userInfoForm.get('consigneeAddress')?.touched">
-              <span class="error-text" *ngIf="userInfoForm.get('consigneeAddress')?.invalid && userInfoForm.get('consigneeAddress')?.touched">
-                Please enter a valid consignee address (min 5 characters)
-              </span>
-            </div>
-          </div>
-        </div>
+    <!-- Invoices Table Container -->
+    <div
+      class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px]"
+      *ngIf="invoices.length > 0; else noInvoices"
+    >
+      <div class="overflow-x-auto invoice-list-scroll">
+        <table class="w-full text-left invoice-list-table">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Invoice #
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Tracking #
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Amount
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Description
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Created By
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr
+              *ngFor="let inv of invoices"
+              (click)="viewInvoice(inv.id!)"
+              class="hover:bg-slate-50/50 transition-colors group"
+            >
+              <td class="px-6 py-4 text-sm text-slate-800 font-semibold">
+                {{ inv.invoice_number }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600 font-mono">
+                {{ inv.tracking_number || '-' }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">{{ inv.date | date }}</td>
+              <td class="px-6 py-4 text-sm text-slate-800 font-bold">
+                {{ settingsService.currencySymbol() }}{{ inv.amount.toFixed(2) }}
+              </td>
+              <td
+                class="px-6 py-4 text-sm text-slate-600 truncate max-w-[200px]"
+                [title]="inv.description"
+              >
+                {{ inv.description }}
+              </td>
+              <td class="px-6 py-4">
+                <!-- Status Dropdown (only for admins/accountants) -->
+                <select
+                  *ngIf="
+                    currentUserRole === 'Super_admin' ||
+                      currentUserRole === 'super_admin' ||
+                      currentUserRole === 'shop_manager' ||
+                      currentUserRole === 'management';
+                    else statusBadge
+                  "
+                  [value]="inv.status"
+                  (change)="updateInvoiceStatus(inv.id!, $event)"
+                  class="px-3 py-1 rounded-full text-xs font-bold border transition-colors outline-none cursor-pointer"
+                  [ngClass]="{
+                    'bg-yellow-100 text-yellow-700 border-yellow-200': inv.status === 'Pending',
+                    'bg-green-100 text-green-700 border-green-200': inv.status === 'Paid',
+                    'bg-red-100 text-red-700 border-red-200': inv.status === 'Canceled',
+                  }"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Canceled">Canceled</option>
+                </select>
+                <ng-template #statusBadge>
+                  <span
+                    class="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    [ngClass]="{
+                      'bg-yellow-100 text-yellow-700': inv.status === 'Pending',
+                      'bg-green-100 text-green-700': inv.status === 'Paid',
+                      'bg-red-100 text-red-700': inv.status === 'Canceled',
+                    }"
+                  >
+                    {{ inv.status }}
+                  </span>
+                </ng-template>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">{{ inv.full_name || 'N/A' }}</td>
+              <td class="px-6 py-4">
+                <div class="flex justify-end gap-2">
+                  <button
+                    class="p-2 text-slate-400 hover:text-blue-600 transition-colors hover:bg-blue-50 rounded-lg"
+                    (click)="$event.stopPropagation(); onEditInvoice(inv)"
+                    title="Edit Invoice"
+                  >
+                    <svg
+                      class="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="p-2 text-slate-400 hover:text-yellow-600 transition-colors hover:bg-yellow-50 rounded-lg"
+                    (click)="$event.stopPropagation(); viewInvoice(inv.id!)"
+                    title="View Invoice"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button
+                    *ngIf="
+                      currentUserRole === 'Super_admin' ||
+                      currentUserRole === 'super_admin' ||
+                      currentUserRole === 'management'
+                    "
+                    class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
+                    (click)="$event.stopPropagation(); deleteInvoice(inv.id!)"
+                    title="Delete Invoice"
+                  >
+                    <svg
+                      class="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M3 6h18"></path>
+                      <path
+                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-      <!-- DELIVERY AND PAYMENT DETAILS -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="modeOfDelivery">Mode of Delivery *</label>
-          <select 
-            id="modeOfDelivery"
-            formControlName="modeOfDelivery"
-            class="form-input form-select"
-            [class.error]="userInfoForm.get('modeOfDelivery')?.invalid && userInfoForm.get('modeOfDelivery')?.touched">
-            <option value="" disabled>Select delivery mode</option>
-            <option *ngFor="let option of modeOfDeliveryOptions" [value]="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <span class="error-text" *ngIf="userInfoForm.get('modeOfDelivery')?.invalid && userInfoForm.get('modeOfDelivery')?.touched">
-            Mode of delivery is required
-          </span>
-        </div>
-
-        <div class="form-group">
-          <label for="modeOfPayment">Mode of Payment *</label>
-          <select 
-            id="modeOfPayment"
-            formControlName="modeOfPayment"
-            class="form-input form-select"
-            [class.error]="userInfoForm.get('modeOfPayment')?.invalid && userInfoForm.get('modeOfPayment')?.touched">
-            <option value="" disabled>Select payment mode</option>
-            <option *ngFor="let option of modeOfPaymentOptions" [value]="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <span class="error-text" *ngIf="userInfoForm.get('modeOfPayment')?.invalid && userInfoForm.get('modeOfPayment')?.touched">
-            Mode of payment is required
-          </span>
-        </div>
-
-        <div class="form-group">
-          <label for="numberOfCartons">Number of Cartons *</label>
-          <input 
-            type="number"
-            id="numberOfCartons"
-            formControlName="numberOfCartons"
-            min="1"
-            placeholder="0"
-            class="form-input"
-            [class.error]="userInfoForm.get('numberOfCartons')?.invalid && userInfoForm.get('numberOfCartons')?.touched">
-          <span class="error-text" *ngIf="userInfoForm.get('numberOfCartons')?.invalid && userInfoForm.get('numberOfCartons')?.touched">
-            Number of cartons must be at least 1
-          </span>
-        </div>
-
-        <div class="form-group">
-          <label for="totalWeight">Total Weight (kg) *</label>
-          <input 
-            type="number"
-            id="totalWeight"
-            formControlName="totalWeight"
-            min="0.01"
-            step="0.01"
-            placeholder="0.00"
-            class="form-input"
-            [class.error]="userInfoForm.get('totalWeight')?.invalid && userInfoForm.get('totalWeight')?.touched">
-          <span class="error-text" *ngIf="userInfoForm.get('totalWeight')?.invalid && userInfoForm.get('totalWeight')?.touched">
-            Total weight is required and must be greater than 0
-          </span>
-        </div>
-      </div>
-
-    </form>
-  </div>
-
-  <!-- ITEMS SECTION -->
-  <div class="section items-section">
-    <h2>Add Items</h2>
-    <form [formGroup]="itemForm" class="item-form">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="description">Item Description *</label>
-          <input 
-            type="text"
-            id="description"
-            formControlName="description"
-            placeholder="Enter item description"
-            class="form-input"
-            [class.error]="itemForm.get('description')?.invalid && itemForm.get('description')?.touched">
-          <span class="error-text" *ngIf="itemForm.get('description')?.invalid && itemForm.get('description')?.touched">
-            Description is required (min 3 characters)
-          </span>
-        </div>
-
-        <div class="form-group">
-          <label for="quantity">Quantity *</label>
-          <input 
-            type="number"
-            id="quantity"
-            formControlName="quantity"
-            min="1"
-            placeholder="0"
-            class="form-input"
-            [class.error]="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched">
-          <span class="error-text" *ngIf="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched">
-            Quantity must be at least 1
-          </span>
-        </div>
-
-        <div class="form-group">
-          <label for="price">Price per Unit *</label>
-          <input 
-            type="number"
-            id="price"
-            formControlName="price"
-            min="0.01"
-            step="0.01"
-            placeholder="0.00"
-            class="form-input"
-            [class.error]="itemForm.get('price')?.invalid && itemForm.get('price')?.touched">
-          <span class="error-text" *ngIf="itemForm.get('price')?.invalid && itemForm.get('price')?.touched">
-            Price is required and must be greater than 0
-          </span>
-        </div>
-
-        <div class="form-group">
-          <label>&nbsp;</label>
-          <button 
-            type="button"
-            class="btn btn-success"
-            (click)="addItem()">
-            Add Item
+      <!-- Pagination -->
+      <div
+        class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between mt-auto"
+      >
+        <span class="text-xs text-slate-500 font-medium">
+          Showing {{ invoices.length }} of {{ totalItems }} results (Page {{ currentPage }} of
+          {{ totalPages }})
+        </span>
+        <div class="flex gap-2">
+          <button
+            (click)="prevPage()"
+            [disabled]="currentPage === 1"
+            class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50"
+          >
+            Next
           </button>
         </div>
       </div>
-    </form>
+    </div>
+    <ng-template #noInvoices>
+      <div class="py-20 text-center bg-white rounded-2xl border border-slate-200">
+        <div class="flex flex-col items-center justify-center text-slate-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-16 w-16 mb-4 opacity-50"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <h3 class="text-lg font-bold text-slate-700">No invoices found</h3>
+          <p class="text-slate-500 max-w-xs mx-auto mt-1" *ngIf="!isLoading">
+            Start by creating a new invoice billing record.
+          </p>
+          <p class="text-slate-500 max-w-xs mx-auto mt-1" *ngIf="isLoading">Loading invoices...</p>
+        </div>
+      </div>
+    </ng-template>
+  </div>
 
-    <!-- ITEMS TABLE -->
-    <div class="items-table-wrapper" *ngIf="items.length > 0">
-      <table class="items-table">
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Amount</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of items" class="item-row">
-            <td>{{ item.description }}</td>
-            <td>
-              <input 
+  <!-- DETAILS / PRINT VIEW -->
+  <div *ngIf="viewMode === 'details' && selectedInvoice" class="invoice-container print-container">
+    <div class="invoice-header no-print">
+      <h1>Invoice Details</h1>
+      <div class="header-actions">
+        <button class="btn btn-secondary" (click)="switchToList()">Back to List</button>
+        <button class="btn btn-primary" (click)="printInvoice()">Print</button>
+      </div>
+    </div>
+
+    <app-invoice-details-view [invoice]="selectedInvoice"></app-invoice-details-view>
+  </div>
+
+  <!-- CREATE VIEW -->
+  <div *ngIf="viewMode === 'create'" class="invoice-container compact-create">
+    <div class="invoice-header">
+      <h1>{{ isEditMode ? 'Edit Billing Invoice' : 'New Billing Invoice' }}</h1>
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-back" (click)="switchToList()">Back to List</button>
+        <button class="btn btn-primary btn-print" (click)="printInvoice()">Print</button>
+        <button class="btn btn-secondary btn-reset" (click)="resetFormBasedOnButton()">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- USER INFORMATION SECTION -->
+    <div class="section user-info-section">
+      <div class="section-header-row">
+        <h2>Invoice Information</h2>
+
+        <!-- Search by Phone Autocomplete -->
+        <div class="search-container relative flex-1 max-w-sm mx-4">
+          <div
+            class="flex items-center bg-slate-100 rounded-lg px-3 py-1.5 border border-slate-200 focus-within:border-yellow-400 focus-within:ring-2 focus-within:ring-yellow-100 transition-all"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-slate-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              #phoneSearchInput
+              type="text"
+              placeholder="Search existing customer by phone..."
+              (input)="onSearchPhone($event)"
+              (focus)="
+                showCustomerDropdown = foundCustomers.length > 0;
+                activeCustomerSuggestionIndex = foundCustomers.length > 0 ? 0 : -1
+              "
+              (keydown)="onPhoneSearchKeydown($event)"
+              class="bg-transparent border-none outline-none text-sm px-2 w-full text-slate-700"
+            />
+          </div>
+
+          <!-- Autocomplete Dropdown -->
+          <div
+            *ngIf="showCustomerDropdown && foundCustomers.length > 0"
+            class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <div
+              *ngFor="let customer of foundCustomers; let i = index"
+              (click)="selectCustomer(customer)"
+              (mouseenter)="activeCustomerSuggestionIndex = i"
+              class="px-4 py-3 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+              [ngClass]="
+                i === activeCustomerSuggestionIndex
+                  ? 'bg-purple-100 text-purple-900'
+                  : 'hover:bg-yellow-50'
+              "
+            >
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-bold text-slate-800">{{ customer.customerName }}</span>
+                <span
+                  class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-bold"
+                  >MATCH</span
+                >
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-xs text-slate-500 font-mono">{{ customer.phone }}</span>
+                <span class="text-xs text-slate-300">|</span>
+                <span class="text-xs text-slate-500 truncate"
+                  >{{ customer.city }}, {{ customer.address }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tracking-display" *ngIf="userInfoForm.get('trackingNumber')?.value">
+          <span class="label">Tracking #:</span>
+          <span class="value">{{ userInfoForm.get('trackingNumber')?.value }}</span>
+        </div>
+      </div>
+      <form [formGroup]="userInfoForm" class="user-info-form">
+        <div class="form-two-columns m-0 gap-1">
+          <!-- LEFT COLUMN -->
+          <div class="form-column">
+            <h3 class="sub-heading">Sender / Shipper</h3>
+
+            <div class="flex gap-1 mb-1">
+              <!-- Sender Name -->
+              <div class="floating-group">
+                <input
+                  type="text"
+                  formControlName="customerName"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('customerName')?.invalid &&
+                    userInfoForm.get('customerName')?.touched
+                  "
+                />
+                <label class="floating-label">Sender Name *</label>
+              </div>
+
+              <!-- Sender Country Code -->
+              <div class="floating-group">
+                <select
+                  formControlName="senderCountryCode"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('senderCountryCode')?.invalid &&
+                    userInfoForm.get('senderCountryCode')?.touched
+                  "
+                >
+                  <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Sender Code *</label>
+              </div>
+
+              <!-- Phone -->
+              <div class="floating-group">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="14"
+                  formControlName="phone"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  (input)="onPhoneInput('phone', $event)"
+                  [class.error]="
+                    userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched
+                  "
+                />
+                <label class="floating-label">Sender Mobile *</label>
+              </div>
+            </div>
+
+            <!-- City / Zip -->
+            <div class="flex gap-1 mb-1">
+              <div class="floating-group full-width">
+                <input
+                  type="text"
+                  formControlName="address"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched
+                  "
+                />
+                <label class="floating-label">Sender Address *</label>
+              </div>
+              <div class="floating-group">
+                <select
+                  formControlName="city"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched
+                  "
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let city of saudiMajorCities" [value]="city">
+                    {{ city }}
+                  </option>
+                </select>
+                <label class="floating-label">Sender City *</label>
+              </div>
+
+              <div class="floating-group">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="14"
+                  formControlName="zipCode"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched
+                  "
+                />
+                <label class="floating-label">Sender Zip Code *</label>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="flex gap-1 mb-1">
+              <div class="floating-group full-width">
+                <input
+                  type="email"
+                  formControlName="email"
+                  placeholder=" "
+                  class="floating-input text-black"
+                />
+                <label class="floating-label">Sender Email</label>
+              </div>
+              <div class="floating-group full-width">
+                <input
+                  type="url"
+                  formControlName="locationLink"
+                  placeholder=" "
+                  class="floating-input text-black"
+                />
+                <label class="floating-label">Google Map Location Link</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="form-column">
+            <h3 class="sub-heading">Consignee</h3>
+
+            <div class="flex gap-1 mb-1">
+              <div class="floating-group">
+                <input
+                  type="text"
+                  formControlName="consigneeName"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeName')?.invalid &&
+                    userInfoForm.get('consigneeName')?.touched
+                  "
+                />
+                <label class="floating-label">Consignee Name *</label>
+              </div>
+
+              <div class="floating-group">
+                <select
+                  formControlName="consigneeCountryCode"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeCountryCode')?.invalid &&
+                    userInfoForm.get('consigneeCountryCode')?.touched
+                  "
+                >
+                  <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Consignee Code *</label>
+              </div>
+
+              <div class="floating-group">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="14"
+                  formControlName="consigneeMobile"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  (input)="onPhoneInput('consigneeMobile', $event)"
+                  [class.error]="
+                    userInfoForm.get('consigneeMobile')?.invalid &&
+                    userInfoForm.get('consigneeMobile')?.touched
+                  "
+                />
+                <label class="floating-label">Consignee Mobile *</label>
+              </div>
+            </div>
+
+            <div class="flex gap-1">
+              <div class="floating-group full-width">
+                <input
+                  type="text"
+                  formControlName="consigneeAddress"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeAddress')?.invalid &&
+                    userInfoForm.get('consigneeAddress')?.touched
+                  "
+                />
+                <label class="floating-label">Consignee Address *</label>
+              </div>
+              <div class="floating-group">
+                <select
+                  formControlName="consigneeCountry"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeCountry')?.invalid &&
+                    userInfoForm.get('consigneeCountry')?.touched
+                  "
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let country of countryOptions" [value]="country">
+                    {{ country }}
+                  </option>
+                </select>
+                <label class="floating-label">Consignee Country *</label>
+              </div>
+
+              <div class="floating-group">
+                <input
+                  type="text"
+                  formControlName="consigneeCity"
+                  placeholder=" "
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('consigneeCity')?.invalid &&
+                    userInfoForm.get('consigneeCity')?.touched
+                  "
+                />
+                <label class="floating-label">Consignee City *</label>
+              </div>
+            </div>
+            <div class="flex gap-1 mt-1">
+              <div class="floating-group">
+                <select
+                  formControlName="modeOfDelivery"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('modeOfDelivery')?.invalid &&
+                    userInfoForm.get('modeOfDelivery')?.touched
+                  "
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let option of modeOfDeliveryOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Mode of Delivery *</label>
+              </div>
+
+              <div class="floating-group">
+                <select
+                  formControlName="modeOfPayment"
+                  class="floating-input text-black"
+                  [class.error]="
+                    userInfoForm.get('modeOfPayment')?.invalid &&
+                    userInfoForm.get('modeOfPayment')?.touched
+                  "
+                >
+                  <option value="" disabled selected hidden></option>
+                  <option *ngFor="let option of modeOfPaymentOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <label class="floating-label">Mode of Payment *</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- ITEMS SECTION -->
+    <div class="section items-section">
+      <h2>Add Items</h2>
+      <form [formGroup]="itemForm">
+        <div class="flex gap-1">
+          <div class="floating-group search-container relative item-autocomplete-input">
+            <input
+              #itemDescriptionInput
+              type="text"
+              formControlName="description"
+              placeholder=" "
+              class="floating-input text-black"
+              (input)="onItemSearch($event)"
+              (focus)="
+                showItemDropdown = suggestedItems.length > 0;
+                activeItemSuggestionIndex = suggestedItems.length > 0 ? 0 : -1
+              "
+              (keydown)="onItemDescriptionKeydown($event)"
+              [class.error]="
+                itemForm.get('description')?.invalid && itemForm.get('description')?.touched
+              "
+            />
+            <label class="floating-label">Item Description *</label>
+
+            <!-- Item Autocomplete Dropdown -->
+            <div
+              *ngIf="showItemDropdown && suggestedItems.length > 0"
+              class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+            >
+              <div
+                *ngFor="let item of suggestedItems; let i = index"
+                (click)="selectItem(item)"
+                (mouseenter)="activeItemSuggestionIndex = i"
+                class="px-4 py-3 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+                [ngClass]="
+                  i === activeItemSuggestionIndex
+                    ? 'bg-purple-100 text-purple-900'
+                    : 'hover:bg-yellow-50'
+                "
+              >
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-bold text-slate-800">{{ item.item_name }}</span>
+                  <span
+                    class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-bold"
+                    >ITEM</span
+                  >
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-xs text-slate-500">{{ item.category_name }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="floating-group">
+            <input
+              type="number"
+              formControlName="quantity"
+              placeholder=" "
+              class="floating-input text-black"
+              (focus)="$event.target.select()"
+              [class.error]="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched"
+            />
+            <label class="floating-label">Quantity *</label>
+          </div>
+
+          <div class="floating-group">
+            <input
+              type="number"
+              formControlName="unitWeight"
+              placeholder=" "
+              class="floating-input text-black"
+              (focus)="$event.target.select()"
+            />
+            <label class="floating-label">Unit Weight</label>
+          </div>
+
+          <div class="flex items-center">
+            <button
+              type="button"
+              class="btn btn-primary btn-large"
+              (click)="addItem(true)"
+              (keydown.enter)="addItem(true); $event.preventDefault()"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- ITEMS TABLE -->
+      <div class="items-table-wrapper" *ngIf="items.length > 0">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Quantity</th>
+              <th>Unit Weight (kg)</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of items" class="item-row">
+              <td>{{ item.description }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.unitWeight || '-' }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
+                  (click)="removeItem(item.id)"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M3 6h18"></path>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- <div class="no-items-message" *ngIf="items.length === 0">
+        <p>No items added yet. Add items to create the invoice.</p>
+      </div> -->
+    </div>
+    <div class="invoice-bottom-row">
+      <!-- FINANCIAL DETAILS SECTION below Items -->
+      <div class="section financial-details-section flex-1">
+        <h3 class="sub-heading">Billing Details</h3>
+        <form [formGroup]="financialForm">
+          <div class="flex gap-1">
+            <div class="floating-group">
+              <input
                 type="number"
-                min="1"
-                [(ngModel)]="item.quantity"
-                (ngModelChange)="updateItemAmount(item)"
-                class="table-input">
-            </td>
-            <td>
-              <input 
+                formControlName="totalCartons"
+                placeholder=" "
+                class="floating-input text-black"
+                (focus)="$event.target.select()"
+                [class.error]="
+                  financialForm.get('totalCartons')?.invalid &&
+                  financialForm.get('totalCartons')?.touched
+                "
+              />
+              <label class="floating-label">Total Cartons *</label>
+            </div>
+
+            <div class="floating-group">
+              <input
                 type="number"
-                min="0"
-                step="0.01"
-                [(ngModel)]="item.price"
-                (ngModelChange)="updateItemAmount(item)"
-                class="table-input">
-            </td>
-            <td class="amount-cell">₹{{ item.amount.toFixed(2) }}</td>
-            <td>
-              <button 
-                type="button"
-                class="btn btn-danger btn-sm"
-                (click)="removeItem(item.id)">
-                Remove
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+                formControlName="pricePerKg"
+                placeholder=" "
+                class="floating-input text-black"
+                (focus)="$event.target.select()"
+                [class.error]="
+                  financialForm.get('pricePerKg')?.invalid &&
+                  financialForm.get('pricePerKg')?.touched
+                "
+              />
+              <label class="floating-label">Price per Kg *</label>
+            </div>
+          </div>
 
-    <div class="no-items-message" *ngIf="items.length === 0">
-      <p>No items added yet. Add items to create the invoice.</p>
+          <div class="cartons-wrapper mt-4" formArrayName="cartons">
+            <div
+              class="carton-card"
+              *ngFor="let carton of cartons.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <h4 class="carton-title">Carton {{ i + 1 }}</h4>
+              <div class="flex gap-1">
+                <div class="floating-group">
+                  <input
+                    type="number"
+                    formControlName="weight"
+                    placeholder=" "
+                    class="floating-input text-black"
+                    (focus)="$event.target.select()"
+                    [class.error]="carton.get('weight')?.invalid && carton.get('weight')?.touched"
+                  />
+                  <label class="floating-label">Carton {{ i + 1 }} Weight *</label>
+                </div>
+
+                <div class="floating-group">
+                  <input
+                    type="number"
+                    formControlName="customsCharge"
+                    placeholder=" "
+                    class="floating-input text-black"
+                    (focus)="$event.target.select()"
+                    [class.error]="
+                      carton.get('customsCharge')?.invalid && carton.get('customsCharge')?.touched
+                    "
+                  />
+                  <label class="floating-label">Carton {{ i + 1 }} Customs Charge*</label>
+                </div>
+
+                <div class="floating-group">
+                  <input
+                    type="number"
+                    formControlName="packingCharge"
+                    placeholder=" "
+                    class="floating-input text-black"
+                    (focus)="$event.target.select()"
+                    [class.error]="
+                      carton.get('packingCharge')?.invalid && carton.get('packingCharge')?.touched
+                    "
+                  />
+                  <label class="floating-label">Carton {{ i + 1 }} Packing Charge*</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+        <form [formGroup]="chargesForm" class="mt-5">
+          <div class="flex gap-1">
+            <div class="floating-group">
+              <input
+                type="number"
+                formControlName="billCharge"
+                placeholder=" "
+                class="floating-input text-black"
+                (focus)="$event.target.select()"
+                [class.error]="
+                  chargesForm.get('billCharge')?.invalid && chargesForm.get('billCharge')?.touched
+                "
+              />
+              <label class="floating-label">Bill Charge</label>
+            </div>
+
+            <div class="floating-group">
+              <input
+                type="number"
+                formControlName="discount"
+                placeholder=" "
+                class="floating-input text-black"
+                (focus)="$event.target.select()"
+                [class.error]="
+                  chargesForm.get('discount')?.invalid && chargesForm.get('discount')?.touched
+                "
+              />
+              <label class="floating-label">Discount</label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- TOTALS SECTION -->
+      <div class="section totals-section flex-1">
+        <h2>Invoice Summary</h2>
+        <div class="totals-grid">
+          <div class="total-item">
+            <span class="label">Subtotal:</span>
+            <span class="value"
+              >{{ settingsService.currencySymbol() }}{{ subtotal.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="customsCharge > 0">
+            <span class="label">Customs Charge:</span>
+            <span class="value positive"
+              >+{{ settingsService.currencySymbol() }}{{ customsCharge.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="billCharge > 0">
+            <span class="label">Bill Charge:</span>
+            <span class="value positive"
+              >+{{ settingsService.currencySymbol() }}{{ billCharge.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="packingCharge > 0">
+            <span class="label">Packing Charge:</span>
+            <span class="value positive"
+              >+{{ settingsService.currencySymbol() }}{{ packingCharge.toFixed(2) }}</span
+            >
+          </div>
+          <div class="total-item" *ngIf="discount > 0">
+            <span class="label">Discount:</span>
+            <span class="value negative"
+              >-{{ settingsService.currencySymbol() }}{{ discount.toFixed(2) }}</span
+            >
+          </div>
+          <div class="grand-total">
+            <span class="label">Grand Total:</span>
+            <span class="value"
+              >{{ settingsService.currencySymbol() }}{{ grandTotal.toFixed(2) }}</span
+            >
+          </div>
+        </div>
+        <!-- ACTION BUTTONS -->
+        <div class="section action-buttons mt-5 no-print">
+          <button
+            type="button"
+            class="btn btn-primary btn-large"
+            (click)="submitInvoice()"
+            [disabled]="items.length === 0"
+          >
+            {{ isEditMode ? 'Update Invoice' : 'Create Invoice' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-
-  <!-- CHARGES SECTION -->
-  <div class="section charges-section">
-    <h2>Additional Charges & Discount</h2>
-    <form [formGroup]="chargesForm" class="charges-form">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="customsCharge">Customs Charge</label>
-          <input 
-            type="number"
-            id="customsCharge"
-            formControlName="customsCharge"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            class="form-input">
-        </div>
-
-        <div class="form-group">
-          <label for="billCharge">Bill Charge</label>
-          <input 
-            type="number"
-            id="billCharge"
-            formControlName="billCharge"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            class="form-input">
-        </div>
-
-        <div class="form-group">
-          <label for="packingCharge">Packing Charge</label>
-          <input 
-            type="number"
-            id="packingCharge"
-            formControlName="packingCharge"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            class="form-input">
-        </div>
-
-        <div class="form-group">
-          <label for="discount">Discount</label>
-          <input 
-            type="number"
-            id="discount"
-            formControlName="discount"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            class="form-input">
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <!-- TOTALS SECTION -->
-  <div class="section totals-section">
-    <h2>Invoice Summary</h2>
-    <div class="totals-grid">
-      <div class="total-item">
-        <span class="label">Subtotal:</span>
-        <span class="value">₹{{ subtotal.toFixed(2) }}</span>
-      </div>
-      <div class="total-item" *ngIf="customsCharge > 0">
-        <span class="label">Customs Charge:</span>
-        <span class="value positive">+₹{{ customsCharge.toFixed(2) }}</span>
-      </div>
-      <div class="total-item" *ngIf="billCharge > 0">
-        <span class="label">Bill Charge:</span>
-        <span class="value positive">+₹{{ billCharge.toFixed(2) }}</span>
-      </div>
-      <div class="total-item" *ngIf="packingCharge > 0">
-        <span class="label">Packing Charge:</span>
-        <span class="value positive">+₹{{ packingCharge.toFixed(2) }}</span>
-      </div>
-      <div class="total-item" *ngIf="discount > 0">
-        <span class="label">Discount:</span>
-        <span class="value negative">-₹{{ discount.toFixed(2) }}</span>
-      </div>
-      <div class="grand-total">
-        <span class="label">Grand Total:</span>
-        <span class="value">₹{{ grandTotal.toFixed(2) }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ACTION BUTTONS -->
-  <div class="section action-buttons">
-    <button 
-      type="button"
-      class="btn btn-primary btn-large"
-      (click)="submitInvoice()"
-      [disabled]="items.length === 0">
-      Create Invoice
-    </button>
-  </div>
-</div>
-    </div>
-  </main>
 </div>

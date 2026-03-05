@@ -1,0 +1,19 @@
+<div class="scanner-container">
+
+  <h2>QR / Barcode Scanner</h2>
+
+  <video id="video" width="300" height="200"></video>
+
+  <br><br>
+
+  <button (click)="startScanner()">Start Scan</button>
+  <button (click)="stopScanner()">Stop</button>
+
+  <br><br>
+
+  <div *ngIf="scannedResult">
+    <h3>Scanned Result:</h3>
+    <p>{{ scannedResult }}</p>
+  </div>
+
+</div>

@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+.env
+instance/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.angular/
+coverage/
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store

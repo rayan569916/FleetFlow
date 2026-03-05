@@ -1,30 +1,136 @@
-<header
-  class="mb-10 flex items-center justify-between max-md:mb-6 max-md:flex-col max-md:items-start max-md:gap-4 header">
-  <div class="flex items-center gap-4 left-section">
-    <!-- <button type="button"
-      class="flex h-10 w-10 flex-col items-center justify-center gap-1 rounded-xl border-0 bg-violet-600/10 p-2 transition-colors duration-200 hover:bg-violet-600/20 hamburger-btn"
-      (click)="onToggleSidebar()" aria-label="Toggle sidebar">
+<header class="app-header">
+  <div class="left-section">
+    <!-- Hamburger: Visible only on mobile -->
+    <button
+      type="button"
+      class="menu-toggle md:hidden"
+      (click)="onToggleSidebar()"
+      aria-label="Toggle sidebar"
+    >
       <span class="block h-0.5 w-5 rounded bg-amber-400"></span>
       <span class="block h-0.5 w-5 rounded bg-amber-400"></span>
       <span class="block h-0.5 w-5 rounded bg-amber-400"></span>
-    </button> -->
-    <div class="logo-section">
-      <h1 class="font-bold">FleetFlow</h1>
-      <p class="mt-1 text-sm font-light text-slate-500">Transportation Management System</p>
+    </button>
+
+    <!-- Logo Section (Mobile Only) -->
+    <div class="logo-section md:hidden flex items-center gap-2">
+      <img src="captain_cargo_logo_yellow.svg" alt="Logo" class="h-6 w-auto" />
+    </div>
+
+    <!-- Breadcrumb (Desktop) -->
+    <div class="breadcrumb hidden md:flex items-center">
+      <div class="crumb-icon-wrapper mr-3">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 text-emerald-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+        </svg>
+      </div>
+      <span class="crumb-link" routerLink="/dashboard">Home</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-3 w-3 mx-2 text-slate-500/50"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+      <span class="crumb-current">{{ currentPageTitle() }}</span>
+    </div>
+
+    <!-- Office Badge (Professional Arrangement) -->
+    <div *ngIf="userOfficeName()" class="office-badge hidden md:flex">
+      <div class="office-indicator"></div>
+      <span class="office-label">Office</span>
+      <span class="office-name">{{ userOfficeName() }}</span>
     </div>
   </div>
 
-  <button
-    class="relative flex items-center gap-3 overflow-hidden rounded-2xl border-0 bg-linear-to-br from-violet-600 to-violet-800 px-8 py-4 text-base font-semibold text-white shadow-lg transition-all duration-300 barcode-btn"
-    type="button">
-    <svg class="h-6 w-6 barcode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      aria-hidden="true">
-      <rect x="3" y="5" width="2" height="14"></rect>
-      <rect x="7" y="5" width="1" height="14"></rect>
-      <rect x="10" y="5" width="2" height="14"></rect>
-      <rect x="14" y="5" width="1" height="14"></rect>
-      <rect x="17" y="5" width="3" height="14"></rect>
-    </svg>
-    Scan Barcode
-  </button>
+  <div class="right-section">
+    <!-- Action Group -->
+    <div class="actions-group hidden lg:flex items-center gap-3 pr-4 border-r border-white/10">
+      <button class="action-icon-btn group" title="Search">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 group-hover:text-amber-400 transition-colors"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </button>
+      <button class="notify-btn" title="Notifications">
+        <span class="notify-dot"></span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- User Profile Widget -->
+    <div
+      class="user-profile-widget p-1 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3 pr-4"
+    >
+      <div
+        class="avatar-wrapper h-9 w-9 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 flex items-center justify-center font-bold text-slate-900 shadow-lg shadow-amber-400/20"
+      >
+        {{ userName()?.charAt(0) || 'U' }}
+      </div>
+      <div class="flex flex-col">
+        <span class="text-xs font-bold text-white tracking-wide truncate max-w-[120px]">{{
+          userName()
+        }}</span>
+        <span
+          class="text-[9px] font-black uppercase text-amber-400/80 tracking-widest leading-none"
+          >{{ userRole() }}</span
+        >
+      </div>
+    </div>
+
+    <!-- Main Scan Action -->
+    <!-- <button class="scan-btn pulse-action brand-yellow-500" type="button">
+      <svg
+        class="scan-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        aria-hidden="true"
+      >
+        <rect x="3" y="5" width="2" height="14"></rect>
+        <rect x="7" y="5" width="1" height="14"></rect>
+        <rect x="10" y="5" width="2" height="14"></rect>
+        <rect x="14" y="5" width="1" height="14"></rect>
+        <rect x="17" y="5" width="3" height="14"></rect>
+      </svg>
+      <span>Scan</span>
+    </button> -->
+  </div>
 </header>

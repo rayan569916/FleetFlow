@@ -1,0 +1,507 @@
+<div class="space-y-8 animate-in fade-in duration-500">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+    <div>
+      <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Business Reports</h1>
+      <p class="text-slate-100 mt-1">Comprehensive financial and operational analysis.</p>
+    </div>
+    <div class="flex gap-3">
+      <button
+        (click)="printReport()"
+        class="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white font-medium hover:bg-white/20 transition shadow-sm flex items-center gap-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        Export PDF
+      </button>
+      <button
+        (click)="downloadExcel()"
+        class="px-4 py-2 bg-[var(--brand-yellow-500)] text-slate-900 rounded-xl font-medium hover:bg-yellow-400 transition shadow-lg shadow-yellow-200/50 flex items-center gap-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- LIST VIEW (Filters + Table) -->
+  <div
+    *ngIf="viewMode() === 'list'"
+    class="space-y-8 animate-in slide-in-from-bottom-2 duration-500"
+  >
+    <div class="bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-sm border border-slate-200/60">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <!-- LEFT: REPORT TABS -->
+        <div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+              >Select Report</label
+            >
+          </div>
+          <div
+            class="flex flex-wrap gap-2 p-1.5 bg-slate-900/5 rounded-2xl border border-white/40 shrink-0"
+          >
+            <button
+              *ngFor="let type of reportTypes"
+              (click)="reportType.set(type.id); onReportTypeChange()"
+              [class]="
+                reportType() === type.id
+                  ? 'px-4 py-2 bg-[var(--brand-purple-700)] text-white rounded-xl font-bold shadow transition'
+                  : 'px-4 py-2 bg-white/60 text-slate-600 rounded-xl font-semibold hover:bg-white hover:text-indigo-600 transition'
+              "
+            >
+              {{ type.label }}
+            </button>
+          </div>
+        </div>
+        <!-- RIGHT: FILTERS -->
+        <div class="flex flex-wrap items-end gap-4 flex-1 justify-end">
+          <ng-container>
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+                >Start Date</label
+              >
+              <input
+                type="date"
+                [(ngModel)]="startDate"
+                (change)="loadReport()"
+                class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+                >End Date</label
+              >
+              <input
+                type="date"
+                [(ngModel)]="endDate"
+                (change)="loadReport()"
+                class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+              />
+            </div>
+          </ng-container>
+
+          <div class="space-y-1.5" *ngIf="authService.currentUserRole() === 'Super_admin' || 'management'">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+              >Office</label
+            >
+            <select
+              [(ngModel)]="selectedOfficeId"
+              (change)="loadReport()"
+              class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+            >
+              <option [ngValue]="undefined">All Offices</option>
+              <option *ngFor="let office of offices()" [value]="office.id">
+                {{ office.name }}
+              </option>
+            </select>
+          </div>
+
+          <div
+            class="space-y-1.5"
+            *ngIf="['payments', 'purchases', 'receipts'].includes(reportType())"
+          >
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
+              >Category</label
+            >
+            <select
+              [(ngModel)]="selectedCategoryId"
+              (change)="loadReport()"
+              class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-500 py-2 px-3 bg-slate-50/50"
+            >
+              <option [ngValue]="undefined">All Categories</option>
+              <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+          <div class="lg:col-start-5">
+            <button
+              (click)="loadReport()"
+              class="w-full px-4 py-2 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition flex items-center justify-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Display Area -->
+    <div class="relative min-h-[400px]">
+      <!-- Loading Overlay -->
+      <div
+        *ngIf="isLoading()"
+        class="absolute inset-0 z-10 bg-white/50 backdrop-blur-[2px] rounded-2xl flex items-center justify-center animate-in fade-in duration-300"
+      >
+        <div class="flex flex-col items-center gap-3">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-500"></div>
+          <span class="text-sm font-medium text-slate-600">Loading data...</span>
+        </div>
+      </div>
+
+      <!-- Table View for Detailed Reports -->
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden animate-in fade-in duration-500 flex flex-col min-h-[500px]"
+      >
+        <div class="overflow-x-auto">
+          <!-- Invoices Table -->
+          <table
+            *ngIf="reportType() === 'invoices'"
+            class="w-full table-fixed text-left border-collapse"
+          >
+            <thead class="bg-slate-50/50 border-b border-slate-100">
+              <tr>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Invoice #
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Tracking #
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Payment Mode
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Office
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Created By
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr
+                *ngFor="let row of invoiceData()"
+                class="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                (click)="openInvoiceDetailsFromReport(row)"
+              >
+                <td class="p-4 text-sm text-slate-600 font-medium">{{ row.date | date }}</td>
+                <td class="p-4 text-sm font-bold text-slate-800">{{ row.invoice_number }}</td>
+                <td class="p-4 text-sm text-slate-500 font-mono">
+                  {{ row.tracking_number || 'N/A' }}
+                </td>
+                <td class="p-4 text-sm">
+                  <span
+                    class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                    [ngClass]="
+                      row.mode_of_payment === 'cash'
+                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                        : 'bg-yellow-50 text-yellow-700 border border-yellow-100'
+                    "
+                  >
+                    {{ row.mode_of_payment }}
+                  </span>
+                </td>
+                <td class="p-4 text-sm font-bold text-slate-900">
+                  {{ settingsService.currencySymbol() }} {{ row.grand_total | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm text-slate-600">{{ row.office_name }}</td>
+                <td class="p-4 text-sm text-slate-500">{{ row.created_by_name }}</td>
+              </tr>
+              <tr *ngIf="invoiceData().length === 0 && !isLoading()">
+                <td colspan="7" class="p-12 text-center text-slate-400">
+                  No invoice data found for the selected filters.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Finance Table (Payments, Purchases, Receipts) -->
+          <table
+            *ngIf="['payments', 'purchases', 'receipts'].includes(reportType())"
+            class="w-full table-fixed text-left border-collapse"
+          >
+            <thead class="bg-slate-50/50 border-b border-slate-100">
+              <tr>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Office
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Created By
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr *ngFor="let row of financeData()" class="hover:bg-slate-50/80 transition-colors">
+                <td class="p-4 text-sm text-slate-600 font-medium">{{ row.created_at | date }}</td>
+                <td class="p-4 text-sm text-slate-800">{{ row.description }}</td>
+                <td class="p-4 text-sm">
+                  <span
+                    class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium"
+                  >
+                    {{ row.category_name }}
+                  </span>
+                </td>
+                <td
+                  class="p-4 text-sm font-bold"
+                  [ngClass]="reportType() === 'receipts' ? 'text-emerald-600' : 'text-rose-600'"
+                >
+                  {{ reportType() === 'receipts' ? '+' : '-' }}
+                  {{ settingsService.currencySymbol() }}
+                  {{ row.amount | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm text-slate-600">{{ row.office_name }}</td>
+                <td class="p-4 text-sm text-slate-500">{{ row.created_by_name }}</td>
+              </tr>
+              <tr *ngIf="financeData().length === 0 && !isLoading()">
+                <td colspan="6" class="p-12 text-center text-slate-400">
+                  No data found for the selected filters.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Daily Reports List Table -->
+          <table
+            *ngIf="reportType() === 'daily-list'"
+            class="w-full table-fixed text-left border-collapse"
+          >
+            <thead class="bg-slate-50/50 border-b border-slate-100">
+              <tr>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Office
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Billing Invoice
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Bank/Swipe
+                </th>
+                <th class="p-4 text-xs font-bold text-rose-400 uppercase tracking-wider">
+                  Payments
+                </th>
+                <th class="p-4 text-xs font-bold text-rose-400 uppercase tracking-wider">
+                  Purchases
+                </th>
+                <th class="p-4 text-xs font-bold text-emerald-500 uppercase tracking-wider">
+                  Receipts
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Prev. Total
+                </th>
+                <th class="p-4 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Daily Total
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr
+                *ngFor="let row of dailyReportsList()"
+                class="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                (click)="openDailyBreakdown(row)"
+              >
+                <td class="p-4 text-sm font-bold text-slate-800">{{ row.date | date }}</td>
+                <td class="p-4 text-sm text-slate-500">{{ row.office_name || 'N/A' }}</td>
+                <td class="p-4 text-sm text-slate-700">
+                  {{ settingsService.currencySymbol() }}
+                  {{ row.total_invoice_grand | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm text-rose-500">
+                  - {{ settingsService.currencySymbol() }}
+                  {{ row.bank_transfer_swipe_sum | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm text-rose-500">
+                  - {{ settingsService.currencySymbol() }} {{ row.total_payment | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm text-rose-500">
+                  - {{ settingsService.currencySymbol() }}
+                  {{ row.total_purchase | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm text-emerald-500">
+                  + {{ settingsService.currencySymbol() }} {{ row.total_receipt | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm text-slate-400">
+                  {{ settingsService.currencySymbol() }} {{ row.previous_total | number: '1.2-2' }}
+                </td>
+                <td class="p-4 text-sm font-black text-slate-900">
+                  {{ settingsService.currencySymbol() }} {{ row.daily_total | number: '1.2-2' }}
+                </td>
+              </tr>
+              <tr *ngIf="dailyReportsList().length === 0 && !isLoading()">
+                <td colspan="8" class="p-12 text-center text-slate-400">
+                  No daily reports found for the selected period.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination Controls -->
+        <div
+          class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between no-print mt-auto"
+          *ngIf="totalPages() > 0"
+        >
+          <span class="text-xs text-slate-500 font-medium">
+            Showing {{ totalItems() > 0 ? (currentPage() - 1) * pageSize() + 1 : 0 }} to
+            {{
+              currentPage() * pageSize() > totalItems() ? totalItems() : currentPage() * pageSize()
+            }}
+            of {{ totalItems() }} results (Page {{ currentPage() }} of {{ totalPages() }})
+          </span>
+          <div class="flex gap-2">
+            <button
+              (click)="prevPage()"
+              [disabled]="currentPage() === 1"
+              class="px-3 py-1.5 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 transition-colors shadow-sm"
+            >
+              Previous
+            </button>
+            <button
+              (click)="nextPage()"
+              [disabled]="currentPage() === totalPages()"
+              class="px-3 py-1.5 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 transition-colors shadow-sm"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOICE DETAIL VIEW -->
+  <div
+    *ngIf="viewMode() === 'invoice-detail' && selectedInvoiceDetails()"
+    class="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500"
+  >
+    <div
+      class="flex justify-between items-center bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-sm"
+    >
+      <div class="flex items-center gap-4">
+        <button
+          (click)="closeDetailPanels()"
+          class="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+        </button>
+        <div>
+          <h3 class="text-xl font-bold text-slate-800">Invoice Details</h3>
+          <p class="text-xs text-slate-500">Viewing comprehensive record for selected invoice.</p>
+        </div>
+      </div>
+      <button
+        (click)="closeDetailPanels()"
+        class="px-4 py-2 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition shadow-sm"
+      >
+        Back to List
+      </button>
+    </div>
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <app-invoice-details-view [invoice]="selectedInvoiceDetails()"></app-invoice-details-view>
+    </div>
+  </div>
+
+  <!-- DAILY BREAKDOWN VIEW -->
+  <div
+    *ngIf="viewMode() === 'daily-breakdown' && selectedDailyBreakdown() as breakdown"
+    class="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500"
+  >
+    <div
+      class="flex justify-between items-center bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-sm"
+    >
+      <div class="flex items-center gap-4">
+        <button
+          (click)="closeDetailPanels()"
+          class="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+        </button>
+        <div>
+          <h3 class="text-xl font-bold text-slate-800">Daily Report Breakdown</h3>
+          <p class="text-xs text-slate-500">
+            Itemized transactions for {{ breakdown.report.date | date: 'fullDate' }}
+          </p>
+        </div>
+      </div>
+      <button
+        (click)="closeDetailPanels()"
+        class="px-4 py-2 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition shadow-sm"
+      >
+        Back to List
+      </button>
+    </div>
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <app-daily-breakdown-view
+        [report]="breakdown.report"
+        [invoices]="breakdown.invoices"
+        [payments]="breakdown.payments"
+        [purchases]="breakdown.purchases"
+        [receipts]="breakdown.receipts"
+        (editInvoice)="triggerInvoiceEdit($event)"
+        (editPayment)="triggerPaymentEdit($event)"
+        (editPurchase)="triggerPurchaseEdit($event)"
+        (editReceipt)="triggerReceiptEdit($event)"
+      ></app-daily-breakdown-view>
+    </div>
+  </div>
+</div>

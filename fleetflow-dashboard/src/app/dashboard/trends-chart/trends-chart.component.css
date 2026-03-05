@@ -1,29 +1,4 @@
-
-.chart-svg {
-  overflow: visible;
+/* Obsolete chart styles removed */
+.daily-report-widget-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.area-path {
-  fill: url(#areaGradient);
-}
-
-.line-path {
-  fill: none;
-  stroke: #7c3aed;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3;
-}
-
-.chart-point {
-  fill: #fff;
-  stroke: #7c3aed;
-  stroke-width: 3;
-  transition: all 0.2s ease;
-}
-
-.chart-point:hover {
-  r: 8;
-  stroke-width: 4;
-}
-

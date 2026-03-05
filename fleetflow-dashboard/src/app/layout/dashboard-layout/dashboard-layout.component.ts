@@ -1,47 +1,40 @@
 import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
-
-import { RecentActivityComponent } from '../../dashboard/recent-activity/recent-activity.component';
-import { TrendsChartComponent } from '../../dashboard/trends-chart/trends-chart.component';
-import { DriversListComponent } from '../../dashboard/drivers-list/drivers-list.component';
-import { DashboardDataService } from '../../services/dashboard-data.service';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { UiStateService } from '../../services/ui-state.service';
+import { DashboardDataService } from '../../services/dashboard-data.service';
+import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { TotalCargoCardComponent } from "../../dashboard/total-cargo-card.component/total-cargo-card.component";
-import { CardComponent } from '../../shared/ui/card/card.component';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
   imports: [
     AsyncPipe,
+    RouterOutlet,
     SidebarComponent,
-    HeaderComponent,
-    RecentActivityComponent,
-    TrendsChartComponent,
-    DriversListComponent,
-    TotalCargoCardComponent,
-    CardComponent
-],
+    HeaderComponent
+  ],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardLayoutComponent {
+export class DashboardLayoutComponent implements OnInit {
   private uiStateService = inject(UiStateService);
+  private router = inject(Router);
   private dashboardDataService = inject(DashboardDataService);
-  private router: Router = inject(Router);
+  private authService = inject(AuthService);
 
+  readonly isDriver = this.authService.isDriver;
   readonly sidebarExpanded$ = this.uiStateService.sidebarExpanded$;
-  readonly activity$ = this.dashboardDataService.getRecentActivity();
-  readonly drivers$ = this.dashboardDataService.getDrivers();
-  readonly income$ = this.dashboardDataService.getSelectedIncome();
-  readonly trends$ = this.dashboardDataService.getYearlyTrends();
-  readonly period$ = this.dashboardDataService.incomePeriod$;
 
-
+  ngOnInit(): void {
+    // If driver, redirect to invoice page immediately
+    if (this.isDriver()) {
+      this.router.navigate(['/dashboard/invoice']);
+    }
+  }
 
   toggleSidebar(): void {
     this.uiStateService.toggleSidebar();
@@ -62,15 +55,23 @@ export class DashboardLayoutComponent {
       'Purchase': ['Computer', 'Smartphone', 'Vehicle', 'Equipment', 'Supplies']
     };
 
-    this.router.navigate(['/transaction-layout'], { 
-      queryParams: { 
+    this.router.navigate(['/transaction-layout'], {
+      queryParams: {
         type,
         categories: JSON.stringify(categoryMap[type] || [])
-      } 
+      }
     });
   }
 
   navigateToBillingInvoice(): void {
     this.router.navigate(['/dashboard/invoice']);
+  }
+
+  navigateToDailyReport(): void {
+    this.router.navigate(['/dashboard/daily-report']);
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }
