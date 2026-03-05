@@ -57,18 +57,38 @@ export class InvoiceComponent implements OnInit {
   packingCharge = 0;
   discount = 0;
   grandTotal = 0;
-  
+
   // Customer search
   private searchSubject = new Subject<string>();
   foundCustomers: any[] = [];
   showCustomerDropdown = false;
   activeCustomerSuggestionIndex = -1;
-  
+
   // Item Autocomplete
   private itemSearchSubject = new Subject<string>();
   suggestedItems: CargoItem[] = [];
   showItemDropdown = false;
   activeItemSuggestionIndex = -1;
+
+  // City Autocomplete
+  private senderCitySearchSubject = new Subject<string>();
+  private consigneeCitySearchSubject = new Subject<string>();
+  senderCitySuggestions: string[] = [];
+  consigneeCitySuggestions: string[] = [];
+  showSenderCityDropdown = false;
+  showConsigneeCityDropdown = false;
+  activeConsigneeCitySuggestionIndex = -1;
+  activeSenderCitySuggestionIndex = -1;
+  showSenderCodeDropdown = false;
+  showConsigneeCodeDropdown = false;
+  showConsigneeCountryDropdown = false;
+  activeSenderCodeIndex = -1;
+  activeConsigneeCodeIndex = -1;
+  activeConsigneeCountryIndex = -1;
+  showModeOfDeliveryDropdown = false;
+  showModeOfPaymentDropdown = false;
+  activeModeOfDeliveryIndex = -1;
+  activeModeOfPaymentIndex = -1;
 
   // Pagination Signals
   currentPage = 1;
@@ -95,12 +115,12 @@ export class InvoiceComponent implements OnInit {
     { label: 'India (+91)', code: '+91' },
     { label: 'Pakistan (+92)', code: '+92' },
     { label: 'Bangladesh (+880)', code: '+880' },
-    { label: 'Sri Lanka (+94)', code: '+94'},
-    { label: 'Nepal (+977)', code: '+977'},
-    { label:'Philippines (+63)', code: '+63'},
-    { label: 'Indonesia (+62)', code: '+62'}
+    { label: 'Sri Lanka (+94)', code: '+94' },
+    { label: 'Nepal (+977)', code: '+977' },
+    { label: 'Philippines (+63)', code: '+63' },
+    { label: 'Indonesia (+62)', code: '+62' }
   ];
-  
+
 
   constructor(
     private fb: FormBuilder,
@@ -123,6 +143,7 @@ export class InvoiceComponent implements OnInit {
     this.loadCountries();
     this.setupCustomerSearch();
     this.setupItemAutocomplete();
+    this.setupCityAutocomplete();
 
     // Check for pending edit from Report
     const pendingEdit = this.uiStateService.getPendingEdit();
@@ -141,6 +162,36 @@ export class InvoiceComponent implements OnInit {
     // Close item dropdown if click outside
     if (this.showItemDropdown && event.target instanceof HTMLElement && !event.target.closest('.item-autocomplete-input')) {
       this.showItemDropdown = false;
+      this.cdr.detectChanges();
+    }
+    // Close city dropdowns if click outside
+    if (this.showSenderCityDropdown && event.target instanceof HTMLElement && !event.target.closest('.sender-city-autocomplete')) {
+      this.showSenderCityDropdown = false;
+      this.cdr.detectChanges();
+    }
+    if (this.showConsigneeCityDropdown && event.target instanceof HTMLElement && !event.target.closest('.consignee-city-autocomplete')) {
+      this.showConsigneeCityDropdown = false;
+      this.cdr.detectChanges();
+    }
+    // New Lookups
+    if (this.showSenderCodeDropdown && event.target instanceof HTMLElement && !event.target.closest('.sender-code-lookup')) {
+      this.showSenderCodeDropdown = false;
+      this.cdr.detectChanges();
+    }
+    if (this.showConsigneeCodeDropdown && event.target instanceof HTMLElement && !event.target.closest('.consignee-code-lookup')) {
+      this.showConsigneeCodeDropdown = false;
+      this.cdr.detectChanges();
+    }
+    if (this.showConsigneeCountryDropdown && event.target instanceof HTMLElement && !event.target.closest('.consignee-country-lookup')) {
+      this.showConsigneeCountryDropdown = false;
+      this.cdr.detectChanges();
+    }
+    if (this.showModeOfDeliveryDropdown && event.target instanceof HTMLElement && !event.target.closest('.mode-of-delivery-lookup')) {
+      this.showModeOfDeliveryDropdown = false;
+      this.cdr.detectChanges();
+    }
+    if (this.showModeOfPaymentDropdown && event.target instanceof HTMLElement && !event.target.closest('.mode-of-payment-lookup')) {
+      this.showModeOfPaymentDropdown = false;
       this.cdr.detectChanges();
     }
   }
@@ -165,11 +216,11 @@ export class InvoiceComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     let phone = (input.value || '').replace(/\D+/g, '');
     phone = phone.replace(/^0+/, '');
-    
+
     if (input.value !== phone) {
       input.value = phone;
     }
-    
+
     this.searchSubject.next(phone);
     this.activeCustomerSuggestionIndex = -1;
     // If no match selected, we still update the phone number in our form
@@ -240,18 +291,23 @@ export class InvoiceComponent implements OnInit {
 
   setupItemAutocomplete(): void {
     this.itemSearchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
+      debounceTime(200),
       switchMap(search => {
-        if (!search || search.length < 1) return of({ items: [] });
-        return this.cargoItemsService.getCargoItemsList(search);
+        // Show all or top items if search is empty on focus
+        return this.cargoItemsService.getCargoItemsList(search || '');
       })
     ).subscribe(res => {
-      this.suggestedItems = res.items || [];
+      const searchVal = this.itemForm.get('description')?.value || '';
+      this.suggestedItems = (res.items || []).filter((item: any) => item.item_name.toLowerCase() !== searchVal.toLowerCase());
       this.showItemDropdown = this.suggestedItems.length > 0;
       this.activeItemSuggestionIndex = this.suggestedItems.length > 0 ? 0 : -1;
       this.cdr.detectChanges();
     });
+  }
+
+  onItemFocus(): void {
+    const val = this.itemForm.get('description')?.value || '';
+    this.itemSearchSubject.next(val);
   }
 
   onItemSearch(event: any): void {
@@ -281,14 +337,15 @@ export class InvoiceComponent implements OnInit {
     }
 
     if (event.key === 'Enter') {
-      event.preventDefault();
-      event.stopPropagation();
-      const selected =
-        this.suggestedItems[this.activeItemSuggestionIndex] || this.suggestedItems[0];
-      if (selected) {
-        this.selectItem(selected);
+      if (this.showItemDropdown && this.suggestedItems.length > 0) {
+        event.preventDefault();
+        event.stopPropagation();
+        const selected = this.suggestedItems[this.activeItemSuggestionIndex] || this.suggestedItems[0];
+        if (selected) {
+          this.selectItem(selected);
+        }
+        return;
       }
-      return;
     }
 
     if (event.key === 'Escape') {
@@ -309,12 +366,128 @@ export class InvoiceComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  setupCityAutocomplete(): void {
+    // Sender City Search
+    this.senderCitySearchSubject.pipe(
+      debounceTime(300),
+      switchMap(search => {
+        return this.unitPriceService.getCities('Saudi Arabia', search);
+      })
+    ).subscribe(cities => {
+      const searchVal = this.userInfoForm.get('city')?.value || '';
+      this.senderCitySuggestions = (cities || []).filter(c => c.toLowerCase() !== searchVal.toLowerCase());
+      this.showSenderCityDropdown = this.senderCitySuggestions.length > 0;
+      this.activeSenderCitySuggestionIndex = this.senderCitySuggestions.length > 0 ? 0 : -1;
+      this.cdr.detectChanges();
+    });
+
+    // Consignee City Search
+    this.consigneeCitySearchSubject.pipe(
+      debounceTime(300),
+      switchMap(search => {
+        const country = this.userInfoForm.get('consigneeCountry')?.value || '';
+        if (!country) return of([]);
+        return this.unitPriceService.getCities(country, search);
+      })
+    ).subscribe(cities => {
+      const searchVal = this.userInfoForm.get('consigneeCity')?.value || '';
+      this.consigneeCitySuggestions = (cities || []).filter(c => c.toLowerCase() !== searchVal.toLowerCase());
+      this.showConsigneeCityDropdown = this.consigneeCitySuggestions.length > 0;
+      this.activeConsigneeCitySuggestionIndex = this.consigneeCitySuggestions.length > 0 ? 0 : -1;
+      this.cdr.detectChanges();
+    });
+  }
+
+  onCityInput(type: 'sender' | 'consignee', event: any): void {
+    const search = event.target.value;
+    if (type === 'sender') {
+      this.senderCitySearchSubject.next(search);
+      this.userInfoForm.patchValue({ city: search }, { emitEvent: false });
+    } else {
+      this.consigneeCitySearchSubject.next(search);
+      this.userInfoForm.patchValue({ consigneeCity: search }, { emitEvent: false });
+    }
+  }
+
+  onCityFocus(type: 'sender' | 'consignee'): void {
+    const currentVal = type === 'sender' ? this.userInfoForm.get('city')?.value : this.userInfoForm.get('consigneeCity')?.value;
+    if (type === 'sender') {
+      this.senderCitySearchSubject.next(currentVal || '');
+    } else {
+      this.consigneeCitySearchSubject.next(currentVal || '');
+    }
+  }
+
+  selectCity(type: 'sender' | 'consignee', city: string): void {
+    if (type === 'sender') {
+      this.userInfoForm.patchValue({ city });
+      this.showSenderCityDropdown = false;
+      this.activeSenderCitySuggestionIndex = -1;
+    } else {
+      this.userInfoForm.patchValue({ consigneeCity: city });
+      this.showConsigneeCityDropdown = false;
+      this.activeConsigneeCitySuggestionIndex = -1;
+    }
+    this.cdr.detectChanges();
+  }
+
+  onCityKeydown(type: 'sender' | 'consignee', event: KeyboardEvent): void {
+    const isDropdownVisible = type === 'sender' ? this.showSenderCityDropdown : this.showConsigneeCityDropdown;
+    const suggestions = type === 'sender' ? this.senderCitySuggestions : this.consigneeCitySuggestions;
+    let activeIndex = type === 'sender' ? this.activeSenderCitySuggestionIndex : this.activeConsigneeCitySuggestionIndex;
+
+    if (!isDropdownVisible || suggestions.length === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      event.stopPropagation();
+      activeIndex = (activeIndex + 1) % suggestions.length;
+      if (type === 'sender') this.activeSenderCitySuggestionIndex = activeIndex;
+      else this.activeConsigneeCitySuggestionIndex = activeIndex;
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      event.stopPropagation();
+      activeIndex = (activeIndex - 1 + suggestions.length) % suggestions.length;
+      if (type === 'sender') this.activeSenderCitySuggestionIndex = activeIndex;
+      else this.activeConsigneeCitySuggestionIndex = activeIndex;
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      if (isDropdownVisible && suggestions.length > 0) {
+        event.preventDefault();
+        event.stopPropagation();
+        const selected = suggestions[activeIndex];
+        if (selected) {
+          this.selectCity(type, selected);
+        }
+        return;
+      }
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      if (type === 'sender') {
+        this.showSenderCityDropdown = false;
+        this.activeSenderCitySuggestionIndex = -1;
+      } else {
+        this.showConsigneeCityDropdown = false;
+        this.activeConsigneeCitySuggestionIndex = -1;
+      }
+    }
+  }
+
+
   onPhoneInput(controlName: 'phone' | 'consigneeMobile', event: Event): void {
     const input = event.target as HTMLInputElement;
     // Remove non-digits and leading zeros
     let value = (input.value || '').replace(/\D+/g, '');
     value = value.replace(/^0+/, '');
-    
+
     if (input.value !== value) {
       input.value = value;
     }
@@ -395,8 +568,13 @@ export class InvoiceComponent implements OnInit {
       discount: [0, [Validators.required, Validators.min(0)]]
     });
 
-    // Listen for country/mode changes to auto-populate price
-    this.userInfoForm.get('consigneeCountry')?.valueChanges.subscribe(() => this.updateAutoPrice());
+    this.userInfoForm.get('consigneeCountry')?.valueChanges.subscribe(() => {
+      this.updateAutoPrice();
+      // Clear consignee city when country changes
+      this.userInfoForm.patchValue({ consigneeCity: '' }, { emitEvent: false });
+      this.consigneeCitySuggestions = [];
+      this.showConsigneeCityDropdown = false;
+    });
     this.userInfoForm.get('modeOfDelivery')?.valueChanges.subscribe(() => this.updateAutoPrice());
 
     // Listen to changes for auto-calculation
@@ -427,7 +605,7 @@ export class InvoiceComponent implements OnInit {
     if (total > currentCount) {
       for (let i = currentCount; i < total; i++) {
         const newCarton = this.createCartonGroup();
-        
+
         // Auto-populate packing charge for the new carton if price data is available
         const country = this.userInfoForm.get('consigneeCountry')?.value;
         const mode = this.userInfoForm.get('modeOfDelivery')?.value;
@@ -437,7 +615,7 @@ export class InvoiceComponent implements OnInit {
             newCarton.patchValue({ packingCharge: priceEntry.packing_charge });
           }
         }
-        
+
         this.cartons.push(newCarton);
       }
     } else if (total < currentCount) {
@@ -457,7 +635,7 @@ export class InvoiceComponent implements OnInit {
       if (priceEntry) {
         const price = mode === 'air' ? priceEntry.air_price : priceEntry.sea_price;
         this.financialForm.patchValue({ pricePerKg: price }, { emitEvent: true });
-        
+
         // billCharge in chargesForm
         const billingCharge = priceEntry.bill_charge;
         this.chargesForm.patchValue({ billCharge: billingCharge }, { emitEvent: true });
@@ -507,15 +685,15 @@ export class InvoiceComponent implements OnInit {
     this.isEditMode = true;
     this.editingInvoiceId = invoice.id;
     this.isLoading = true;
-    
+
     this.invoiceService.getInvoiceById(invoice.id).subscribe({
       next: (data: any) => {
         this.resetForm();
         this.isEditMode = true;
         this.editingInvoiceId = data.id;
-        
+
         const details = data.invoice_details || {};
-        
+
         // Patch User Info
         this.userInfoForm.patchValue({
           trackingNumber: data.tracking_number,
@@ -831,14 +1009,14 @@ export class InvoiceComponent implements OnInit {
       totalPacking += packing;
       totalCartonSum += (weight * rate);
     });
-  // Calculated totals
-  // subtotal = 0;
-  // totalWeight = 0;
-  // customsCharge = 0;
-  // billCharge = 0;
-  // packingCharge = 0;
-  // discount = 0;
-  // grandTotal = 0;
+    // Calculated totals
+    // subtotal = 0;
+    // totalWeight = 0;
+    // customsCharge = 0;
+    // billCharge = 0;
+    // packingCharge = 0;
+    // discount = 0;
+    // grandTotal = 0;
     this.subtotal = totalCartonSum; // subtotal now includes per-carton charges
     this.totalWeight = totalWeight;
     this.customsCharge = totalCustoms; // for display
@@ -919,7 +1097,7 @@ export class InvoiceComponent implements OnInit {
     };
 
     this.isLoading = true;
-    const request = this.isEditMode 
+    const request = this.isEditMode
       ? this.invoiceService.updateInvoice(this.editingInvoiceId!, invoiceData)
       : this.invoiceService.createInvoice(invoiceData);
 
@@ -993,8 +1171,118 @@ export class InvoiceComponent implements OnInit {
     }
   }
 
-  printInvoice(): void {
-    window.print();
+  printInvoice() {
+    const printableArea = document.getElementById('printable-area');
+    if (!printableArea) {
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      // Fallback if popup is blocked
+      window.print();
+      return;
+    }
+
+    const content = printableArea.innerHTML;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Invoice</title>
+          <style>
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            body {
+              font-family: 'Segoe UI', Arial, sans-serif;
+              background: white;
+              color: #000;
+              padding: 20px;
+            }
+            .text-3xl { font-size: 1.875rem; }
+            .text-xl { font-size: 1.25rem; }
+            .text-lg { font-size: 1.125rem; }
+            .text-sm { font-size: 0.875rem; }
+            .text-xs { font-size: 0.75rem; }
+            .font-bold { font-weight: 700; }
+            .font-semibold { font-weight: 600; }
+            .font-medium { font-weight: 500; }
+            .text-right { text-align: right; }
+            .text-left { text-align: left; }
+            .text-center { text-align: center; }
+            .flex { display: flex; }
+            .justify-between { justify-content: space-between; }
+            .justify-end { justify-content: flex-end; }
+            .items-start { align-items: flex-start; }
+            .grid { display: grid; }
+            .grid-cols-2 { grid-template-columns: 1fr 1fr; }
+            .gap-8 { gap: 2rem; }
+            .gap-4 { gap: 1rem; }
+            .mb-8 { margin-bottom: 2rem; }
+            .mb-3 { margin-bottom: 0.75rem; }
+            .mb-2 { margin-bottom: 0.5rem; }
+            .mb-1 { margin-bottom: 0.25rem; }
+            .mt-12 { margin-top: 3rem; }
+            .mt-2 { margin-top: 0.5rem; }
+            .mt-1 { margin-top: 0.25rem; }
+            .ml-2 { margin-left: 0.5rem; }
+            .p-8 { padding: 2rem; }
+            .p-4 { padding: 1rem; }
+            .pt-8 { padding-top: 2rem; }
+            .pt-2 { padding-top: 0.5rem; }
+            .pb-6 { padding-bottom: 1.5rem; }
+            .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+            .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+            .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+            .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+            .border-b { border-bottom: 1px solid #e5e7eb; }
+            .border-b-2 { border-bottom: 2px solid #e5e7eb; }
+            .border-t { border-top: 1px solid #e5e7eb; }
+            .border { border: 1px solid #e5e7eb; }
+            .border-gray-100 { border-color: #f3f4f6; }
+            .border-gray-200 { border-color: #e5e7eb; }
+            .rounded-lg { border-radius: 0.5rem; }
+            .shadow-lg { box-shadow: none; }
+            .overflow-hidden { overflow: hidden; }
+            .w-full { width: 100%; }
+            .w-72 { width: 18rem; }
+            .space-y-2 > * + * { margin-top: 0.5rem; }
+            .uppercase { text-transform: uppercase; }
+            .tracking-wider { letter-spacing: 0.05em; }
+            .italic { font-style: italic; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { text-align: left; }
+            .bg-gray-50 { background-color: #f9fafb; }
+            .bg-white { background-color: #ffffff; }
+            /* All text explicitly black */
+            p, span, div, td, th, h1, h2, h3, h4, h5, h6, b {
+              color: #000000 !important;
+            }
+            .text-yellow-600 { color: #d97706 !important; }
+            .text-green-600 { color: #16a34a !important; }
+            .text-red-600 { color: #dc2626 !important; }
+            @media print {
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          ${content}
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() { window.close(); };
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 
   private buildValidationMessage(): string {
@@ -1048,6 +1336,99 @@ export class InvoiceComponent implements OnInit {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 0);
+  }
+
+  // Code and Country Lookups
+  toggleLookup(type: 'senderCode' | 'consigneeCode' | 'consigneeCountry' | 'modeOfDelivery' | 'modeOfPayment'): void {
+    if (type === 'senderCode') {
+      this.showSenderCodeDropdown = !this.showSenderCodeDropdown;
+      if (this.showSenderCodeDropdown) this.activeSenderCodeIndex = 0;
+    } else if (type === 'consigneeCode') {
+      this.showConsigneeCodeDropdown = !this.showConsigneeCodeDropdown;
+      if (this.showConsigneeCodeDropdown) this.activeConsigneeCodeIndex = 0;
+    } else if (type === 'consigneeCountry') {
+      this.showConsigneeCountryDropdown = !this.showConsigneeCountryDropdown;
+      if (this.showConsigneeCountryDropdown) this.activeConsigneeCountryIndex = 0;
+    } else if (type === 'modeOfDelivery') {
+      this.showModeOfDeliveryDropdown = !this.showModeOfDeliveryDropdown;
+      if (this.showModeOfDeliveryDropdown) this.activeModeOfDeliveryIndex = 0;
+    } else if (type === 'modeOfPayment') {
+      this.showModeOfPaymentDropdown = !this.showModeOfPaymentDropdown;
+      if (this.showModeOfPaymentDropdown) this.activeModeOfPaymentIndex = 0;
+    }
+    this.cdr.detectChanges();
+  }
+
+  selectLookupOption(type: 'senderCode' | 'consigneeCode' | 'consigneeCountry' | 'modeOfDelivery' | 'modeOfPayment', option: any): void {
+    if (type === 'senderCode') {
+      this.userInfoForm.patchValue({ senderCountryCode: option.code });
+      this.showSenderCodeDropdown = false;
+    } else if (type === 'consigneeCode') {
+      this.userInfoForm.patchValue({ consigneeCountryCode: option.code });
+      this.showConsigneeCodeDropdown = false;
+    } else if (type === 'consigneeCountry') {
+      this.userInfoForm.patchValue({ consigneeCountry: option });
+      this.showConsigneeCountryDropdown = false;
+    } else if (type === 'modeOfDelivery') {
+      this.userInfoForm.patchValue({ modeOfDelivery: option.value });
+      this.showModeOfDeliveryDropdown = false;
+    } else if (type === 'modeOfPayment') {
+      this.userInfoForm.patchValue({ modeOfPayment: option.value });
+      this.showModeOfPaymentDropdown = false;
+    }
+    this.cdr.detectChanges();
+  }
+
+  onLookupKeydown(type: 'senderCode' | 'consigneeCode' | 'consigneeCountry' | 'modeOfDelivery' | 'modeOfPayment', event: KeyboardEvent): void {
+    const isVisible = type === 'senderCode' ? this.showSenderCodeDropdown :
+      type === 'consigneeCode' ? this.showConsigneeCodeDropdown :
+        type === 'consigneeCountry' ? this.showConsigneeCountryDropdown :
+          type === 'modeOfDelivery' ? this.showModeOfDeliveryDropdown :
+            this.showModeOfPaymentDropdown;
+
+    const options = type === 'consigneeCountry' ? this.countryOptions :
+      type === 'modeOfDelivery' ? this.modeOfDeliveryOptions :
+        type === 'modeOfPayment' ? this.modeOfPaymentOptions :
+          this.countryCodeOptions;
+
+    let index = type === 'senderCode' ? this.activeSenderCodeIndex :
+      type === 'consigneeCode' ? this.activeConsigneeCodeIndex :
+        type === 'consigneeCountry' ? this.activeConsigneeCountryIndex :
+          type === 'modeOfDelivery' ? this.activeModeOfDeliveryIndex :
+            this.activeModeOfPaymentIndex;
+
+    if (!isVisible) {
+      if (event.key === 'ArrowDown' || event.key === 'Enter') {
+        this.toggleLookup(type);
+      }
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      index = (index + 1) % options.length;
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      index = (index - 1 + options.length) % options.length;
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.selectLookupOption(type, options[index]);
+      return;
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      if (type === 'senderCode') this.showSenderCodeDropdown = false;
+      else if (type === 'consigneeCode') this.showConsigneeCodeDropdown = false;
+      else if (type === 'consigneeCountry') this.showConsigneeCountryDropdown = false;
+      else if (type === 'modeOfDelivery') this.showModeOfDeliveryDropdown = false;
+      else if (type === 'modeOfPayment') this.showModeOfPaymentDropdown = false;
+    }
+
+    if (type === 'senderCode') this.activeSenderCodeIndex = index;
+    else if (type === 'consigneeCode') this.activeConsigneeCodeIndex = index;
+    else if (type === 'consigneeCountry') this.activeConsigneeCountryIndex = index;
+    else if (type === 'modeOfDelivery') this.activeModeOfDeliveryIndex = index;
+    else if (type === 'modeOfPayment') this.activeModeOfPaymentIndex = index;
+    this.cdr.detectChanges();
   }
 
   async canDeactivate(): Promise<boolean> {

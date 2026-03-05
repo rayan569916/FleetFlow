@@ -361,20 +361,41 @@
               </div>
 
               <!-- Sender Country Code -->
-              <div class="floating-group">
-                <select
-                  formControlName="senderCountryCode"
-                  class="floating-input text-black"
+              <div class="floating-group sender-code-lookup relative">
+                <div
+                  (click)="toggleLookup('senderCode')"
+                  (keydown)="onLookupKeydown('senderCode', $event)"
+                  tabindex="0"
+                  class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
                     userInfoForm.get('senderCountryCode')?.invalid &&
                     userInfoForm.get('senderCountryCode')?.touched
                   "
                 >
-                  <option *ngFor="let option of countryCodeOptions" [value]="option.code">
-                    {{ option.label }}
-                  </option>
-                </select>
+                  <span>{{ userInfoForm.get('senderCountryCode')?.value || 'Select Code' }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
                 <label class="floating-label">Sender Code *</label>
+
+                <!-- Custom Dropdown -->
+                <div
+                  *ngIf="showSenderCodeDropdown"
+                  class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let option of countryCodeOptions; let i = index"
+                    (click)="selectLookupOption('senderCode', option)"
+                    (mouseenter)="activeSenderCodeIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeSenderCodeIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium">{{ option.label }}</span>
+                  </div>
+                </div>
               </div>
 
               <!-- Phone -->
@@ -410,20 +431,40 @@
                 />
                 <label class="floating-label">Sender Address *</label>
               </div>
-              <div class="floating-group">
-                <select
+
+              <div class="floating-group sender-city-autocomplete relative">
+                <input
+                  type="text"
                   formControlName="city"
+                  placeholder=" "
                   class="floating-input text-black"
+                  (input)="onCityInput('sender', $event)"
+                  (focus)="onCityFocus('sender')"
+                  (keydown)="onCityKeydown('sender', $event)"
                   [class.error]="
                     userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched
                   "
-                >
-                  <option value="" disabled selected hidden></option>
-                  <option *ngFor="let city of saudiMajorCities" [value]="city">
-                    {{ city }}
-                  </option>
-                </select>
+                />
                 <label class="floating-label">Sender City *</label>
+                <!-- City Suggestions Dropdown -->
+                <div
+                  *ngIf="showSenderCityDropdown && senderCitySuggestions.length > 0"
+                  class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let city of senderCitySuggestions; let i = index"
+                    (click)="selectCity('sender', city)"
+                    (mouseenter)="activeSenderCitySuggestionIndex = i"
+                    class="px-4 py-3 text-black cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeSenderCitySuggestionIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium">{{ city }}</span>
+                  </div>
+                </div>
               </div>
 
               <div class="floating-group">
@@ -485,20 +526,43 @@
                 <label class="floating-label">Consignee Name *</label>
               </div>
 
-              <div class="floating-group">
-                <select
-                  formControlName="consigneeCountryCode"
-                  class="floating-input text-black"
+              <div class="floating-group consignee-code-lookup relative">
+                <div
+                  (click)="toggleLookup('consigneeCode')"
+                  (keydown)="onLookupKeydown('consigneeCode', $event)"
+                  tabindex="0"
+                  class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
                     userInfoForm.get('consigneeCountryCode')?.invalid &&
                     userInfoForm.get('consigneeCountryCode')?.touched
                   "
                 >
-                  <option *ngFor="let option of countryCodeOptions" [value]="option.code">
-                    {{ option.label }}
-                  </option>
-                </select>
+                  <span>{{
+                    userInfoForm.get('consigneeCountryCode')?.value || 'Select Code'
+                  }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
                 <label class="floating-label">Consignee Code *</label>
+
+                <!-- Custom Dropdown -->
+                <div
+                  *ngIf="showConsigneeCodeDropdown"
+                  class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let option of countryCodeOptions; let i = index"
+                    (click)="selectLookupOption('consigneeCode', option)"
+                    (mouseenter)="activeConsigneeCodeIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeConsigneeCodeIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium text-black">{{ option.label }}</span>
+                  </div>
+                </div>
               </div>
 
               <div class="floating-group">
@@ -534,70 +598,160 @@
                 />
                 <label class="floating-label">Consignee Address *</label>
               </div>
-              <div class="floating-group">
-                <select
-                  formControlName="consigneeCountry"
-                  class="floating-input text-black"
+              <div class="floating-group consignee-country-lookup relative">
+                <div
+                  (click)="toggleLookup('consigneeCountry')"
+                  (keydown)="onLookupKeydown('consigneeCountry', $event)"
+                  tabindex="0"
+                  class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
                     userInfoForm.get('consigneeCountry')?.invalid &&
                     userInfoForm.get('consigneeCountry')?.touched
                   "
                 >
-                  <option value="" disabled selected hidden></option>
-                  <option *ngFor="let country of countryOptions" [value]="country">
-                    {{ country }}
-                  </option>
-                </select>
+                  <span>{{ userInfoForm.get('consigneeCountry')?.value || 'Select Country' }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
                 <label class="floating-label">Consignee Country *</label>
+
+                <!-- Custom Dropdown -->
+                <div
+                  *ngIf="showConsigneeCountryDropdown"
+                  class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let country of countryOptions; let i = index"
+                    (click)="selectLookupOption('consigneeCountry', country)"
+                    (mouseenter)="activeConsigneeCountryIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeConsigneeCountryIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium text-black">{{ country }}</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="floating-group">
+              <div class="floating-group consignee-city-autocomplete relative">
                 <input
                   type="text"
                   formControlName="consigneeCity"
                   placeholder=" "
                   class="floating-input text-black"
+                  (input)="onCityInput('consignee', $event)"
+                  (focus)="onCityFocus('consignee')"
+                  (keydown)="onCityKeydown('consignee', $event)"
                   [class.error]="
                     userInfoForm.get('consigneeCity')?.invalid &&
                     userInfoForm.get('consigneeCity')?.touched
                   "
                 />
                 <label class="floating-label">Consignee City *</label>
+                <!-- City Suggestions Dropdown -->
+                <div
+                  *ngIf="showConsigneeCityDropdown && consigneeCitySuggestions.length > 0"
+                  class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let city of consigneeCitySuggestions; let i = index"
+                    (click)="selectCity('consignee', city)"
+                    (mouseenter)="activeConsigneeCitySuggestionIndex = i"
+                    class="px-4 py-3 text-black cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeConsigneeCitySuggestionIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium">{{ city }}</span>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="flex gap-1 mt-1">
-              <div class="floating-group">
-                <select
-                  formControlName="modeOfDelivery"
-                  class="floating-input text-black"
+              <div class="floating-group mode-of-delivery-lookup relative">
+                <div
+                  (click)="toggleLookup('modeOfDelivery')"
+                  (keydown)="onLookupKeydown('modeOfDelivery', $event)"
+                  tabindex="0"
+                  class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
                     userInfoForm.get('modeOfDelivery')?.invalid &&
                     userInfoForm.get('modeOfDelivery')?.touched
                   "
                 >
-                  <option value="" disabled selected hidden></option>
-                  <option *ngFor="let option of modeOfDeliveryOptions" [value]="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
+                  <span class="text-black">{{
+                    userInfoForm.get('modeOfDelivery')?.value
+                      ? (userInfoForm.get('modeOfDelivery')?.value | uppercase)
+                      : 'Select Mode'
+                  }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
                 <label class="floating-label">Mode of Delivery *</label>
+
+                <!-- Custom Dropdown -->
+                <div
+                  *ngIf="showModeOfDeliveryDropdown"
+                  class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let option of modeOfDeliveryOptions; let i = index"
+                    (click)="selectLookupOption('modeOfDelivery', option)"
+                    (mouseenter)="activeModeOfDeliveryIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeModeOfDeliveryIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium">{{ option.label }}</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="floating-group">
-                <select
-                  formControlName="modeOfPayment"
-                  class="floating-input text-black"
+              <div class="floating-group mode-of-payment-lookup relative">
+                <div
+                  (click)="toggleLookup('modeOfPayment')"
+                  (keydown)="onLookupKeydown('modeOfPayment', $event)"
+                  tabindex="0"
+                  class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
                     userInfoForm.get('modeOfPayment')?.invalid &&
                     userInfoForm.get('modeOfPayment')?.touched
                   "
                 >
-                  <option value="" disabled selected hidden></option>
-                  <option *ngFor="let option of modeOfPaymentOptions" [value]="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
+                  <span class="text-black">{{
+                    userInfoForm.get('modeOfPayment')?.value
+                      ? (userInfoForm.get('modeOfPayment')?.value | titlecase)
+                      : 'Select Mode'
+                  }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
                 <label class="floating-label">Mode of Payment *</label>
+
+                <!-- Custom Dropdown -->
+                <div
+                  *ngIf="showModeOfPaymentDropdown"
+                  class="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let option of modeOfPaymentOptions; let i = index"
+                    (click)="selectLookupOption('modeOfPayment', option)"
+                    (mouseenter)="activeModeOfPaymentIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeModeOfPaymentIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium">{{ option.label }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -618,10 +772,7 @@
               placeholder=" "
               class="floating-input text-black"
               (input)="onItemSearch($event)"
-              (focus)="
-                showItemDropdown = suggestedItems.length > 0;
-                activeItemSuggestionIndex = suggestedItems.length > 0 ? 0 : -1
-              "
+              (focus)="onItemFocus()"
               (keydown)="onItemDescriptionKeydown($event)"
               [class.error]="
                 itemForm.get('description')?.invalid && itemForm.get('description')?.touched

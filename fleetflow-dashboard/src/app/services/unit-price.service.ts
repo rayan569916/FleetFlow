@@ -33,6 +33,12 @@ export class UnitPriceService {
         return this.http.get<string[]>(`${this.apiUrl}/countries`);
     }
 
+    getCities(country: string, query: string = ''): Observable<string[]> {
+        return this.http.get<string[]>(`${this.apiUrl}/cities`, {
+            params: { country, q: query }
+        });
+    }
+
     createUnitPrice(unitPriceData: Omit<UnitPriceInterface, 'id'>): Observable<any> {
         return this.http.post<any>(this.apiUrl, unitPriceData);
     }
@@ -40,8 +46,4 @@ export class UnitPriceService {
     updateUnitPrice(id: number, unitPriceData: Omit<UnitPriceInterface, 'id'>): Observable<any> {
         return this.http.put<any>(`${this.apiUrl}/${id}`, unitPriceData);
     }
-
-    // deleteUnitPrice(id: number): Observable<any> {
-    //     return this.http.delete<any>(`${this.apiUrl}/${id}`);
-    // }
 }
