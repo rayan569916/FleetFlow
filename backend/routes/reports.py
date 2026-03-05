@@ -168,11 +168,30 @@ def ensure_office_report(target_date, office_id):
             report_record.previous_total = running_prev_total
             report_record.daily_total = daily_total
         
+        from sqlalchemy.exc import IntegrityError
+
         try:
             db.session.commit()
+
+        except IntegrityError:
+            db.session.rollback()
+
+            # record already created by another worker
+            report_record = DailyReport.query.filter_by(
+                date=current_catchup_date,
+                office_id=office_id
+            ).first()
+
+            if report_record:
+                running_prev_total = report_record.daily_total
+                if current_catchup_date == target_date:
+                    return report_record
+                current_catchup_date += datetime.timedelta(days=1)
+                continue
+
         except Exception as e:
             db.session.rollback()
-            print(f"Error saving catch-up report for {current_catchup_date}: {e}")
+            raise e
         
         running_prev_total = daily_total
         if current_catchup_date == target_date:

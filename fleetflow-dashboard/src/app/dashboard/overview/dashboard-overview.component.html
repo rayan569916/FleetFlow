@@ -1,4 +1,4 @@
-<section id="reportSection" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+<section id="reportSection" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-6">
   <!-- Billing Invoice -->
   <app-card
     extraClass="hover:shadow-md hover:border-slate-300 cursor-pointer flex flex-col items-center justify-center text-center py-6"
@@ -130,13 +130,9 @@
   </app-card>
 </section>
 
-<section class="grid-row-1">
-  <app-recent-activity [activity]="(activity$ | async) ?? []" />
-  <app-total-cargo-card
-    [selectedPeriod]="(period$ | async) ?? 'today'"
-    (periodChange)="onPeriodChange($event)"
-  />
-  <app-trends-chart />
+<section class="flex gap-6 mb-6">
+  <app-recent-activity class="flex-1" [activity]="(activity$ | async) ?? []" />
+  <app-trends-chart class="flex-1" />
 </section>
 
 <section class="grid-row-3">

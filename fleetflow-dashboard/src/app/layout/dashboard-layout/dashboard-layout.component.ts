@@ -6,7 +6,6 @@ import { DashboardDataService } from '../../services/dashboard-data.service';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { ConfirmationDialogComponent } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -15,8 +14,7 @@ import { ConfirmationDialogComponent } from '../../shared/components/confirmatio
     AsyncPipe,
     RouterOutlet,
     SidebarComponent,
-    HeaderComponent,
-    ConfirmationDialogComponent
+    HeaderComponent
   ],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.css',

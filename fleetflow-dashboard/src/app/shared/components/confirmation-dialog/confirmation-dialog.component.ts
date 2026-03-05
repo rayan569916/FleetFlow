@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, effect, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { animate, style, transition, trigger } from '@angular/animations';
@@ -33,6 +33,60 @@ import { animate, style, transition, trigger } from '@angular/animations';
 export class ConfirmationDialogComponent {
   private dialogService = inject(ConfirmationDialogService);
   state = this.dialogService.state;
+
+  @ViewChild('confirmBtn') confirmBtn?: ElementRef<HTMLButtonElement>;
+  @ViewChild('cancelBtn') cancelBtn?: ElementRef<HTMLButtonElement>;
+
+  constructor() {
+    // Automatically focus the confirm button when the dialog opens
+    effect(() => {
+      const currentState = this.state();
+      if (currentState) {
+        // Wait for animation frame to ensure element is rendered
+        requestAnimationFrame(() => {
+          this.confirmBtn?.nativeElement.focus();
+        });
+      }
+    });
+  }
+
+  // Helper because ViewChild is not a signal, but we want it in the effect
+  private get confirmBtnEl() { return this.confirmBtn?.nativeElement; }
+  private get cancelBtnEl() { return this.cancelBtn?.nativeElement; }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (!this.state()) return;
+
+    switch (event.key) {
+      case 'Enter':
+        event.preventDefault();
+        this.onConfirm();
+        break;
+      case 'Escape':
+        event.preventDefault();
+        this.onCancel();
+        break;
+      case 'ArrowLeft':
+      case 'ArrowRight':
+        event.preventDefault();
+        this.toggleFocus();
+        break;
+    }
+  }
+
+  private toggleFocus() {
+    const confirm = this.confirmBtn?.nativeElement;
+    const cancel = this.cancelBtn?.nativeElement;
+
+    if (!cancel) return; // Only one button (alert mode), nothing to toggle
+
+    if (document.activeElement === confirm) {
+      cancel.focus();
+    } else {
+      confirm?.focus();
+    }
+  }
 
   onConfirm() {
     this.dialogService.handleConfirm();

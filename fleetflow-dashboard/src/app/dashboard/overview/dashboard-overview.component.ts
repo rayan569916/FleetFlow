@@ -5,7 +5,6 @@ import { DashboardDataService } from '../../services/dashboard-data.service';
 import { RecentActivityComponent } from '../recent-activity/recent-activity.component';
 import { TrendsChartComponent } from '../trends-chart/trends-chart.component';
 import { DriversListComponent } from '../drivers-list/drivers-list.component';
-import { TotalCargoCardComponent } from "../total-cargo-card.component/total-cargo-card.component";
 import { CardComponent } from '../../shared/ui/card/card.component';
 
 @Component({
@@ -16,7 +15,6 @@ import { CardComponent } from '../../shared/ui/card/card.component';
     RecentActivityComponent,
     TrendsChartComponent,
     DriversListComponent,
-    TotalCargoCardComponent,
     CardComponent
   ],
   templateUrl: './dashboard-overview.component.html',
@@ -29,7 +27,6 @@ export class DashboardOverviewComponent {
 
   readonly activity$ = this.dashboardDataService.getRecentActivity();
   readonly drivers$ = this.dashboardDataService.getDrivers();
-  // readonly income$ = this.dashboardDataService.getSelectedIncome();
   readonly period$ = this.dashboardDataService.incomePeriod$;
 
   onPeriodChange(period: 'today' | 'week' | 'month' | 'year'): void {
@@ -37,7 +34,6 @@ export class DashboardOverviewComponent {
   }
 
   navigateToTransaction(type: string): void {
-    // Navigate to the specific route based on type
     const routePath = `/dashboard/${type.toLowerCase()}`;
     this.router.navigate([routePath]);
   }

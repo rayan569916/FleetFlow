@@ -62,6 +62,7 @@ export class InvoiceComponent implements OnInit {
   private searchSubject = new Subject<string>();
   foundCustomers: any[] = [];
   showCustomerDropdown = false;
+  activeCustomerSuggestionIndex = -1;
   
   // Item Autocomplete
   private itemSearchSubject = new Subject<string>();
@@ -155,29 +156,76 @@ export class InvoiceComponent implements OnInit {
     ).subscribe(res => {
       this.foundCustomers = res.customers || [];
       this.showCustomerDropdown = this.foundCustomers.length > 0;
+      this.activeCustomerSuggestionIndex = this.foundCustomers.length > 0 ? 0 : -1;
       this.cdr.detectChanges();
     });
   }
 
   onSearchPhone(event: any): void {
-    const phone = event.target.value;
+    const input = event.target as HTMLInputElement;
+    let phone = (input.value || '').replace(/\D+/g, '');
+    phone = phone.replace(/^0+/, '');
+    
+    if (input.value !== phone) {
+      input.value = phone;
+    }
+    
     this.searchSubject.next(phone);
+    this.activeCustomerSuggestionIndex = -1;
     // If no match selected, we still update the phone number in our form
     this.userInfoForm.patchValue({ phone: phone }, { emitEvent: false });
+  }
+
+  onPhoneSearchKeydown(event: KeyboardEvent): void {
+    if (!this.showCustomerDropdown || this.foundCustomers.length === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.activeCustomerSuggestionIndex =
+        (this.activeCustomerSuggestionIndex + 1) % this.foundCustomers.length;
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.activeCustomerSuggestionIndex =
+        (this.activeCustomerSuggestionIndex - 1 + this.foundCustomers.length) % this.foundCustomers.length;
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      const selected =
+        this.foundCustomers[this.activeCustomerSuggestionIndex] || this.foundCustomers[0];
+      if (selected) {
+        this.selectCustomer(selected);
+      }
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showCustomerDropdown = false;
+      this.activeCustomerSuggestionIndex = -1;
+    }
   }
 
   selectCustomer(customer: any): void {
     this.userInfoForm.patchValue({
       customerName: customer.customerName,
       email: customer.email,
-      phone: customer.phone,
+      phone: (customer.phone || '').replace(/^0+/, ''),
       address: customer.address,
       city: customer.city,
       zipCode: customer.zipCode,
       senderCountryCode: customer.senderCountryCode || '+966',
       consigneeName: customer.consigneeName,
       consigneeCountryCode: customer.consigneeCountryCode || '+966',
-      consigneeMobile: customer.consigneeMobile,
+      consigneeMobile: (customer.consigneeMobile || '').replace(/^0+/, ''),
       consigneeAddress: customer.consigneeAddress,
       consigneeCountry: customer.consigneeCountry,
       consigneeCity: customer.consigneeCity,
@@ -185,7 +233,7 @@ export class InvoiceComponent implements OnInit {
     this.showCustomerDropdown = false;
     this.foundCustomers = [];
     if (this.phoneSearchInput) {
-      this.phoneSearchInput.nativeElement.value = customer.phone;
+      this.phoneSearchInput.nativeElement.value = (customer.phone || '').replace(/^0+/, '');
     }
     this.cdr.detectChanges();
   }
@@ -263,11 +311,14 @@ export class InvoiceComponent implements OnInit {
 
   onPhoneInput(controlName: 'phone' | 'consigneeMobile', event: Event): void {
     const input = event.target as HTMLInputElement;
-    const digitsOnly = (input.value || '').replace(/\D+/g, '');
-    if (input.value !== digitsOnly) {
-      input.value = digitsOnly;
+    // Remove non-digits and leading zeros
+    let value = (input.value || '').replace(/\D+/g, '');
+    value = value.replace(/^0+/, '');
+    
+    if (input.value !== value) {
+      input.value = value;
     }
-    this.userInfoForm.patchValue({ [controlName]: digitsOnly }, { emitEvent: false });
+    this.userInfoForm.patchValue({ [controlName]: value }, { emitEvent: false });
   }
 
   loadCountries(): void {
@@ -300,7 +351,7 @@ export class InvoiceComponent implements OnInit {
       customerName: ['', [Validators.required, Validators.minLength(2)]],
       email: [''],
       senderCountryCode: ['+966', Validators.required],
-      phone: ['', [Validators.required, Validators.pattern(/^\d{6,14}$/)]],
+      phone: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5,13}$/)]],
       address: ['', [Validators.required, Validators.minLength(5)]],
       city: ['', Validators.required],
       zipCode: ['', Validators.required],
@@ -313,7 +364,7 @@ export class InvoiceComponent implements OnInit {
       // Consignee Information
       consigneeName: ['', [Validators.required, Validators.minLength(2)]],
       consigneeCountryCode: ['+966', Validators.required],
-      consigneeMobile: ['', [Validators.required, Validators.pattern(/^\d{6,14}$/)]],
+      consigneeMobile: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5,13}$/)]],
       consigneeAddress: ['', [Validators.required, Validators.minLength(5)]],
       consigneeCountry: ['', Validators.required],
       consigneeCity: ['', Validators.required]

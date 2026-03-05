@@ -27,7 +27,7 @@
       </button>
       <button
         (click)="downloadExcel()"
-        class="px-4 py-2 bg-yellow-400 text-slate-900 rounded-xl font-medium hover:bg-yellow-500 transition shadow-lg shadow-yellow-200/50 flex items-center gap-2"
+        class="px-4 py-2 bg-[var(--brand-yellow-500)] text-slate-900 rounded-xl font-medium hover:bg-yellow-400 transition shadow-lg shadow-yellow-200/50 flex items-center gap-2"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -68,7 +68,7 @@
               (click)="reportType.set(type.id); onReportTypeChange()"
               [class]="
                 reportType() === type.id
-                  ? 'px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold shadow transition'
+                  ? 'px-4 py-2 bg-[var(--brand-purple-700)] text-white rounded-xl font-bold shadow transition'
                   : 'px-4 py-2 bg-white/60 text-slate-600 rounded-xl font-semibold hover:bg-white hover:text-indigo-600 transition'
               "
             >
@@ -103,7 +103,7 @@
             </div>
           </ng-container>
 
-          <div class="space-y-1.5" *ngIf="authService.currentUserRole() === 'Super_admin'">
+          <div class="space-y-1.5" *ngIf="authService.currentUserRole() === 'Super_admin' || 'management'">
             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1"
               >Office</label
             >

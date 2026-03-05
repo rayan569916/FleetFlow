@@ -48,7 +48,7 @@ export class SidebarComponent {
       // },
       {
         label: 'Finance',
-        items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'receipt', 'purchase'].includes(i.id))
+        items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'purchase', 'receipt'].includes(i.id))
       },
       {
         label: 'System',

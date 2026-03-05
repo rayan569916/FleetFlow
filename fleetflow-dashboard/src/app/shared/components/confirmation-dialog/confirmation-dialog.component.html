@@ -12,10 +12,10 @@
     </div>
 
     <div class="dialog-footer" [class.alert-mode]="state()?.isAlert">
-      <button *ngIf="!state()?.isAlert" class="btn-cancel" (click)="onCancel()">
+      <button *ngIf="!state()?.isAlert" #cancelBtn class="btn-cancel" (click)="onCancel()">
         {{ state()?.cancelText }}
       </button>
-      <button class="btn-confirm" (click)="onConfirm()">
+      <button #confirmBtn class="btn-confirm" (click)="onConfirm()">
         {{ state()?.confirmText }}
       </button>
     </div>
