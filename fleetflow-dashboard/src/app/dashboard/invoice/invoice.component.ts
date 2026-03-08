@@ -46,6 +46,34 @@ export class InvoiceComponent implements OnInit {
   currentUserRole: string | null = null;
   @ViewChild('phoneSearchInput') phoneSearchInput!: ElementRef;
   @ViewChild('itemDescriptionInput') itemDescriptionInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('customerNameInput') customerNameInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('phoneInput') phoneInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('addressInput') addressInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('senderCityInput') senderCityInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('zipCodeInput') zipCodeInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('emailInput') emailInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('locationLinkInput') locationLinkInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('consigneeNameInput') consigneeNameInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('consigneeMobileInput') consigneeMobileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('consigneeAddressInput') consigneeAddressInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('consigneeCityInput') consigneeCityInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('senderCodeLookup') senderCodeLookup!: ElementRef<HTMLElement>;
+  @ViewChild('consigneeCodeLookup') consigneeCodeLookup!: ElementRef<HTMLElement>;
+  @ViewChild('consigneeCountryLookup') consigneeCountryLookup!: ElementRef<HTMLElement>;
+  @ViewChild('modeOfDeliveryLookup') modeOfDeliveryLookup!: ElementRef<HTMLElement>;
+  @ViewChild('modeOfPaymentLookup') modeOfPaymentLookup!: ElementRef<HTMLElement>;
+  @ViewChild('quantityInput') quantityInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('unitWeightInput') unitWeightInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('totalCartonsInput') totalCartonsInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('pricePerKgInput') pricePerKgInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('discountInput') discountInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('advanceInput') advanceInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('packingChargesInput') packingChargesInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('docChargesInput') docChargesInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('otherChargesInput') otherChargesInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('fuelSurchargeInput') fuelSurchargeInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('billChargeInput') billChargeInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('addItemButton') addItemButton!: ElementRef<HTMLButtonElement>;
   isEditMode = false;
   editingInvoiceId: number | null = null;
 
@@ -57,6 +85,8 @@ export class InvoiceComponent implements OnInit {
   packingCharge = 0;
   discount = 0;
   grandTotal = 0;
+  invoiceNumber: string = '';
+  trackingNumber: string = '';
 
   // Customer search
   private searchSubject = new Subject<string>();
@@ -89,6 +119,8 @@ export class InvoiceComponent implements OnInit {
   showModeOfPaymentDropdown = false;
   activeModeOfDeliveryIndex = -1;
   activeModeOfPaymentIndex = -1;
+  senderMaxMobileLength = 9;
+  consigneeMaxMobileLength = 9;
 
   // Pagination Signals
   currentPage = 1;
@@ -106,19 +138,27 @@ export class InvoiceComponent implements OnInit {
     'Abha', 'Khamis Mushait', 'Al Hofuf', 'Al Mubarraz', 'Hail', 'Najran', 'Hafar Al-Batin', 'Jubail', 'Al Qatif', 'Al Khobar'
   ];
   countryCodeOptions = [
-    { label: 'KSA (+966)', code: '+966' },
-    { label: 'UAE (+971)', code: '+971' },
-    { label: 'Qatar (+974)', code: '+974' },
-    { label: 'Oman (+968)', code: '+968' },
-    { label: 'Kuwait (+965)', code: '+965' },
-    { label: 'Bahrain (+973)', code: '+973' },
-    { label: 'India (+91)', code: '+91' },
-    { label: 'Pakistan (+92)', code: '+92' },
-    { label: 'Bangladesh (+880)', code: '+880' },
-    { label: 'Sri Lanka (+94)', code: '+94' },
-    { label: 'Nepal (+977)', code: '+977' },
-    { label: 'Philippines (+63)', code: '+63' },
-    { label: 'Indonesia (+62)', code: '+62' }
+    { label: 'KSA (+966)', code: '+966', phoneLength: 9 },
+    { label: 'UAE (+971)', code: '+971', phoneLength: 9 },
+    { label: 'Qatar (+974)', code: '+974', phoneLength: 8 },
+    { label: 'Oman (+968)', code: '+968', phoneLength: 8 },
+    { label: 'Kuwait (+965)', code: '+965', phoneLength: 8 },
+    { label: 'Bahrain (+973)', code: '+973', phoneLength: 8 },
+    { label: 'India (+91)', code: '+91', phoneLength: 10 },
+    { label: 'Pakistan (+92)', code: '+92', phoneLength: 10 },
+    { label: 'Bangladesh (+880)', code: '+880', phoneLength: 10 },
+    { label: 'Sri Lanka (+94)', code: '+94', phoneLength: 9 },
+    { label: 'Nepal (+977)', code: '+977', phoneLength: 10 },
+    { label: 'Philippines (+63)', code: '+63', phoneLength: 10 },
+    { label: 'Indonesia (+62)', code: '+62', phoneLength: 10 }
+  ];
+
+  // Navigation Map
+  fieldSequence = [
+    'senderName', 'senderCode', 'phone', 'address', 'city', 'zipCode', 'email', 'locationLink',
+    'consigneeName', 'consigneeCode', 'consigneeMobile', 'consigneeAddress', 'consigneeCountry', 'consigneeCity',
+    'modeOfDelivery', 'modeOfPayment', 'itemDescription', 'quantity', 'unitWeight', 'addItemButton',
+    'totalCartons', 'pricePerKg', 'billCharge', 'discount'
   ];
 
 
@@ -363,6 +403,7 @@ export class InvoiceComponent implements OnInit {
     this.showItemDropdown = false;
     this.activeItemSuggestionIndex = -1;
     this.suggestedItems = [];
+    setTimeout(() => this.quantityInput?.nativeElement?.focus());
     this.cdr.detectChanges();
   }
 
@@ -423,10 +464,12 @@ export class InvoiceComponent implements OnInit {
       this.userInfoForm.patchValue({ city });
       this.showSenderCityDropdown = false;
       this.activeSenderCitySuggestionIndex = -1;
+      setTimeout(() => this.zipCodeInput?.nativeElement?.focus());
     } else {
       this.userInfoForm.patchValue({ consigneeCity: city });
       this.showConsigneeCityDropdown = false;
       this.activeConsigneeCitySuggestionIndex = -1;
+      setTimeout(() => this.modeOfDeliveryLookup?.nativeElement?.focus());
     }
     this.cdr.detectChanges();
   }
@@ -520,7 +563,6 @@ export class InvoiceComponent implements OnInit {
     // User Information Form
     this.userInfoForm = this.fb.group({
       // Sender/Shipper Information
-      trackingNumber: [{ value: '', disabled: true }],
       customerName: ['', [Validators.required, Validators.minLength(2)]],
       email: [''],
       senderCountryCode: ['+966', Validators.required],
@@ -559,7 +601,8 @@ export class InvoiceComponent implements OnInit {
 
     // Watch totalCartons to dynamically sync FormArray
     this.financialForm.get('totalCartons')?.valueChanges.subscribe(val => {
-      this.syncCartons(val);
+      this.syncCartons(+val || 1);
+      this.cdr.detectChanges();
     });
 
     // Charges Form (Removed individual charges that are now per-carton)
@@ -580,10 +623,12 @@ export class InvoiceComponent implements OnInit {
     // Listen to changes for auto-calculation
     this.financialForm.valueChanges.subscribe(() => {
       this.calculateTotals();
+      this.cdr.detectChanges();
     });
 
     this.chargesForm.valueChanges.subscribe(() => {
       this.updateChargesAndTotal();
+      this.cdr.detectChanges();
     });
   }
 
@@ -650,6 +695,13 @@ export class InvoiceComponent implements OnInit {
   }
 
   generateTrackingNumber(): string {
+    const prefix = 'TRK';
+    const random = Math.floor(100000 + Math.random() * 900000);
+    const timestamp = Date.now().toString().slice(-4);
+    return `${prefix}-${random}-${timestamp}`;
+  }
+
+  generateInvoiceNumber(): string {
     const prefix = 'CAP';
     const random = Math.floor(100000 + Math.random() * 900000);
     const timestamp = Date.now().toString().slice(-4);
@@ -661,9 +713,8 @@ export class InvoiceComponent implements OnInit {
     this.resetForm();
     this.isEditMode = false;
     this.editingInvoiceId = null;
-    this.userInfoForm.patchValue({
-      trackingNumber: this.generateTrackingNumber()
-    });
+    this.invoiceNumber = this.generateInvoiceNumber();
+    this.trackingNumber = this.generateTrackingNumber();
     this.viewMode = 'create';
     this.errorMessage = null;
     this.successMessage = null;
@@ -691,12 +742,13 @@ export class InvoiceComponent implements OnInit {
         this.resetForm();
         this.isEditMode = true;
         this.editingInvoiceId = data.id;
+        this.invoiceNumber = data.invoice_number;
+        this.trackingNumber = data.tracking_number;
 
         const details = data.invoice_details || {};
 
         // Patch User Info
         this.userInfoForm.patchValue({
-          trackingNumber: data.tracking_number,
           customerName: details.customerName,
           email: details.email,
           senderCountryCode: details.senderCountryCode || '+966',
@@ -993,16 +1045,16 @@ export class InvoiceComponent implements OnInit {
   }
 
   calculateTotals(): void {
-    const rate = this.financialForm.get('pricePerKg')?.value || 0;
+    const rate = +(this.financialForm.get('pricePerKg')?.value || 0);
     let totalCartonSum = 0;
     let totalWeight = 0;
     let totalCustoms = 0;
     let totalPacking = 0;
 
     this.cartons.controls.forEach(ctrl => {
-      const weight = ctrl.get('weight')?.value || 0;
-      const customs = ctrl.get('customsCharge')?.value || 0;
-      const packing = ctrl.get('packingCharge')?.value || 0;
+      const weight = +(ctrl.get('weight')?.value || 0);
+      const customs = +(ctrl.get('customsCharge')?.value || 0);
+      const packing = +(ctrl.get('packingCharge')?.value || 0);
 
       totalWeight += weight;
       totalCustoms += customs;
@@ -1025,8 +1077,8 @@ export class InvoiceComponent implements OnInit {
   }
 
   updateChargesAndTotal(): void {
-    this.billCharge = this.chargesForm.value.billCharge || 0;
-    this.discount = this.chargesForm.value.discount || 0;
+    this.billCharge = +(this.chargesForm.value.billCharge || 0);
+    this.discount = +(this.chargesForm.value.discount || 0);
     this.calculateGrandTotal();
   }
 
@@ -1076,12 +1128,12 @@ export class InvoiceComponent implements OnInit {
       ...formVal,
       ...this.financialForm.getRawValue(),
       ...this.chargesForm.value,
-      invoice_number: 'INV-' + Date.now(),
+      invoice_number: this.invoiceNumber,
       amount: this.grandTotal,
       date: new Date().toISOString().split('T')[0],
       status: 'Pending',
       description: description,
-      tracking_number: formVal.trackingNumber,
+      tracking_number: this.trackingNumber,
       items: this.items.map(i => ({
         description: i.description,
         quantity: i.quantity,
@@ -1132,6 +1184,8 @@ export class InvoiceComponent implements OnInit {
     this.cartons.push(this.createCartonGroup());
     this.itemForm.reset({ quantity: 1, description: '', unitWeight: null });
     this.chargesForm.reset({ billCharge: 0, discount: 0 });
+    this.invoiceNumber = '';
+    this.trackingNumber = '';
     this.items = [];
     this.itemIdCounter = 1;
     this.subtotal = 0;
@@ -1145,13 +1199,17 @@ export class InvoiceComponent implements OnInit {
   }
 
   resetFormBasedOnButton(): void {
-    const tracking = this.userInfoForm.get('trackingNumber')?.value;
+    const tracking = this.trackingNumber;
     this.userInfoForm.reset();
+    this.trackingNumber = tracking;
     this.userInfoForm.patchValue({
-      trackingNumber: tracking,
       senderCountryCode: '+966',
       consigneeCountryCode: '+966'
     });
+    // Note: invoiceNumber is NOT reset here because it should persist 
+    // for the "Generate New" but keep same data flow if that was the intent,
+    // though usually resetFormBasedOnButton is for keeping partial data.
+    // However, for a fresh invoice number, we rely on switchToCreate calling resetForm.
     this.financialForm.reset({ totalCartons: 1, pricePerKg: 0 });
     while (this.cartons.length !== 0) {
       this.cartons.removeAt(0);
@@ -1363,18 +1421,33 @@ export class InvoiceComponent implements OnInit {
     if (type === 'senderCode') {
       this.userInfoForm.patchValue({ senderCountryCode: option.code });
       this.showSenderCodeDropdown = false;
+      this.maxLength(option.code, 'senderCode');
+      setTimeout(() => this.phoneInput?.nativeElement?.focus());
     } else if (type === 'consigneeCode') {
       this.userInfoForm.patchValue({ consigneeCountryCode: option.code });
       this.showConsigneeCodeDropdown = false;
+      this.maxLength(option.code, 'consigneeCode');
+      setTimeout(() => this.consigneeMobileInput?.nativeElement?.focus());
     } else if (type === 'consigneeCountry') {
       this.userInfoForm.patchValue({ consigneeCountry: option });
       this.showConsigneeCountryDropdown = false;
+      setTimeout(() => {
+        if (this.consigneeCityInput) {
+          this.consigneeCityInput.nativeElement.focus();
+        }
+      });
     } else if (type === 'modeOfDelivery') {
       this.userInfoForm.patchValue({ modeOfDelivery: option.value });
       this.showModeOfDeliveryDropdown = false;
+      setTimeout(() => this.modeOfPaymentLookup?.nativeElement?.focus());
     } else if (type === 'modeOfPayment') {
       this.userInfoForm.patchValue({ modeOfPayment: option.value });
       this.showModeOfPaymentDropdown = false;
+      setTimeout(() => {
+        if (this.itemDescriptionInput) {
+          this.itemDescriptionInput.nativeElement.focus();
+        }
+      });
     }
     this.cdr.detectChanges();
   }
@@ -1400,6 +1473,17 @@ export class InvoiceComponent implements OnInit {
     if (!isVisible) {
       if (event.key === 'ArrowDown' || event.key === 'Enter') {
         this.toggleLookup(type);
+      } else if (event.key.length === 1 && /[a-zA-Z0-9]/.test(event.key)) {
+        // Quick search for character
+        const char = event.key.toLowerCase();
+        const found = options.find((opt: any) => {
+          const label = typeof opt === 'string' ? opt : (opt.label || opt.code || '');
+          return label.toLowerCase().startsWith(char);
+        });
+        if (found) {
+          this.selectLookupOption(type, found);
+          event.preventDefault();
+        }
       }
       return;
     }
@@ -1449,5 +1533,157 @@ export class InvoiceComponent implements OnInit {
       confirmText: 'Leave',
       cancelText: 'Stay'
     });
+  }
+
+  maxLength(code: any, type: string) {
+    const country = this.countryCodeOptions.find((c: any) => c.code === code);
+    const length = country?.phoneLength || 15;
+    if (type === 'senderCode') this.senderMaxMobileLength = length;
+    else if (type === 'consigneeCode') this.consigneeMaxMobileLength = length;
+  }
+
+  onNumberInputKeydown(event: KeyboardEvent): void {
+    const isControlKey = ['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Delete', 'End', 'Home'].includes(event.key);
+    const isNumber = /[0-9]/.test(event.key);
+    const isDecimal = event.key === '.' && !(event.target as HTMLInputElement).value.includes('.');
+
+    if (!isControlKey && !isNumber && !isDecimal) {
+      event.preventDefault();
+    }
+  }
+
+  onGeneralKeydown(event: KeyboardEvent, currentField: string): void {
+    // If it's a lookup field and dropdown is visible, don't intercept navigation
+    const isLookup = ['senderCode', 'consigneeCode', 'consigneeCountry', 'modeOfDelivery', 'modeOfPayment'].includes(currentField);
+    if (isLookup) {
+      const isVisible = currentField === 'senderCode' ? this.showSenderCodeDropdown :
+        currentField === 'consigneeCode' ? this.showConsigneeCodeDropdown :
+          currentField === 'consigneeCountry' ? this.showConsigneeCountryDropdown :
+            currentField === 'modeOfDelivery' ? this.showModeOfDeliveryDropdown :
+              this.showModeOfPaymentDropdown;
+      if (isVisible) return;
+    }
+
+    // Similar for City and Item Autocomplete
+    if (currentField === 'city' && this.showSenderCityDropdown) return;
+    if (currentField === 'consigneeCity' && this.showConsigneeCityDropdown) return;
+    if (currentField === 'itemDescription' && this.showItemDropdown) return;
+
+    if (event.key === 'Enter' || event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+      const isEnter = event.key === 'Enter';
+      const isRight = event.key === 'ArrowRight';
+      const isLeft = event.key === 'ArrowLeft';
+
+      // For normal inputs, only navigate on Arrow keys if cursor is at bounds OR if it's a lookup div
+      const target = event.target as HTMLInputElement;
+      const isAtStart = target.selectionStart === 0 && target.selectionEnd === 0;
+      const isAtEnd = target.selectionStart === target.value?.length && target.selectionEnd === target.value?.length;
+
+      if (isEnter || (isRight && (isAtEnd || isLookup)) || (isLeft && (isAtStart || isLookup))) {
+        // For the Add button, let the default Enter behavior trigger its own (keydown.enter) handler
+        // which calls addItem(true), refocusing the description automatically.
+        if (currentField === 'addItemButton' && isEnter) return;
+
+        event.preventDefault();
+
+        // Handle Carton Navigation
+        if (currentField === 'pricePerKg' && (isEnter || isRight)) {
+          this.focusField('cartonWeight_0');
+          return;
+        }
+
+        if (currentField === 'billCharge' && isLeft) {
+          const lastIndex = this.cartons.length - 1;
+          this.focusField('cartonPacking_' + lastIndex);
+          return;
+        }
+
+        if (currentField.startsWith('carton')) {
+          const parts = currentField.split('_');
+          const fieldType = parts[0];
+          const index = parseInt(parts[1]);
+
+          if (isEnter || isRight) {
+            if (fieldType === 'cartonWeight') {
+              this.focusField('cartonCustoms_' + index);
+            } else if (fieldType === 'cartonCustoms') {
+              this.focusField('cartonPacking_' + index);
+            } else if (fieldType === 'cartonPacking') {
+              if (index < this.cartons.length - 1) {
+                this.focusField('cartonWeight_' + (index + 1));
+              } else {
+                this.focusField('billCharge');
+              }
+            }
+          } else if (isLeft) {
+            if (fieldType === 'cartonWeight') {
+              if (index > 0) {
+                this.focusField('cartonPacking_' + (index - 1));
+              } else {
+                this.focusField('pricePerKg');
+              }
+            } else if (fieldType === 'cartonCustoms') {
+              this.focusField('cartonWeight_' + index);
+            } else if (fieldType === 'cartonPacking') {
+              this.focusField('cartonCustoms_' + index);
+            }
+          }
+          return;
+        }
+
+        const currentIndex = this.fieldSequence.indexOf(currentField);
+        if (currentIndex === -1) return;
+
+        let nextIndex = currentIndex;
+        if (isEnter || isRight) {
+          nextIndex = (currentIndex + 1) % this.fieldSequence.length;
+        } else if (isLeft) {
+          nextIndex = (currentIndex - 1 + this.fieldSequence.length) % this.fieldSequence.length;
+        }
+
+        const nextField = this.fieldSequence[nextIndex];
+        this.focusField(nextField);
+      }
+    }
+  }
+
+  private focusField(field: string): void {
+    const fieldMap: { [key: string]: ElementRef | undefined } = {
+      'senderName': this.customerNameInput,
+      'senderCode': this.senderCodeLookup,
+      'phone': this.phoneInput,
+      'address': this.addressInput,
+      'city': this.senderCityInput,
+      'zipCode': this.zipCodeInput,
+      'email': this.emailInput,
+      'locationLink': this.locationLinkInput,
+      'consigneeName': this.consigneeNameInput,
+      'consigneeCode': this.consigneeCodeLookup,
+      'consigneeMobile': this.consigneeMobileInput,
+      'consigneeAddress': this.consigneeAddressInput,
+      'consigneeCountry': this.consigneeCountryLookup,
+      'consigneeCity': this.consigneeCityInput,
+      'modeOfDelivery': this.modeOfDeliveryLookup,
+      'modeOfPayment': this.modeOfPaymentLookup,
+      'itemDescription': this.itemDescriptionInput,
+      'quantity': this.quantityInput,
+      'unitWeight': this.unitWeightInput,
+      'addItemButton': this.addItemButton,
+      'totalCartons': this.totalCartonsInput,
+      'pricePerKg': this.pricePerKgInput,
+      'billCharge': this.billChargeInput,
+      'discount': this.discountInput
+    };
+
+    const target = fieldMap[field];
+    if (target) {
+      target.nativeElement.focus();
+    } else if (field.startsWith('carton')) {
+      // Dynamic focus for carton fields using ID
+      const element = document.getElementById(field);
+      if (element) {
+        element.focus();
+      }
+    }
   }
 }

@@ -39,9 +39,9 @@
               <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Invoice #
               </th>
-              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+              <!-- <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Tracking #
-              </th>
+              </th> -->
               <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Date
               </th>
@@ -71,9 +71,9 @@
               <td class="px-6 py-4 text-sm text-slate-800 font-semibold">
                 {{ inv.invoice_number }}
               </td>
-              <td class="px-6 py-4 text-sm text-slate-600 font-mono">
+              <!-- <td class="px-6 py-4 text-sm text-slate-600 font-mono">
                 {{ inv.tracking_number || '-' }}
-              </td>
+              </td> -->
               <td class="px-6 py-4 text-sm text-slate-600">{{ inv.date | date }}</td>
               <td class="px-6 py-4 text-sm text-slate-800 font-bold">
                 {{ settingsService.currencySymbol() }}{{ inv.amount.toFixed(2) }}
@@ -333,9 +333,9 @@
           </div>
         </div>
 
-        <div class="tracking-display" *ngIf="userInfoForm.get('trackingNumber')?.value">
-          <span class="label">Tracking #:</span>
-          <span class="value">{{ userInfoForm.get('trackingNumber')?.value }}</span>
+        <div class="tracking-display">
+          <span class="label">Invoice #:</span>
+          <span class="value">{{ invoiceNumber }}</span>
         </div>
       </div>
       <form [formGroup]="userInfoForm" class="user-info-form">
@@ -348,10 +348,12 @@
               <!-- Sender Name -->
               <div class="floating-group">
                 <input
+                  #customerNameInput
                   type="text"
                   formControlName="customerName"
                   placeholder=" "
                   class="floating-input text-black"
+                  (keydown)="onGeneralKeydown($event, 'senderName')"
                   [class.error]="
                     userInfoForm.get('customerName')?.invalid &&
                     userInfoForm.get('customerName')?.touched
@@ -363,8 +365,11 @@
               <!-- Sender Country Code -->
               <div class="floating-group sender-code-lookup relative">
                 <div
+                  #senderCodeLookup
                   (click)="toggleLookup('senderCode')"
-                  (keydown)="onLookupKeydown('senderCode', $event)"
+                  (keydown)="
+                    onLookupKeydown('senderCode', $event); onGeneralKeydown($event, 'senderCode')
+                  "
                   tabindex="0"
                   class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
@@ -401,14 +406,16 @@
               <!-- Phone -->
               <div class="floating-group">
                 <input
+                  #phoneInput
                   type="text"
                   inputmode="numeric"
                   pattern="[0-9]*"
-                  maxlength="14"
+                  [maxlength]="senderMaxMobileLength"
                   formControlName="phone"
                   placeholder=" "
                   class="floating-input text-black"
                   (input)="onPhoneInput('phone', $event)"
+                  (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'phone')"
                   [class.error]="
                     userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched
                   "
@@ -421,10 +428,12 @@
             <div class="flex gap-1 mb-1">
               <div class="floating-group full-width">
                 <input
+                  #addressInput
                   type="text"
                   formControlName="address"
                   placeholder=" "
                   class="floating-input text-black"
+                  (keydown)="onGeneralKeydown($event, 'address')"
                   [class.error]="
                     userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched
                   "
@@ -434,13 +443,14 @@
 
               <div class="floating-group sender-city-autocomplete relative">
                 <input
+                  #senderCityInput
                   type="text"
                   formControlName="city"
                   placeholder=" "
                   class="floating-input text-black"
                   (input)="onCityInput('sender', $event)"
                   (focus)="onCityFocus('sender')"
-                  (keydown)="onCityKeydown('sender', $event)"
+                  (keydown)="onCityKeydown('sender', $event); onGeneralKeydown($event, 'city')"
                   [class.error]="
                     userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched
                   "
@@ -469,6 +479,7 @@
 
               <div class="floating-group">
                 <input
+                  #zipCodeInput
                   type="text"
                   inputmode="numeric"
                   pattern="[0-9]*"
@@ -476,6 +487,7 @@
                   formControlName="zipCode"
                   placeholder=" "
                   class="floating-input text-black"
+                  (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'zipCode')"
                   [class.error]="
                     userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched
                   "
@@ -488,19 +500,23 @@
             <div class="flex gap-1 mb-1">
               <div class="floating-group full-width">
                 <input
+                  #emailInput
                   type="email"
                   formControlName="email"
                   placeholder=" "
                   class="floating-input text-black"
+                  (keydown)="onGeneralKeydown($event, 'email')"
                 />
                 <label class="floating-label">Sender Email</label>
               </div>
               <div class="floating-group full-width">
                 <input
+                  #locationLinkInput
                   type="url"
                   formControlName="locationLink"
                   placeholder=" "
                   class="floating-input text-black"
+                  (keydown)="onGeneralKeydown($event, 'locationLink')"
                 />
                 <label class="floating-label">Google Map Location Link</label>
               </div>
@@ -514,10 +530,12 @@
             <div class="flex gap-1 mb-1">
               <div class="floating-group">
                 <input
+                  #consigneeNameInput
                   type="text"
                   formControlName="consigneeName"
                   placeholder=" "
                   class="floating-input text-black"
+                  (keydown)="onGeneralKeydown($event, 'consigneeName')"
                   [class.error]="
                     userInfoForm.get('consigneeName')?.invalid &&
                     userInfoForm.get('consigneeName')?.touched
@@ -528,8 +546,12 @@
 
               <div class="floating-group consignee-code-lookup relative">
                 <div
+                  #consigneeCodeLookup
                   (click)="toggleLookup('consigneeCode')"
-                  (keydown)="onLookupKeydown('consigneeCode', $event)"
+                  (keydown)="
+                    onLookupKeydown('consigneeCode', $event);
+                    onGeneralKeydown($event, 'consigneeCode')
+                  "
                   tabindex="0"
                   class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
@@ -567,14 +589,18 @@
 
               <div class="floating-group">
                 <input
+                  #consigneeMobileInput
                   type="text"
                   inputmode="numeric"
                   pattern="[0-9]*"
-                  maxlength="14"
+                  [maxlength]="consigneeMaxMobileLength"
                   formControlName="consigneeMobile"
                   placeholder=" "
                   class="floating-input text-black"
                   (input)="onPhoneInput('consigneeMobile', $event)"
+                  (keydown)="
+                    onNumberInputKeydown($event); onGeneralKeydown($event, 'consigneeMobile')
+                  "
                   [class.error]="
                     userInfoForm.get('consigneeMobile')?.invalid &&
                     userInfoForm.get('consigneeMobile')?.touched
@@ -587,10 +613,12 @@
             <div class="flex gap-1">
               <div class="floating-group full-width">
                 <input
+                  #consigneeAddressInput
                   type="text"
                   formControlName="consigneeAddress"
                   placeholder=" "
                   class="floating-input text-black"
+                  (keydown)="onGeneralKeydown($event, 'consigneeAddress')"
                   [class.error]="
                     userInfoForm.get('consigneeAddress')?.invalid &&
                     userInfoForm.get('consigneeAddress')?.touched
@@ -600,8 +628,12 @@
               </div>
               <div class="floating-group consignee-country-lookup relative">
                 <div
+                  #consigneeCountryLookup
                   (click)="toggleLookup('consigneeCountry')"
-                  (keydown)="onLookupKeydown('consigneeCountry', $event)"
+                  (keydown)="
+                    onLookupKeydown('consigneeCountry', $event);
+                    onGeneralKeydown($event, 'consigneeCountry')
+                  "
                   tabindex="0"
                   class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
@@ -637,13 +669,16 @@
 
               <div class="floating-group consignee-city-autocomplete relative">
                 <input
+                  #consigneeCityInput
                   type="text"
                   formControlName="consigneeCity"
                   placeholder=" "
                   class="floating-input text-black"
                   (input)="onCityInput('consignee', $event)"
                   (focus)="onCityFocus('consignee')"
-                  (keydown)="onCityKeydown('consignee', $event)"
+                  (keydown)="
+                    onCityKeydown('consignee', $event); onGeneralKeydown($event, 'consigneeCity')
+                  "
                   [class.error]="
                     userInfoForm.get('consigneeCity')?.invalid &&
                     userInfoForm.get('consigneeCity')?.touched
@@ -674,8 +709,12 @@
             <div class="flex gap-1 mt-1">
               <div class="floating-group mode-of-delivery-lookup relative">
                 <div
+                  #modeOfDeliveryLookup
                   (click)="toggleLookup('modeOfDelivery')"
-                  (keydown)="onLookupKeydown('modeOfDelivery', $event)"
+                  (keydown)="
+                    onLookupKeydown('modeOfDelivery', $event);
+                    onGeneralKeydown($event, 'modeOfDelivery')
+                  "
                   tabindex="0"
                   class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
@@ -715,8 +754,12 @@
 
               <div class="floating-group mode-of-payment-lookup relative">
                 <div
+                  #modeOfPaymentLookup
                   (click)="toggleLookup('modeOfPayment')"
-                  (keydown)="onLookupKeydown('modeOfPayment', $event)"
+                  (keydown)="
+                    onLookupKeydown('modeOfPayment', $event);
+                    onGeneralKeydown($event, 'modeOfPayment')
+                  "
                   tabindex="0"
                   class="floating-input text-black cursor-pointer flex justify-between items-center"
                   [class.error]="
@@ -773,7 +816,9 @@
               class="floating-input text-black"
               (input)="onItemSearch($event)"
               (focus)="onItemFocus()"
-              (keydown)="onItemDescriptionKeydown($event)"
+              (keydown)="
+                onItemDescriptionKeydown($event); onGeneralKeydown($event, 'itemDescription')
+              "
               [class.error]="
                 itemForm.get('description')?.invalid && itemForm.get('description')?.touched
               "
@@ -812,11 +857,16 @@
 
           <div class="floating-group">
             <input
-              type="number"
+              #quantityInput
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="14"
               formControlName="quantity"
               placeholder=" "
               class="floating-input text-black"
               (focus)="$event.target.select()"
+              (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'quantity')"
               [class.error]="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched"
             />
             <label class="floating-label">Quantity *</label>
@@ -824,21 +874,28 @@
 
           <div class="floating-group">
             <input
-              type="number"
+              #unitWeightInput
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="14"
               formControlName="unitWeight"
               placeholder=" "
               class="floating-input text-black"
               (focus)="$event.target.select()"
+              (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'unitWeight')"
             />
             <label class="floating-label">Unit Weight</label>
           </div>
 
           <div class="flex items-center">
             <button
+              #addItemButton
               type="button"
               class="btn btn-primary btn-large"
               (click)="addItem(true)"
               (keydown.enter)="addItem(true); $event.preventDefault()"
+              (keydown)="onGeneralKeydown($event, 'addItemButton')"
             >
               Add
             </button>
@@ -899,11 +956,16 @@
           <div class="flex gap-1">
             <div class="floating-group">
               <input
-                type="number"
+                #totalCartonsInput
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="2"
                 formControlName="totalCartons"
                 placeholder=" "
                 class="floating-input text-black"
                 (focus)="$event.target.select()"
+                (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'totalCartons')"
                 [class.error]="
                   financialForm.get('totalCartons')?.invalid &&
                   financialForm.get('totalCartons')?.touched
@@ -914,11 +976,16 @@
 
             <div class="floating-group">
               <input
-                type="number"
+                #pricePerKgInput
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="14"
                 formControlName="pricePerKg"
                 placeholder=" "
                 class="floating-input text-black"
                 (focus)="$event.target.select()"
+                (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'pricePerKg')"
                 [class.error]="
                   financialForm.get('pricePerKg')?.invalid &&
                   financialForm.get('pricePerKg')?.touched
@@ -938,11 +1005,19 @@
               <div class="flex gap-1">
                 <div class="floating-group">
                   <input
-                    type="number"
+                    #cartonWeight
+                    [id]="'cartonWeight_' + i"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    maxlength="14"
                     formControlName="weight"
                     placeholder=" "
                     class="floating-input text-black"
                     (focus)="$event.target.select()"
+                    (keydown)="
+                      onNumberInputKeydown($event); onGeneralKeydown($event, 'cartonWeight_' + i)
+                    "
                     [class.error]="carton.get('weight')?.invalid && carton.get('weight')?.touched"
                   />
                   <label class="floating-label">Carton {{ i + 1 }} Weight *</label>
@@ -950,11 +1025,19 @@
 
                 <div class="floating-group">
                   <input
-                    type="number"
+                    #cartonCustoms
+                    [id]="'cartonCustoms_' + i"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    maxlength="14"
                     formControlName="customsCharge"
                     placeholder=" "
                     class="floating-input text-black"
                     (focus)="$event.target.select()"
+                    (keydown)="
+                      onNumberInputKeydown($event); onGeneralKeydown($event, 'cartonCustoms_' + i)
+                    "
                     [class.error]="
                       carton.get('customsCharge')?.invalid && carton.get('customsCharge')?.touched
                     "
@@ -964,11 +1047,19 @@
 
                 <div class="floating-group">
                   <input
-                    type="number"
+                    #cartonPacking
+                    [id]="'cartonPacking_' + i"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    maxlength="14"
                     formControlName="packingCharge"
                     placeholder=" "
                     class="floating-input text-black"
                     (focus)="$event.target.select()"
+                    (keydown)="
+                      onNumberInputKeydown($event); onGeneralKeydown($event, 'cartonPacking_' + i)
+                    "
                     [class.error]="
                       carton.get('packingCharge')?.invalid && carton.get('packingCharge')?.touched
                     "
@@ -983,11 +1074,16 @@
           <div class="flex gap-1">
             <div class="floating-group">
               <input
-                type="number"
+                #billChargeInput
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="14"
                 formControlName="billCharge"
                 placeholder=" "
                 class="floating-input text-black"
                 (focus)="$event.target.select()"
+                (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'billCharge')"
                 [class.error]="
                   chargesForm.get('billCharge')?.invalid && chargesForm.get('billCharge')?.touched
                 "
@@ -997,11 +1093,16 @@
 
             <div class="floating-group">
               <input
-                type="number"
+                #discountInput
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="14"
                 formControlName="discount"
                 placeholder=" "
                 class="floating-input text-black"
                 (focus)="$event.target.select()"
+                (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'discount')"
                 [class.error]="
                   chargesForm.get('discount')?.invalid && chargesForm.get('discount')?.touched
                 "

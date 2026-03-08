@@ -162,9 +162,27 @@
   transition: all 0.2s ease;
 }
 
-.floating-input:focus {
-  border-color: #f2d21b; /* brand yellow */
-  box-shadow: 0 0 0 2px rgba(242, 210, 27, 0.1);
+.floating-input:focus,
+.sender-code-lookup [tabindex="0"]:focus,
+.consignee-code-lookup [tabindex="0"]:focus,
+.consignee-country-lookup [tabindex="0"]:focus,
+.mode-of-delivery-lookup [tabindex="0"]:focus,
+.mode-of-payment-lookup [tabindex="0"]:focus {
+  border-color: var(--brand-purple-600); /* purple */
+  box-shadow: 0 0 0 2px rgba(124, 28, 154, 0.25);
+  outline: none;
+}
+
+/* Ensure containers have higher z-index when focused to show dropdowns clearly */
+.sender-code-lookup:focus-within,
+.consignee-code-lookup:focus-within,
+.consignee-country-lookup:focus-within,
+.sender-city-autocomplete:focus-within,
+.consignee-city-autocomplete:focus-within,
+.mode-of-delivery-lookup:focus-within,
+.mode-of-payment-lookup:focus-within,
+.item-autocomplete-input:focus-within {
+  z-index: 50;
 }
 
 .floating-label {
