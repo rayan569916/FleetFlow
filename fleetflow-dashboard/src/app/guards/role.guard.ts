@@ -18,9 +18,9 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // If driver tries to access a non-allowed route, redirect to invoice
+  // If driver tries to access a non-allowed route, redirect to driver-ui
   if (currentRole === 'driver') {
-    router.navigate(['/dashboard/invoice']);
+    router.navigate(['/dashboard/driver-ui']);
     return false;
   }
 

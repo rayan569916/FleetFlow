@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import datetime
 from extensions import db
+from sqlalchemy.orm import joinedload
 from models.finance import Purchase, Receipt, Payment
 from utils.auth import (
     role_required,
@@ -45,7 +46,14 @@ def get_paginated_list(model, serializer, current_user):
         except:
             pass
 
-    pagination = query.order_by(model.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    pagination = (
+        query.options(
+            joinedload(model.office)
+        )
+        .order_by(model.created_at.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+
     
     return jsonify({
         'items': [serializer(item) for item in pagination.items],

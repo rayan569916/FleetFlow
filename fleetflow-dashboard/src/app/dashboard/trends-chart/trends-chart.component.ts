@@ -31,6 +31,9 @@ export class TrendsChartComponent implements OnInit {
     if (this.authService.hasFullAccess()) {
       this.loadOffices();
     }
+    this.selectedOfficeId.set(
+      parseInt(localStorage.getItem('user_office_id') ?? '0')
+    );
     this.loadDailyReport();
   }
 

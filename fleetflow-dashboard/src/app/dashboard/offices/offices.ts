@@ -9,6 +9,7 @@ interface OfficeEntry {
   id: number;
   name: string;
   location: string | null;
+  office_type: string | null;
 }
 
 @Component({
@@ -32,6 +33,7 @@ export class OfficesComponent implements OnInit {
   formModel = {
     name: '',
     location: '',
+    office_type: '',
   };
 
   ngOnInit(): void {
@@ -55,7 +57,7 @@ export class OfficesComponent implements OnInit {
 
   openForm(): void {
     this.editingId.set(null);
-    this.formModel = { name: '', location: '' };
+    this.formModel = { name: '', location: '', office_type: '' };
     this.initialFormModel = JSON.stringify(this.formModel);
     this.isFormOpen.set(true);
   }
@@ -65,6 +67,7 @@ export class OfficesComponent implements OnInit {
     this.formModel = {
       name: office.name,
       location: office.location || '',
+      office_type: office.office_type || '',
     };
     this.initialFormModel = JSON.stringify(this.formModel);
     this.isFormOpen.set(true);
@@ -83,7 +86,7 @@ export class OfficesComponent implements OnInit {
 
     this.isFormOpen.set(false);
     this.editingId.set(null);
-    this.formModel = { name: '', location: '' };
+    this.formModel = { name: '', location: '', office_type: '' };
     this.initialFormModel = '';
   }
 
@@ -91,6 +94,7 @@ export class OfficesComponent implements OnInit {
     const payload = {
       name: this.formModel.name.trim(),
       location: this.formModel.location.trim(),
+      office_type: this.formModel.office_type || null,
     };
 
     if (!payload.name) {

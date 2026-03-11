@@ -1,14 +1,14 @@
 import { Component, ChangeDetectionStrategy, input, output, inject } from '@angular/core';
 import { IncomePeriod, IncomeSnapshot } from '../../core/models/dashboard.models';
 import { INCOME_PERIOD_OPTIONS } from '../../core/constants/dashboard.constants';
-import { CardComponent } from '../../shared/ui/card/card.component';
 import { ReportService } from '../../services/report.service';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../services/settings.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-total-cargo-card',
-  imports: [CardComponent,CommonModule],
+  imports: [CommonModule],
   templateUrl: './total-cargo-card.component.html',
   styleUrl: './total-cargo-card.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,6 +21,7 @@ export class TotalCargoCardComponent {
   readonly options = INCOME_PERIOD_OPTIONS;
   readonly reportDetails$ = this.reportService.getDailyReport();
   private settingsService = inject(SettingsService);
+  authService = inject(AuthService)
 
   // get budgetUsedPercent(): number {
   //   const current = this.snapshot();

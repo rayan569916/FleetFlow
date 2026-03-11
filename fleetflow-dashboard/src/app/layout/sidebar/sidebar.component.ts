@@ -35,6 +35,7 @@ export class SidebarComponent {
     }
     
     const fullAccess = this.authService.hasFullAccess();
+    const shopManager = this.authService.isShopManager();
     const allItems = SIDEBAR_ITEMS;
 
     const groups: NavGroup[] = [
@@ -48,7 +49,7 @@ export class SidebarComponent {
       // },
       {
         label: 'Finance',
-        items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'purchase', 'receipt'].includes(i.id))
+        items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'purchase', 'receipt', 'balance-share'].includes(i.id))
       },
       {
         label: 'System',
@@ -57,7 +58,7 @@ export class SidebarComponent {
           if (i.id === 'register') return fullAccess;
           if (i.id === 'offices') return fullAccess;
           if (i.id === 'unit-price') return fullAccess;
-          if (i.id === 'cargo-items') return fullAccess;
+          if (i.id === 'cargo-items') return fullAccess || shopManager;
           return false;
         })
       }

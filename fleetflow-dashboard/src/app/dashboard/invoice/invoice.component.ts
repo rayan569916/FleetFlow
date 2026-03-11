@@ -14,13 +14,13 @@ import { UnitPriceService, UnitPriceInterface } from '../../services/unit-price.
 import { InvoiceDetailsViewComponent } from './invoice-details-view.component';
 import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 import { CargoItemsService, CargoItem } from '../../services/cargo-items.service';
-
+import { MobileNavComponent } from '../../shared/ui/mobile-nav/mobile-nav.component';
 
 
 @Component({
   selector: 'app-invoice',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, InvoiceDetailsViewComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, InvoiceDetailsViewComponent, MobileNavComponent],
   templateUrl: './invoice.component.html',
   styleUrl: './invoice.component.css'
 })
@@ -74,6 +74,8 @@ export class InvoiceComponent implements OnInit {
   @ViewChild('fuelSurchargeInput') fuelSurchargeInput!: ElementRef<HTMLInputElement>;
   @ViewChild('billChargeInput') billChargeInput!: ElementRef<HTMLInputElement>;
   @ViewChild('addItemButton') addItemButton!: ElementRef<HTMLButtonElement>;
+
+  isMobile = window.innerWidth <= 768;
   isEditMode = false;
   editingInvoiceId: number | null = null;
 
@@ -119,8 +121,8 @@ export class InvoiceComponent implements OnInit {
   showModeOfPaymentDropdown = false;
   activeModeOfDeliveryIndex = -1;
   activeModeOfPaymentIndex = -1;
-  senderMaxMobileLength = 9;
-  consigneeMaxMobileLength = 9;
+  senderMaxMobileLength = 10;
+  consigneeMaxMobileLength = 10;
 
   // Pagination Signals
   currentPage = 1;
@@ -161,11 +163,10 @@ export class InvoiceComponent implements OnInit {
     'totalCartons', 'pricePerKg', 'billCharge', 'discount'
   ];
 
-
+  authService = inject(AuthService);
   constructor(
     private fb: FormBuilder,
     private invoiceService: InvoiceService,
-    private authService: AuthService,
     private toastService: ToastService,
     private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationDialogService,
@@ -190,6 +191,11 @@ export class InvoiceComponent implements OnInit {
     if (pendingEdit) {
       setTimeout(() => this.onEditInvoice(pendingEdit), 100);
     }
+  }
+
+  @HostListener('window:resize')
+  onResize(){
+    this.isMobile = window.innerWidth <= 768;
   }
 
   @HostListener('document:click', ['$event'])
@@ -878,7 +884,6 @@ export class InvoiceComponent implements OnInit {
       )
       .subscribe({
         next: (data: any) => {
-          console.log('Invoices loaded:', data);
           if (data.items) {
             this.invoices = data.items;
             this.totalItems = data.total;

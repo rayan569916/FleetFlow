@@ -1,9 +1,9 @@
 from flask import Flask, jsonify
 from extensions import db
 from flask_cors import CORS
-from config import Config
+# from config import Config
 # from config_development import Config
-# from config_local import Config
+from config_local import Config
 from routes import register_routes
 from dotenv import load_dotenv
 from flask_migrate import Migrate
@@ -65,7 +65,7 @@ app = create_app()
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.create_all() # Uncomment if you want automatic table creation
+        db.create_all() # Uncomment if you want automatic table creation
         pass
     # For local development only
     app.run(host='0.0.0.0', port=5000, debug=False)

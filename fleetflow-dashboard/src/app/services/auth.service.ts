@@ -53,6 +53,7 @@ export class AuthService {
     currentUserName = signal<string | null>(localStorage.getItem('user_name'));
     currentUserFullName = signal<string | null>(localStorage.getItem('user_full_name'));
     currentUserOfficeName = signal<string | null>(localStorage.getItem('user_office_name'));
+    currentUserOfficeId = signal<string | null>(localStorage.getItem('user_office_id'));
 
     register(userData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/register`, userData);
@@ -64,6 +65,10 @@ export class AuthService {
 
     getOffices(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/offices`);
+    }
+
+    getOfficesForBalanceSharing(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/offices_for_balance_sharing`);
     }
 
     createOffice(payload: OfficePayload): Observable<any> {
