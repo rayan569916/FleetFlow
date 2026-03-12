@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener, ViewChild, ElementRef, signal } from '@angular/core';
 import { CommonModule, AsyncPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { finalize, timeout, Observable, Subject, of } from 'rxjs';
@@ -40,6 +40,7 @@ export class InvoiceComponent implements OnInit {
   unitPricesData: UnitPriceInterface[] = [];
   viewMode: 'list' | 'create' | 'details' = 'list';
   isLoading = false;
+  isSubmitting = signal(false);
   selectedInvoice: any = null;
   errorMessage: string | null = null;
   successMessage: string | null = null;
@@ -1099,6 +1100,8 @@ export class InvoiceComponent implements OnInit {
     this.errorMessage = null;
     this.successMessage = null;
 
+    if (this.isSubmitting()) return;
+
     if (this.userInfoForm.invalid || this.financialForm.invalid) {
       this.userInfoForm.markAllAsTouched();
       this.financialForm.markAllAsTouched();
@@ -1153,6 +1156,7 @@ export class InvoiceComponent implements OnInit {
       packing_charge_total: this.packingCharge
     };
 
+    this.isSubmitting.set(true);
     this.isLoading = true;
     const request = this.isEditMode
       ? this.invoiceService.updateInvoice(this.editingInvoiceId!, invoiceData)
@@ -1160,6 +1164,7 @@ export class InvoiceComponent implements OnInit {
 
     request.subscribe({
       next: () => {
+        this.isSubmitting.set(false);
         this.isLoading = false;
         this.viewMode = 'list';
         this.toastService.show(`Invoice ${this.isEditMode ? 'updated' : 'created'} successfully!`, 'success');
@@ -1170,6 +1175,7 @@ export class InvoiceComponent implements OnInit {
         console.error(`Error ${this.isEditMode ? 'updating' : 'creating'} invoice:`, error);
         const msg = error.error?.message || `Failed to ${this.isEditMode ? 'update' : 'create'} invoice. Please try again.`;
         this.toastService.show(msg, 'error');
+        this.isSubmitting.set(false);
         this.isLoading = false;
         this.cdr?.detectChanges();
       }

@@ -25,9 +25,12 @@ export class BalanceShareComponent implements OnInit {
     totalPages = 0;
     totalItems = 0;
 
+
     currentPageRecieved = 1;
     totalPagesRecieved = 0;
     totalItemsRecieved = 0;
+
+    daily_total = 0;
 
 
     private balanceShareService = inject(BalanceShareService);
@@ -40,6 +43,7 @@ export class BalanceShareComponent implements OnInit {
     readonly incomingRequests = signal<BalanceShareRequest[]>([]);
     readonly outgoingRequests = signal<BalanceShareRequest[]>([]);
     readonly isLoading = signal(false);
+    readonly isSubmitting = signal(false);
     readonly isShareModalOpen = signal(false);
     readonly isCancelModalOpen = signal(false);
     currentUserOfficeId = signal<number | null>(null);
@@ -152,6 +156,12 @@ export class BalanceShareComponent implements OnInit {
     loadData() {
         this.loadBalanceShareRecieved();
         this.loadBalanceShareRequests();
+        this.reportService.getDailyReport(
+            undefined,
+            this.currentUserOfficeId() ?? undefined
+        ).subscribe(res => {
+            this.daily_total = res?.daily_total ?? 0;
+        });
     }
 
     loadRequestData() {
@@ -181,14 +191,16 @@ export class BalanceShareComponent implements OnInit {
         });
     }
 
+
     openShareModal() {
         this.balanceShareForm.reset();
         this.reportService.getDailyReport(
             undefined,
             this.currentUserOfficeId() ?? undefined
         ).subscribe(report => {
+            this.daily_total = report?.daily_total ?? 0;
             this.balanceShareForm.setValue({
-                amount: report?.daily_total ?? 0,
+                amount: this.daily_total,
                 receiver_office_id: ''
             });
         });
@@ -226,6 +238,14 @@ export class BalanceShareComponent implements OnInit {
             return;
         }
 
+        if (this.balanceShareForm.value.amount > this.daily_total) {
+            this.toastService.show('Insufficient balance', 'error');
+            return;
+        }
+
+        if (this.isSubmitting()) return;
+        this.isSubmitting.set(true);
+
         this.balanceShareService.createRequest({
             amount: this.balanceShareForm.value.amount,
             receiver_office_id: Number(this.balanceShareForm.value.receiver_office_id)
@@ -234,9 +254,11 @@ export class BalanceShareComponent implements OnInit {
                 this.toastService.show('Balance share requested successfully', 'success');
                 this.closeShareModal();
                 this.loadData();
+                this.isSubmitting.set(false);
             },
             error: (err) => {
                 this.toastService.show(err.error?.message || 'Failed to request balance share', 'error');
+                this.isSubmitting.set(false);
             }
         });
     }
@@ -251,13 +273,18 @@ export class BalanceShareComponent implements OnInit {
 
         if (!confirmed) return;
 
+        if (this.isSubmitting()) return;
+        this.isSubmitting.set(true);
+
         this.balanceShareService.acceptRequest(req.id).subscribe({
             next: () => {
                 this.toastService.show('Balance share accepted successfully', 'success');
                 this.loadData();
+                this.isSubmitting.set(false);
             },
             error: (err) => {
                 this.toastService.show(err.error?.message || 'Failed to accept', 'error');
+                this.isSubmitting.set(false);
             }
         });
     }
@@ -286,14 +313,19 @@ export class BalanceShareComponent implements OnInit {
 
         if (!this.cancelForm.value.id) return;
 
+        if (this.isSubmitting()) return;
+        this.isSubmitting.set(true);
+
         this.balanceShareService.cancelRequest(this.cancelForm.value.id, this.cancelForm.value.comment).subscribe({
             next: () => {
                 this.toastService.show('Request cancelled successfully', 'success');
                 this.closeCancelModal();
                 this.loadData();
+                this.isSubmitting.set(false);
             },
             error: (err) => {
                 this.toastService.show(err.error?.message || 'Failed to cancel', 'error');
+                this.isSubmitting.set(false);
             }
         });
     }

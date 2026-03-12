@@ -6,6 +6,9 @@ from models.balance_share import BalanceShareRequest, BalanceShareType
 from models.finance import Payment, Receipt, PaymentCategory, ReceiptCategory
 from utils.auth import role_required
 from utils.reports_util import update_daily_report
+from services.push_notification_service import send_push_notification
+from models.push_subscription import PushSubscription
+from models.user import User
 
 balance_share_bp = Blueprint('balance_share', __name__)
 
@@ -44,6 +47,29 @@ def create_request(current_user):
         created_at=datetime.datetime.utcnow()
     )
     db.session.add(new_request)
+    db.session.commit()
+
+    # Trigger Push Notification to users in receiver office
+    receiver_users = User.query.filter_by(office_id=receiver_office_id).all()
+    for user in receiver_users:
+        subscriptions = PushSubscription.query.filter_by(user_id=user.id).all()
+        for sub in subscriptions:
+            notification_data = {
+                "notification": {
+                    "title": "New Balance Share Request",
+                    "body": f"Office {current_user.office.name} has requested {amount} to be shared.",
+                    "icon": "/assets/icons/icon-72x72.png",
+                    "data": {
+                        "url": "/balance-share"
+                    }
+                }
+            }
+            print(f"Sending Request notification to User {user.id} at {sub.endpoint}")
+            success, status_code = send_push_notification(sub.to_dict(), notification_data)
+            if not success and status_code in [404, 410]:
+                print(f"Deleting invalid subscription: {sub.id} (status: {status_code})")
+                db.session.delete(sub)
+    
     db.session.commit()
 
     return jsonify({'message': 'Balance share request sent successfully'}), 201
@@ -156,7 +182,7 @@ def accept_request(current_user, req_id):
     payment_cat = get_or_create_category(PaymentCategory, 'Balance Share')
     payment = Payment(
         amount=req.amount,
-        description=f'Balance Share to {req.receiver_office.name} from {req.sender_office_id.name}',
+        description=f'Balance Share to {req.receiver_office.name} from {req.sender_office.name}',
         category_id=payment_cat.id,
         office_id=req.sender_office_id,
         creator_id=current_user.id
@@ -183,6 +209,29 @@ def accept_request(current_user, req_id):
     update_daily_report(today_str, req.sender_office_id)
     update_daily_report(today_str, req.receiver_office_id)
 
+    # Notify the SENDER that their request was accepted
+    sender_users = User.query.filter_by(office_id=req.sender_office_id).all()
+    for user in sender_users:
+        subscriptions = PushSubscription.query.filter_by(user_id=user.id).all()
+        for sub in subscriptions:
+            notification_data = {
+                "notification": {
+                    "title": "Balance Share Accepted",
+                    "body": f"Your balance share request of {req.amount} has been accepted by {req.sender_office.name}",
+                    "icon": "/assets/icons/icon-72x72.png",
+                    "data": {
+                        "url": "/balance-share"
+                    }
+                }
+            }
+            print(f"Sending Accept notification to User {user.id} at {sub.endpoint}")
+            success, status_code = send_push_notification(sub.to_dict(), notification_data)
+            if not success and status_code in [404, 410]:
+                print(f"Deleting invalid subscription: {sub.id} (status: {status_code})")
+                db.session.delete(sub) 
+    
+    db.session.commit()
+
     return jsonify({'message': 'Balance share accepted successfully'})
 
 @balance_share_bp.route('/cancel/<int:req_id>', methods=['POST'])
@@ -204,6 +253,31 @@ def cancel_request(current_user, req_id):
 
     req.status = get_balance_share_status_id('cancelled')
     req.comment = comment
+    db.session.commit()
+
+    # If receiver cancels, notify sender. If sender cancels, notify receiver.
+    notified_office_id = req.receiver_office_id if current_user.office_id == req.sender_office_id else req.sender_office_id
+    
+    receiver_users = User.query.filter_by(office_id=notified_office_id).all()
+    for user in receiver_users:
+        subscriptions = PushSubscription.query.filter_by(user_id=user.id).all()
+        for sub in subscriptions:
+            notification_data = {
+                "notification": {
+                    "title": "Balance Share Cancelled",
+                    "body": f"A balance share request of {req.amount} has been cancelled by {current_user.office.name}",
+                    "icon": "/assets/icons/icon-72x72.png",
+                    "data": {
+                        "url": "/balance-share"
+                    }
+                }
+            }
+            print(f"Sending Cancel notification to User {user.id} at {sub.endpoint}")
+            success, status_code = send_push_notification(sub.to_dict(), notification_data)
+            if not success and status_code in [404, 410]:
+                print(f"Deleting invalid subscription: {sub.id} (status: {status_code})")
+                db.session.delete(sub) 
+    
     db.session.commit()
 
     return jsonify({'message': 'Balance share cancelled'})

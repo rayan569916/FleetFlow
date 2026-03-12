@@ -65,10 +65,11 @@
       <div class="md:col-span-3 flex justify-end">
         <button
           type="submit"
-          [disabled]="paymentForm.invalid"
-          class="px-6 py-2 bg-yellow-400 text-slate-900 rounded-xl font-medium hover:bg-yellow-500 disabled:opacity-50 transition"
+          [disabled]="paymentForm.invalid || isSubmitting()"
+          class="px-6 py-2 bg-yellow-400 text-slate-900 rounded-xl font-medium hover:bg-yellow-500 disabled:opacity-50 transition flex items-center gap-2"
         >
-          {{ editingItem() ? 'Update Payment' : 'Save Payment' }}
+          <span *ngIf="isSubmitting()" class="w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></span>
+          {{ isSubmitting() ? (editingItem() ? 'Updating...' : 'Saving...') : (editingItem() ? 'Update Payment' : 'Save Payment') }}
         </button>
       </div>
     </form>

@@ -85,6 +85,7 @@ export class ShipmentComponent implements OnInit {
 
   async onSubmit() {
     if (this.shipmentForm.invalid) return;
+    if (this.isLoading) return;
 
     const confirmed = await this.confirmationService.confirm({
       title: this.isEditing ? 'Update Shipment' : 'Create Shipment',

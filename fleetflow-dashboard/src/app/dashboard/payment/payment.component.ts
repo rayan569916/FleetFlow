@@ -25,6 +25,7 @@ export class PaymentComponent implements OnInit {
   categories = signal<Category[]>([]);
   showForm = signal(false);
   editingItem = signal<any | null>(null);
+  isSubmitting = signal(false);
 
   // Pagination & Filtering Signals
   searchTerm = signal('');
@@ -155,6 +156,9 @@ export class PaymentComponent implements OnInit {
 
       if (!confirmed) return;
 
+      if (this.isSubmitting()) return;
+      this.isSubmitting.set(true);
+
       const request = isEdit 
         ? this.dashboardDataService.updatePayment(this.editingItem().id, this.paymentForm.value)
         : this.dashboardDataService.createPayment(this.paymentForm.value);
@@ -163,8 +167,12 @@ export class PaymentComponent implements OnInit {
         next: () => {
           this.fetchData();
           this.toggleForm(true);
+          this.isSubmitting.set(false);
         },
-        error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} payment`, err)
+        error: (err: any) => {
+          console.error(`Failed to ${isEdit ? 'update' : 'create'} payment`, err);
+          this.isSubmitting.set(false);
+        }
       });
     }
   }

@@ -22,6 +22,7 @@ export class Transaction implements OnInit, OnChanges {
   entryForm!: FormGroup;
   allEntries: Entry[] = [];
   filteredEntries: Entry[] = [];
+  isSubmitting = false;
 
   // Pagination
   currentPage = 1;
@@ -65,6 +66,9 @@ export class Transaction implements OnInit, OnChanges {
 
   onSubmit(): void {
     if (this.entryForm.valid) {
+      if (this.isSubmitting) return;
+      this.isSubmitting = true;
+
       const newEntry: Omit<Entry, 'id'> = {
         ...this.entryForm.value,
         transactionType: this.transactionType // Ensure backend knows the type if needed, or handled by endpoint
@@ -80,8 +84,12 @@ export class Transaction implements OnInit, OnChanges {
             amount: '',
             date: new Date().toISOString().split('T')[0]
           });
+          this.isSubmitting = false;
         },
-        error: (err: any) => console.error('Failed to save transaction', err)
+        error: (err: any) => {
+          console.error('Failed to save transaction', err);
+          this.isSubmitting = false;
+        }
       });
     } else {
       this.entryForm.markAllAsTouched();

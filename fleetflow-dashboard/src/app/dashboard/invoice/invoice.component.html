@@ -395,9 +395,10 @@
             type="button"
             class="btn btn-primary"
             (click)="submitInvoice()"
-            [disabled]="items.length === 0"
+            [disabled]="items.length === 0 || isSubmitting()"
           >
-            {{ isEditMode ? 'Update Invoice' : 'Create Invoice' }}
+            <span *ngIf="isSubmitting()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            {{ isSubmitting() ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Invoice' : 'Create Invoice') }}
           </button>
         }
       </div>
@@ -1299,9 +1300,10 @@
             type="button"
             class="btn btn-primary btn-large"
             (click)="submitInvoice()"
-            [disabled]="items.length === 0"
+            [disabled]="items.length === 0 || isSubmitting()"
           >
-            {{ isEditMode ? 'Update Invoice' : 'Create Invoice' }}
+            <span *ngIf="isSubmitting()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            {{ isSubmitting() ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Invoice' : 'Create Invoice') }}
           </button>
         </div>
         }

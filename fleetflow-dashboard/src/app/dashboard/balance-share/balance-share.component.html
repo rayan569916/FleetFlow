@@ -17,7 +17,9 @@
   <div class="grid grid-cols-1 gap-6" [class.lg:grid-cols-2]="!authService.isDriver()">
     @if (!authService.isDriver()) {
       <!-- Incoming Requests -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden  flex flex-col h-full">
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full"
+      >
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
           <h2 class="text-lg font-bold text-slate-800">Incoming Requests</h2>
           <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
@@ -72,8 +74,9 @@
                   <td class="px-6 py-3 text-center align-middle">
                     <div class="flex flex-col gap-1 items-center" *ngIf="req.status === 'waiting'">
                       <button
-                        class="text-xs bg-green-100 text-green-700 font-bold px-2 py-1 rounded hover:bg-green-200 w-full"
+                        class="text-xs bg-green-100 text-green-700 font-bold px-2 py-1 rounded hover:bg-green-200 w-full disabled:opacity-50"
                         (click)="acceptRequest(req)"
+                        [disabled]="isSubmitting()"
                       >
                         Accept
                       </button>
@@ -152,8 +155,9 @@
 
               <div class="grid grid-cols-2 gap-2" *ngIf="req.status === 'waiting'">
                 <button
-                  class="text-xs bg-green-100 text-green-700 font-bold px-3 py-2 rounded-lg hover:bg-green-200"
+                  class="text-xs bg-green-100 text-green-700 font-bold px-3 py-2 rounded-lg hover:bg-green-200 disabled:opacity-50"
                   (click)="acceptRequest(req)"
+                  [disabled]="isSubmitting()"
                 >
                   Accept
                 </button>
@@ -180,16 +184,16 @@
           </span>
           <div class="flex gap-2 w-full sm:w-auto">
             <button
-              (click)="prevPageBalanceShareRequests()"
-              [disabled]="currentPage === 1"
+              (click)="prevPageBalanceShareRecieved()"
+              [disabled]="currentPageRecieved === 1"
               class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
             >
               <!--  -->
               Previous
             </button>
             <button
-              (click)="nextPageBalanceShareRequests()"
-              [disabled]="currentPage === totalPages || totalPages === 0"
+              (click)="nextPageBalanceShareRecieved()"
+              [disabled]="currentPageRecieved === totalPagesRecieved || totalPagesRecieved === 0"
               class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
             >
               <!--  -->
@@ -201,7 +205,9 @@
     }
 
     <!-- Outgoing Requests -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden  flex flex-col h-full">
+    <div
+      class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full"
+    >
       <div class="p-6 border-b border-slate-100 flex justify-between items-center">
         <h2 class="text-lg font-bold text-slate-800">Outgoing Requests</h2>
         <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
@@ -351,22 +357,22 @@
           {{ currentPageRecieved }} of {{ totalPages }})
         </span>
         <div class="flex gap-2 w-full sm:w-auto">
-          <button
-            (click)="prevPageBalanceShareRecieved()"
-            [disabled]="currentPageRecieved === 1"
-            class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
-          >
-            <!--  -->
-            Previous
-          </button>
-          <button
-            (click)="nextPageBalanceShareRecieved()"
-            [disabled]="currentPageRecieved === totalPagesRecieved || totalPagesRecieved === 0"
-            class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
-          >
-            <!--  -->
-            Next
-          </button>
+                      <button
+              (click)="prevPageBalanceShareRequests()"
+              [disabled]="currentPage === 1"
+              class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
+            >
+              <!--  -->
+              Previous
+            </button>
+            <button
+              (click)="nextPageBalanceShareRequests()"
+              [disabled]="currentPage === totalPages || totalPages === 0"
+              class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
+            >
+              <!--  -->
+              Next
+            </button>
         </div>
       </div>
     </div>
@@ -428,9 +434,14 @@
       </button>
       <button
         type="submit"
-        class="px-6 py-2.5 text-sm font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
+        [disabled]="isSubmitting()"
+        class="px-6 py-2.5 text-sm font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2"
       >
-        Request Share
+        <span
+          *ngIf="isSubmitting()"
+          class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+        {{ isSubmitting() ? 'Submitting...' : 'Request Share' }}
       </button>
     </div>
   </form>
@@ -469,9 +480,14 @@
       </button>
       <button
         type="submit"
-        class="px-6 py-2.5 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition"
+        [disabled]="isSubmitting()"
+        class="px-6 py-2.5 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
       >
-        Confirm Cancel
+        <span
+          *ngIf="isSubmitting()"
+          class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+        {{ isSubmitting() ? 'Cancelling...' : 'Confirm Cancel' }}
       </button>
     </div>
   </form>

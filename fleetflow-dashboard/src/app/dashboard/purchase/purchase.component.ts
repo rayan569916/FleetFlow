@@ -25,6 +25,7 @@ export class PurchaseComponent implements OnInit {
   categories = signal<Category[]>([]);
   showForm = signal(false);
   editingItem = signal<any | null>(null);
+  isSubmitting = signal(false);
 
   // Pagination & Filtering Signals
   searchTerm = signal('');
@@ -157,6 +158,9 @@ export class PurchaseComponent implements OnInit {
 
       if (!confirmed) return;
 
+      if (this.isSubmitting()) return;
+      this.isSubmitting.set(true);
+
       const request = isEdit 
         ? this.dashboardDataService.updatePurchase(this.editingItem().id, this.purchaseForm.value)
         : this.dashboardDataService.createPurchase(this.purchaseForm.value);
@@ -165,8 +169,12 @@ export class PurchaseComponent implements OnInit {
         next: () => {
           this.fetchData();
           this.toggleForm(true);
+          this.isSubmitting.set(false);
         },
-        error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} purchase`, err)
+        error: (err: any) => {
+          console.error(`Failed to ${isEdit ? 'update' : 'create'} purchase`, err);
+          this.isSubmitting.set(false);
+        }
       });
     }
   }

@@ -99,9 +99,11 @@
       </button>
       <button
         (click)="saveForm()"
-        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition"
+        [disabled]="isSubmitting()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2"
       >
-        {{ editingId() !== null ? 'Update Item' : 'Save Item' }}
+        <span *ngIf="isSubmitting()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+        {{ isSubmitting() ? (editingId() !== null ? 'Updating...' : 'Saving...') : (editingId() !== null ? 'Update Item' : 'Save Item') }}
       </button>
     </div>
   </div>

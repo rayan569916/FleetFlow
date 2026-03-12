@@ -1,6 +1,5 @@
 import os
 
-
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 
@@ -28,3 +27,7 @@ class Config:
             "ssl": {}
         }
     }
+
+    VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "BGmqkut9MKfrvUvjmmTxBnXxQYUDYRigWQ4lvzj0jEoS1zqYRK8Gud28S0E6pfqGc7tkWk36rewzeDZYBOWX5lA")
+    VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "NqTXha_Wgl40a7GbAiKHqVI1i2A_QysRpiAJah2gCzw")
+    VAPID_CLAIM_EMAIL = os.getenv("VAPID_CLAIM_EMAIL", "mailto:admin@captaincargo.co")

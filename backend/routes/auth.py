@@ -3,6 +3,7 @@ import jwt
 import datetime
 from extensions import db
 from models.user import User, Role, Office
+from models.push_subscription import PushSubscription
 from utils.auth import role_required, is_super_user, validate_office_id
 from sqlalchemy.orm import joinedload
 
@@ -238,3 +239,35 @@ def update_office(current_user, office_id):
         'message': 'Office updated successfully!',
         'office': {'id': office.id, 'name': office.name, 'location': office.location, 'office_type': office.office_type}
     })
+
+@auth_bp.route('/save-subscription', methods=['POST'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver', 'super_admin'])
+def save_subscription(current_user):
+    data = request.get_json()
+    if not data or not data.get('endpoint'):
+        return jsonify({'message': 'Invalid subscription data'}), 400
+
+    # Extract keys
+    keys = data.get('keys', {})
+    p256dh = keys.get('p256dh')
+    auth = keys.get('auth')
+
+    if not p256dh or not auth:
+        return jsonify({'message': 'Missing subscription keys'}), 400
+
+    # Check if subscription already exists for this user
+    existing = PushSubscription.query.filter_by(user_id=current_user.id, endpoint=data['endpoint']).first()
+    if existing:
+        existing.p256dh = p256dh
+        existing.auth = auth
+    else:
+        new_sub = PushSubscription(
+            user_id=current_user.id,
+            endpoint=data['endpoint'],
+            p256dh=p256dh,
+            auth=auth
+        )
+        db.session.add(new_sub)
+
+    db.session.commit()
+    return jsonify({'message': 'Subscription saved successfully'}), 201
