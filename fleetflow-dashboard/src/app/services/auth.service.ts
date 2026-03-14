@@ -110,12 +110,20 @@ export class AuthService {
         return role === 'Super_admin' || role === 'super_admin' || role === 'management';
     });
 
+    isAdmin = computed(() => {
+        return this.currentUserRole() === 'Super_admin';
+    });
+
     isShopManager = computed(() => {
         return this.currentUserRole() === 'shop_manager';
     });
 
     isDriver = computed(() => {
         return this.currentUserRole() === 'driver';
+    });
+
+    isManagement = computed(() => {
+        return this.currentUserRole() === 'management';
     });
 
     getToken(): string | null {

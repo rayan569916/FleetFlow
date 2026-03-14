@@ -1,9 +1,9 @@
 from flask import Flask, jsonify
 from extensions import db
 from flask_cors import CORS
-from config import Config
+# from config import Config
 # from config_development import Config
-# from config_local import Config
+from config_local import Config
 from routes import register_routes
 from dotenv import load_dotenv
 from flask_migrate import Migrate

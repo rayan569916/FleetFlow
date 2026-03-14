@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { SwPush } from "@angular/service-worker";
+import { Subject } from "rxjs";
 import { environment } from '../../environments/environment';
 
 
@@ -19,9 +20,13 @@ export class PushNotificationService {
     private http = inject(HttpClient);
     private router = inject(Router);
 
+    private notificationClicksSource = new Subject<{ action: string; notification: any }>();
+    notificationClicks$ = this.notificationClicksSource.asObservable();
+
     constructor() {
         this.swPush.notificationClicks.subscribe(({ action, notification }) => {
             console.log('Notification clicked', action, notification);
+            this.notificationClicksSource.next({ action, notification });
             const data = (notification as any).data;
             if (data && data.url) {
                 this.router.navigateByUrl(data.url);

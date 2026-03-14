@@ -51,6 +51,9 @@ def create_request(current_user):
 
     # Trigger Push Notification to users in receiver office
     receiver_users = User.query.filter_by(office_id=receiver_office_id).all()
+    with open('push_debug.log', 'a') as f:
+        f.write(f"[{datetime.datetime.utcnow()}] Request from {sender_office_id} to {receiver_office_id}. Users found: {len(receiver_users)}\n")
+    
     for user in receiver_users:
         subscriptions = PushSubscription.query.filter_by(user_id=user.id).all()
         for sub in subscriptions:
@@ -60,7 +63,7 @@ def create_request(current_user):
                     "body": f"Office {current_user.office.name} has requested {amount} to be shared.",
                     "icon": "/assets/icons/icon-72x72.png",
                     "data": {
-                        "url": "/balance-share"
+                        "url": "/dashboard/balance-share"
                     }
                 }
             }
@@ -220,7 +223,7 @@ def accept_request(current_user, req_id):
                     "body": f"Your balance share request of {req.amount} has been accepted by {req.sender_office.name}",
                     "icon": "/assets/icons/icon-72x72.png",
                     "data": {
-                        "url": "/balance-share"
+                        "url": "/dashboard/balance-share"
                     }
                 }
             }
@@ -245,7 +248,7 @@ def cancel_request(current_user, req_id):
         return jsonify({'message': 'A reason for cancellation must be provided'}), 400
 
     if get_balance_share_status(req.status) != 'waiting':
-        return jsonify({'message': f'Cannot cancel request because it is already {req.status}'}), 400
+        return jsonify({'message': f'Cannot cancel request because it is already {get_balance_share_status(req.status)}'}), 400
 
     # Sender or Receiver can cancel
     if current_user.office_id not in [req.sender_office_id, req.receiver_office_id]:
@@ -268,7 +271,7 @@ def cancel_request(current_user, req_id):
                     "body": f"A balance share request of {req.amount} has been cancelled by {current_user.office.name}",
                     "icon": "/assets/icons/icon-72x72.png",
                     "data": {
-                        "url": "/balance-share"
+                        "url": "/dashboard/balance-share"
                     }
                 }
             }

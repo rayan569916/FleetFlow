@@ -7,6 +7,7 @@ import { ConfirmationDialogService } from '../../services/confirmation-dialog.se
 import { AuthService } from '../../services/auth.service';
 import { MobileNavComponent } from '../../shared/ui/mobile-nav/mobile-nav.component';
 import { ReportService } from '../../services/report.service';
+import { PushNotificationService } from '../../services/push.notification.service';
 import { ReactiveFormsModule } from '@angular/forms';
 
 
@@ -38,6 +39,7 @@ export class BalanceShareComponent implements OnInit {
     private confirmationService = inject(ConfirmationDialogService);
     public authService = inject(AuthService);
     public reportService = inject(ReportService);
+    private pushService = inject(PushNotificationService);
     private fb = inject(FormBuilder);
 
     readonly incomingRequests = signal<BalanceShareRequest[]>([]);
@@ -64,6 +66,14 @@ export class BalanceShareComponent implements OnInit {
         this.currentUserOfficeId.set(Number(localStorage.getItem('user_office_id')));
         this.loadData();
         this.loadOffices();
+
+        this.pushService.notificationClicks$.subscribe(({ notification }: { notification: any }) => {
+            const data = notification?.data;
+            if (data && data.url && data.url.includes('balance-share')) {
+                console.log('Forcing data reload on notification click');
+                this.loadData();
+            }
+        });
     }
 
 

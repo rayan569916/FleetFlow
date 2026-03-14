@@ -79,7 +79,13 @@ export class ReportsComponent implements OnInit {
 
   fetchOffices() {
     this.authService.getOffices().subscribe({
-      next: (data) => this.offices.set(data),
+      next: (data) => {
+      if (this.authService.isManagement()){
+        this.offices.set(data.filter(c=>c.office_type !== 'central'));
+      } else {
+        this.offices.set(data);
+      }
+      },
       error: (err) => console.error('Failed to fetch offices', err)
     });
   }
