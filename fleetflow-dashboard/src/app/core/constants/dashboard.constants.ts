@@ -25,7 +25,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { id: 'drivers', label: 'Drivers', icon: 'users', route: '/dashboard/drivers' },
   { id: 'reports', label: 'Reports', icon: 'file', route: '/dashboard/reports' },
   // { id: 'income', label: 'Income', icon: 'income', route: '/dashboard/income' },
-  { id: 'invoice', label: 'Billing Invoice', icon: 'file', route: '/dashboard/invoice' },
+  { id: 'invoice', label: 'Billing Invoice', icon: 'invoice', route: '/dashboard/invoice' },
   { id: 'settings', label: 'Settings', icon: 'settings', route: '/dashboard/settings' },
   { id: 'balance-share', label: 'Balance Share', icon: 'dollar-sign', route: '/dashboard/balance-share' },
   { id: 'register', label: 'Register User', icon: 'users', route: '/dashboard/register' },

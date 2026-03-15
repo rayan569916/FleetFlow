@@ -13,6 +13,7 @@ export interface Invoice {
     created_at?: string;
     full_name?: string; // Creator's name
     tracking_number?: string;
+    office_name?: string;
 }
 
 @Injectable({

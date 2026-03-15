@@ -122,8 +122,8 @@ export class InvoiceComponent implements OnInit {
   showModeOfPaymentDropdown = false;
   activeModeOfDeliveryIndex = -1;
   activeModeOfPaymentIndex = -1;
-  senderMaxMobileLength = 10;
-  consigneeMaxMobileLength = 10;
+  senderMaxMobileLength = 9;
+  consigneeMaxMobileLength = 9;
 
   // Pagination Signals
   currentPage = 1;
@@ -140,6 +140,8 @@ export class InvoiceComponent implements OnInit {
     'Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Sultanah', 'Dammam', 'Taif', 'Tabuk', 'Al Kharj', 'Buraidah',
     'Abha', 'Khamis Mushait', 'Al Hofuf', 'Al Mubarraz', 'Hail', 'Najran', 'Hafar Al-Batin', 'Jubail', 'Al Qatif', 'Al Khobar'
   ];
+  saudiCities: string[] = [];
+  cityOptions: { [key: string]: string[] } = {};
   countryCodeOptions = [
     { label: 'KSA (+966)', code: '+966', phoneLength: 9 },
     { label: 'UAE (+971)', code: '+971', phoneLength: 9 },
@@ -481,6 +483,35 @@ export class InvoiceComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  onCityBlur(type: 'sender' | 'consignee'): void {
+    // Small delay to allow click on dropdown to trigger first
+    setTimeout(() => {
+      const controlName = type === 'sender' ? 'city' : 'consigneeCity';
+      const val = this.userInfoForm.get(controlName)?.value;
+      if (!val) return;
+
+      if (type === 'sender') {
+        const isValid = this.saudiCities.some(c => c.toLowerCase() === val.toLowerCase());
+        if (!isValid) {
+          this.userInfoForm.patchValue({ city: '' });
+          this.toastService.show('Please select a valid city from the list', 'warning');
+        } else {
+          // Sync casing with the lookup
+          const matched = this.saudiCities.find(c => c.toLowerCase() === val.toLowerCase());
+          if (matched && matched !== val) {
+            this.userInfoForm.patchValue({ city: matched });
+          }
+        }
+        this.showSenderCityDropdown = false;
+      } else {
+        // Consignee city restriction could be added here if needed,
+        // but user specifically asked for sender city.
+        this.showConsigneeCityDropdown = false;
+      }
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
   onCityKeydown(type: 'sender' | 'consignee', event: KeyboardEvent): void {
     const isDropdownVisible = type === 'sender' ? this.showSenderCityDropdown : this.showConsigneeCityDropdown;
     const suggestions = type === 'sender' ? this.senderCitySuggestions : this.consigneeCitySuggestions;
@@ -556,6 +587,11 @@ export class InvoiceComponent implements OnInit {
       }
     });
 
+    // Fetch Saudi Cities for restriction
+    this.unitPriceService.getCities('Saudi Arabia', '').subscribe(cities => {
+      this.saudiCities = cities || [];
+    });
+
     this.unitPriceService.getUnitPrice().subscribe({
       next: (res: any) => {
         this.unitPricesData = Array.isArray(res) ? res : (res?.unit_prices ?? []);
@@ -573,7 +609,10 @@ export class InvoiceComponent implements OnInit {
       customerName: ['', [Validators.required, Validators.minLength(2)]],
       email: [''],
       senderCountryCode: ['+966', Validators.required],
-      phone: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5,13}$/)]],
+      phone: ['', [Validators.required, (control: any) => {
+        const pattern = new RegExp('^[1-9]\\d{' + (this.senderMaxMobileLength - 1) + '}$');
+        return pattern.test(control.value) ? null : { pattern: true };
+      }]],
       address: ['', [Validators.required, Validators.minLength(5)]],
       city: ['', Validators.required],
       zipCode: ['', Validators.required],
@@ -586,7 +625,10 @@ export class InvoiceComponent implements OnInit {
       // Consignee Information
       consigneeName: ['', [Validators.required, Validators.minLength(2)]],
       consigneeCountryCode: ['+966', Validators.required],
-      consigneeMobile: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5,13}$/)]],
+      consigneeMobile: ['', [Validators.required, (control: any) => {
+        const pattern = new RegExp('^[1-9]\\d{' + (this.consigneeMaxMobileLength - 1) + '}$');
+        return pattern.test(control.value) ? null : { pattern: true };
+      }]],
       consigneeAddress: ['', [Validators.required, Validators.minLength(5)]],
       consigneeCountry: ['', Validators.required],
       consigneeCity: ['', Validators.required]
@@ -596,7 +638,7 @@ export class InvoiceComponent implements OnInit {
     this.itemForm = this.fb.group({
       description: ['', [Validators.required, Validators.minLength(3)]],
       quantity: [1, [Validators.required, Validators.min(1)]],
-      unitWeight: [null] // Optional
+      unitWeight: [null, [Validators.pattern(/^\d*\.?\d*$/)]] // Optional decimal
     });
 
     // Financial Details Form (Refactored)
@@ -1548,9 +1590,14 @@ export class InvoiceComponent implements OnInit {
 
   maxLength(code: any, type: string) {
     const country = this.countryCodeOptions.find((c: any) => c.code === code);
-    const length = country?.phoneLength || 15;
-    if (type === 'senderCode') this.senderMaxMobileLength = length;
-    else if (type === 'consigneeCode') this.consigneeMaxMobileLength = length;
+    const length = country?.phoneLength || 9;
+    if (type === 'senderCode') {
+      this.senderMaxMobileLength = length;
+      this.userInfoForm.get('phone')?.updateValueAndValidity();
+    } else if (type === 'consigneeCode') {
+      this.consigneeMaxMobileLength = length;
+      this.userInfoForm.get('consigneeMobile')?.updateValueAndValidity();
+    }
   }
 
   onNumberInputKeydown(event: KeyboardEvent): void {

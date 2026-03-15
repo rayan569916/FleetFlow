@@ -113,7 +113,7 @@ def get_recent_activity(current_user):
         activity.append({
             'id': inv.id,
             'type': 'invoice',
-            'title': f'Invoice {inv.invoice_number} generated',
+            'title': f'Invoice {inv.invoice_number} generated in {inv.office.name} at {inv.created_at.isoformat()}',
             'timestamp': inv.created_at.isoformat(),
             'user': inv.creator.full_name if inv.creator else 'System',
             'status': inv.status
@@ -123,7 +123,7 @@ def get_recent_activity(current_user):
         activity.append({
             'id': pay.id,
             'type': 'payment',
-            'title': f'Payment {DashboardService.det_category_name(pay.category_id,"payments")} generated',
+            'title': f'Payment {DashboardService.det_category_name(pay.category_id,"payments")} generated in {pay.office.name} at {pay.created_at.isoformat()}',
             'timestamp': pay.created_at.isoformat(),
             'user': 'System',
             'status': "completed"
@@ -133,7 +133,7 @@ def get_recent_activity(current_user):
         activity.append({
             'id': pur.id,
             'type': 'purchase',
-            'title': f'Purchase {DashboardService.det_category_name(pur.category_id,"purchases")} generated',
+            'title': f'Purchase {DashboardService.det_category_name(pur.category_id,"purchases")} generated in {pur.office.name} at {pur.created_at.isoformat()}',
             'timestamp': pur.created_at.isoformat(),
             'user': 'System',
             'status': "completed"
@@ -143,7 +143,7 @@ def get_recent_activity(current_user):
         activity.append({
             'id': rec.id,
             'type': 'receipt',
-            'title': f'Receipt {DashboardService.det_category_name(rec.category_id,"receipts")} generated',
+            'title': f'Receipt {DashboardService.det_category_name(rec.category_id,"receipts")} generated in {rec.office.name} at {rec.created_at.isoformat()}',
             'timestamp': rec.created_at.isoformat(),
             'user': 'System',
             'status': "completed"

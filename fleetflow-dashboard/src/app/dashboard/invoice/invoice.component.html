@@ -51,11 +51,14 @@
               <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Description
               </th>
-              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+              <!-- <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Status
-              </th>
+              </th> -->
               <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Created By
+              </th>
+              <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                Office
               </th>
               <th class="px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Action
@@ -87,8 +90,9 @@
                   >{{ inv.description || '-' }}</span
                 >
               </td>
-              <td class="px-6 py-4">
-                <!-- Status Dropdown (only for admins/accountants) -->
+              <!-- Status Dropdown (only for admins/accountants) -->
+              <!-- <td class="px-6 py-4">
+                
                 <select
                   *ngIf="
                     currentUserRole === 'Super_admin' ||
@@ -122,8 +126,9 @@
                     {{ inv.status }}
                   </span>
                 </ng-template>
-              </td>
+              </td> -->
               <td class="px-6 py-4 text-sm text-slate-600">{{ inv.full_name || 'N/A' }}</td>
+              <td class="px-6 py-4 text-sm text-slate-600">{{ inv.office_name || 'N/A' }}</td>
               <td class="px-6 py-4">
                 <div class="flex justify-end gap-2">
                   <button
@@ -499,7 +504,13 @@
                     userInfoForm.get('customerName')?.touched
                   "
                 />
-                <label class="floating-label">Sender Name *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('customerName')?.invalid && userInfoForm.get('customerName')?.touched">
+                  @if (userInfoForm.get('customerName')?.invalid && userInfoForm.get('customerName')?.touched) {
+                    Enter valid sender name
+                  } @else {
+                    Sender Name *
+                  }
+                </label>
               </div>
 
               <!-- Sender Country Code -->
@@ -520,7 +531,13 @@
                   <span>{{ userInfoForm.get('senderCountryCode')?.value || 'Select Code' }}</span>
                   <i class="fas fa-chevron-down text-xs text-slate-400"></i>
                 </div>
-                <label class="floating-label">Sender Code *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('senderCountryCode')?.invalid && userInfoForm.get('senderCountryCode')?.touched">
+                  @if (userInfoForm.get('senderCountryCode')?.invalid && userInfoForm.get('senderCountryCode')?.touched) {
+                    Select sender code
+                  } @else {
+                    Sender Code *
+                  }
+                </label>
 
                 <!-- Custom Dropdown -->
                 <div
@@ -560,7 +577,13 @@
                     userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched
                   "
                 />
-                <label class="floating-label">Sender Mobile *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched">
+                  @if (userInfoForm.get('phone')?.invalid && userInfoForm.get('phone')?.touched) {
+                    Enter valid sender mobile
+                  } @else {
+                    Sender Mobile *
+                  }
+                </label>
               </div>
             </div>
 
@@ -578,7 +601,13 @@
                     userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched
                   "
                 />
-                <label class="floating-label">Sender Address *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched">
+                  @if (userInfoForm.get('address')?.invalid && userInfoForm.get('address')?.touched) {
+                    Enter valid sender address
+                  } @else {
+                    Sender Address *
+                  }
+                </label>
               </div>
 
               <div class="floating-group sender-city-autocomplete relative">
@@ -591,11 +620,18 @@
                   (input)="onCityInput('sender', $event)"
                   (focus)="onCityFocus('sender')"
                   (keydown)="onCityKeydown('sender', $event); onGeneralKeydown($event, 'city')"
+                  (blur)="onCityBlur('sender')"
                   [class.error]="
                     userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched
                   "
                 />
-                <label class="floating-label">Sender City *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched">
+                  @if (userInfoForm.get('city')?.invalid && userInfoForm.get('city')?.touched) {
+                    Select sender city
+                  } @else {
+                    Sender City *
+                  }
+                </label>
                 <!-- City Suggestions Dropdown -->
                 <div
                   *ngIf="showSenderCityDropdown && senderCitySuggestions.length > 0"
@@ -632,7 +668,13 @@
                     userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched
                   "
                 />
-                <label class="floating-label">Sender Zip Code *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched">
+                  @if (userInfoForm.get('zipCode')?.invalid && userInfoForm.get('zipCode')?.touched) {
+                    Enter valid zip code
+                  } @else {
+                    Sender Zip Code *
+                  }
+                </label>
               </div>
             </div>
 
@@ -681,7 +723,13 @@
                     userInfoForm.get('consigneeName')?.touched
                   "
                 />
-                <label class="floating-label">Consignee Name *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('consigneeName')?.invalid && userInfoForm.get('consigneeName')?.touched">
+                  @if (userInfoForm.get('consigneeName')?.invalid && userInfoForm.get('consigneeName')?.touched) {
+                    Enter valid consignee name
+                  } @else {
+                    Consignee Name *
+                  }
+                </label>
               </div>
 
               <div class="floating-group consignee-code-lookup relative">
@@ -704,7 +752,13 @@
                   }}</span>
                   <i class="fas fa-chevron-down text-xs text-slate-400"></i>
                 </div>
-                <label class="floating-label">Consignee Code *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('consigneeCountryCode')?.invalid && userInfoForm.get('consigneeCountryCode')?.touched">
+                  @if (userInfoForm.get('consigneeCountryCode')?.invalid && userInfoForm.get('consigneeCountryCode')?.touched) {
+                    Select consignee code
+                  } @else {
+                    Consignee Code *
+                  }
+                </label>
 
                 <!-- Custom Dropdown -->
                 <div
@@ -746,7 +800,13 @@
                     userInfoForm.get('consigneeMobile')?.touched
                   "
                 />
-                <label class="floating-label">Consignee Mobile *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('consigneeMobile')?.invalid && userInfoForm.get('consigneeMobile')?.touched">
+                  @if (userInfoForm.get('consigneeMobile')?.invalid && userInfoForm.get('consigneeMobile')?.touched) {
+                    Enter valid consignee mobile
+                  } @else {
+                    Consignee Mobile *
+                  }
+                </label>
               </div>
             </div>
 
@@ -764,7 +824,13 @@
                     userInfoForm.get('consigneeAddress')?.touched
                   "
                 />
-                <label class="floating-label">Consignee Address *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('consigneeAddress')?.invalid && userInfoForm.get('consigneeAddress')?.touched">
+                  @if (userInfoForm.get('consigneeAddress')?.invalid && userInfoForm.get('consigneeAddress')?.touched) {
+                    Enter valid consignee address
+                  } @else {
+                    Consignee Address *
+                  }
+                </label>
               </div>
               <div class="floating-group consignee-country-lookup relative">
                 <div
@@ -784,7 +850,13 @@
                   <span>{{ userInfoForm.get('consigneeCountry')?.value || 'Select Country' }}</span>
                   <i class="fas fa-chevron-down text-xs text-slate-400"></i>
                 </div>
-                <label class="floating-label">Consignee Country *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('consigneeCountry')?.invalid && userInfoForm.get('consigneeCountry')?.touched">
+                  @if (userInfoForm.get('consigneeCountry')?.invalid && userInfoForm.get('consigneeCountry')?.touched) {
+                    Select consignee country
+                  } @else {
+                    Consignee Country *
+                  }
+                </label>
 
                 <!-- Custom Dropdown -->
                 <div
@@ -824,7 +896,13 @@
                     userInfoForm.get('consigneeCity')?.touched
                   "
                 />
-                <label class="floating-label">Consignee City *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('consigneeCity')?.invalid && userInfoForm.get('consigneeCity')?.touched">
+                  @if (userInfoForm.get('consigneeCity')?.invalid && userInfoForm.get('consigneeCity')?.touched) {
+                    Select consignee city
+                  } @else {
+                    Consignee City *
+                  }
+                </label>
                 <!-- City Suggestions Dropdown -->
                 <div
                   *ngIf="showConsigneeCityDropdown && consigneeCitySuggestions.length > 0"
@@ -869,7 +947,13 @@
                   }}</span>
                   <i class="fas fa-chevron-down text-xs text-slate-400"></i>
                 </div>
-                <label class="floating-label">Mode of Delivery *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('modeOfDelivery')?.invalid && userInfoForm.get('modeOfDelivery')?.touched">
+                  @if (userInfoForm.get('modeOfDelivery')?.invalid && userInfoForm.get('modeOfDelivery')?.touched) {
+                    Select mode of delivery
+                  } @else {
+                    Mode of Delivery *
+                  }
+                </label>
 
                 <!-- Custom Dropdown -->
                 <div
@@ -914,7 +998,13 @@
                   }}</span>
                   <i class="fas fa-chevron-down text-xs text-slate-400"></i>
                 </div>
-                <label class="floating-label">Mode of Payment *</label>
+                <label class="floating-label" [class.!text-red-500]="userInfoForm.get('modeOfPayment')?.invalid && userInfoForm.get('modeOfPayment')?.touched">
+                  @if (userInfoForm.get('modeOfPayment')?.invalid && userInfoForm.get('modeOfPayment')?.touched) {
+                    Select mode of payment
+                  } @else {
+                    Mode of Payment *
+                  }
+                </label>
 
                 <!-- Custom Dropdown -->
                 <div
@@ -963,7 +1053,13 @@
                 itemForm.get('description')?.invalid && itemForm.get('description')?.touched
               "
             />
-            <label class="floating-label">Item Description *</label>
+            <label class="floating-label" [class.!text-red-500]="itemForm.get('description')?.invalid && itemForm.get('description')?.touched">
+              @if (itemForm.get('description')?.invalid && itemForm.get('description')?.touched) {
+                Enter valid item description
+              } @else {
+                Item Description *
+              }
+            </label>
 
             <!-- Item Autocomplete Dropdown -->
             <div
@@ -1000,7 +1096,7 @@
               #quantityInput
               type="text"
               inputmode="numeric"
-              pattern="[0-9]*"
+              pattern="[0-9]*[.]?[0-9]*"
               maxlength="14"
               formControlName="quantity"
               placeholder=" "
@@ -1009,7 +1105,13 @@
               (keydown)="onNumberInputKeydown($event); onGeneralKeydown($event, 'quantity')"
               [class.error]="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched"
             />
-            <label class="floating-label">Quantity *</label>
+            <label class="floating-label" [class.!text-red-500]="itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched">
+              @if (itemForm.get('quantity')?.invalid && itemForm.get('quantity')?.touched) {
+                Enter valid quantity
+              } @else {
+                Quantity *
+              }
+            </label>
           </div>
 
           <div class="floating-group">
@@ -1017,7 +1119,7 @@
               #unitWeightInput
               type="text"
               inputmode="numeric"
-              pattern="[0-9]*"
+              pattern="[0-9]*[.]?[0-9]*"
               maxlength="14"
               formControlName="unitWeight"
               placeholder=" "
@@ -1099,7 +1201,7 @@
                 #totalCartonsInput
                 type="text"
                 inputmode="numeric"
-                pattern="[0-9]*"
+                pattern="[0-9]*[.]?[0-9]*"
                 maxlength="2"
                 formControlName="totalCartons"
                 placeholder=" "
@@ -1111,7 +1213,13 @@
                   financialForm.get('totalCartons')?.touched
                 "
               />
-              <label class="floating-label">Total Cartons *</label>
+              <label class="floating-label" [class.!text-red-500]="financialForm.get('totalCartons')?.invalid && financialForm.get('totalCartons')?.touched">
+                @if (financialForm.get('totalCartons')?.invalid && financialForm.get('totalCartons')?.touched) {
+                  Enter total cartons
+                } @else {
+                  Total Cartons *
+                }
+              </label>
             </div>
 
             <div class="floating-group">
@@ -1119,7 +1227,7 @@
                 #pricePerKgInput
                 type="text"
                 inputmode="numeric"
-                pattern="[0-9]*"
+                pattern="[0-9]*[.]?[0-9]*"
                 maxlength="14"
                 formControlName="pricePerKg"
                 placeholder=" "
@@ -1131,7 +1239,13 @@
                   financialForm.get('pricePerKg')?.touched
                 "
               />
-              <label class="floating-label">Price per Kg *</label>
+              <label class="floating-label" [class.!text-red-500]="financialForm.get('pricePerKg')?.invalid && financialForm.get('pricePerKg')?.touched">
+                @if (financialForm.get('pricePerKg')?.invalid && financialForm.get('pricePerKg')?.touched) {
+                  Enter price per kg
+                } @else {
+                  Price per Kg *
+                }
+              </label>
             </div>
           </div>
 
@@ -1149,7 +1263,7 @@
                     [id]="'cartonWeight_' + i"
                     type="text"
                     inputmode="numeric"
-                    pattern="[0-9]*"
+                    pattern="[0-9]*[.]?[0-9]*"
                     maxlength="14"
                     formControlName="weight"
                     placeholder=" "
@@ -1160,7 +1274,13 @@
                     "
                     [class.error]="carton.get('weight')?.invalid && carton.get('weight')?.touched"
                   />
-                  <label class="floating-label">Carton {{ i + 1 }} Weight *</label>
+                  <label class="floating-label" [class.!text-red-500]="carton.get('weight')?.invalid && carton.get('weight')?.touched">
+                    @if (carton.get('weight')?.invalid && carton.get('weight')?.touched) {
+                      Enter weight
+                    } @else {
+                      Carton {{ i + 1 }} Weight *
+                    }
+                  </label>
                 </div>
 
                 <div class="floating-group">
@@ -1169,7 +1289,7 @@
                     [id]="'cartonCustoms_' + i"
                     type="text"
                     inputmode="numeric"
-                    pattern="[0-9]*"
+                    pattern="[0-9]*[.]?[0-9]*"
                     maxlength="14"
                     formControlName="customsCharge"
                     placeholder=" "
@@ -1182,7 +1302,13 @@
                       carton.get('customsCharge')?.invalid && carton.get('customsCharge')?.touched
                     "
                   />
-                  <label class="floating-label">Carton {{ i + 1 }} Customs Charge*</label>
+                  <label class="floating-label" [class.!text-red-500]="carton.get('customsCharge')?.invalid && carton.get('customsCharge')?.touched">
+                    @if (carton.get('customsCharge')?.invalid && carton.get('customsCharge')?.touched) {
+                      Enter customs
+                    } @else {
+                      Carton {{ i + 1 }} Customs *
+                    }
+                  </label>
                 </div>
 
                 <div class="floating-group">
@@ -1191,7 +1317,7 @@
                     [id]="'cartonPacking_' + i"
                     type="text"
                     inputmode="numeric"
-                    pattern="[0-9]*"
+                    pattern="[0-9]*[.]?[0-9]*"
                     maxlength="14"
                     formControlName="packingCharge"
                     placeholder=" "
@@ -1204,7 +1330,13 @@
                       carton.get('packingCharge')?.invalid && carton.get('packingCharge')?.touched
                     "
                   />
-                  <label class="floating-label">Carton {{ i + 1 }} Packing Charge*</label>
+                  <label class="floating-label" [class.!text-red-500]="carton.get('packingCharge')?.invalid && carton.get('packingCharge')?.touched">
+                    @if (carton.get('packingCharge')?.invalid && carton.get('packingCharge')?.touched) {
+                      Enter packing
+                    } @else {
+                      Carton {{ i + 1 }} Packing *
+                    }
+                  </label>
                 </div>
               </div>
             </div>
@@ -1217,7 +1349,7 @@
                 #billChargeInput
                 type="text"
                 inputmode="numeric"
-                pattern="[0-9]*"
+                pattern="[0-9]*[.]?[0-9]*"
                 maxlength="14"
                 formControlName="billCharge"
                 placeholder=" "
@@ -1236,7 +1368,7 @@
                 #discountInput
                 type="text"
                 inputmode="numeric"
-                pattern="[0-9]*"
+                pattern="[0-9]*[.]?[0-9]*"
                 maxlength="14"
                 formControlName="discount"
                 placeholder=" "
