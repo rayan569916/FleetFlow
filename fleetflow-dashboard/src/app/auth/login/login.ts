@@ -41,10 +41,11 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    if (this.isLoading) return;
+
     this.isLoading = true;
     this.authService.login(this.loginForm.value).subscribe({
       next: (response: any) => {
-        // Delay slightly for smoother UX
         setTimeout(() => {
           this.toastService.show('Welcome back!', 'success');
           this.router.navigate(['/dashboard']);

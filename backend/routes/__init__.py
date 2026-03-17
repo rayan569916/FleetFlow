@@ -8,7 +8,7 @@ from .general import general_bp
 from .reports import reports_bp
 from .unit_price import unit_price_bp
 from .item_list import item_list_bp
-
+from .balance_share import balance_share_bp
 def register_routes(app):
     app.register_blueprint(general_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -20,3 +20,4 @@ def register_routes(app):
     app.register_blueprint(reports_bp, url_prefix='/api/reports')
     app.register_blueprint(unit_price_bp, url_prefix='/api/unit_price')
     app.register_blueprint(item_list_bp, url_prefix='/api/item_list')
+    app.register_blueprint(balance_share_bp, url_prefix='/api/balance_share')

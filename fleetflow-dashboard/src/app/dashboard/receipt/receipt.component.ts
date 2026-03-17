@@ -25,6 +25,7 @@ export class ReceiptComponent implements OnInit {
   categories = signal<Category[]>([]);
   showForm = signal(false);
   editingItem = signal<any | null>(null);
+  isSubmitting = signal(false);
 
   // Pagination & Filtering Signals
   searchTerm = signal('');
@@ -155,6 +156,9 @@ export class ReceiptComponent implements OnInit {
 
       if (!confirmed) return;
 
+      if (this.isSubmitting()) return;
+      this.isSubmitting.set(true);
+
       const request = isEdit 
         ? this.dashboardDataService.updateReceipt(this.editingItem().id, this.receiptForm.value)
         : this.dashboardDataService.createReceipt(this.receiptForm.value);
@@ -163,8 +167,12 @@ export class ReceiptComponent implements OnInit {
         next: () => {
           this.fetchData();
           this.toggleForm(true);
+          this.isSubmitting.set(false);
         },
-        error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} receipt`, err)
+        error: (err: any) => {
+          console.error(`Failed to ${isEdit ? 'update' : 'create'} receipt`, err);
+          this.isSubmitting.set(false);
+        }
       });
     }
   }

@@ -16,7 +16,7 @@ export class AddDriverComponent {
     private fb = inject(FormBuilder);
     private router = inject(Router);
     private confirmationService = inject(ConfirmationDialogService);
-    private isSubmitting = false;
+    public isSubmitting = false;
 
     driverForm = this.fb.group({
         name: ['', Validators.required],
@@ -33,6 +33,7 @@ export class AddDriverComponent {
 
     onSubmit() {
         if (this.driverForm.valid) {
+            if (this.isSubmitting) return;
             this.isSubmitting = true;
             console.log('Driver Data:', this.driverForm.value);
             alert('Driver added successfully! (Mock)');

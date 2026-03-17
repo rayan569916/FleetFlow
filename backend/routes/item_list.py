@@ -39,7 +39,7 @@ def get_item_list(current_user):
         return jsonify({'message': 'Database error', 'error': str(e)}), 500
 
 @item_list_bp.route("/categories", methods=["GET"])
-@role_required(['Super_admin', 'management'])
+@role_required(['Super_admin', 'management','shop_manager'])
 def get_categories(current_user):
     try:
         categories = Item_category.query.all()
@@ -48,7 +48,7 @@ def get_categories(current_user):
         return jsonify({'message': 'Error fetching categories', 'error': str(e)}), 500
 
 @item_list_bp.route("/create", methods=["POST"])
-@role_required(['Super_admin', 'management'])
+@role_required(['Super_admin', 'management','shop_manager'])
 def create_item(current_user):
     data = request.get_json()
     if not data or 'item_name' not in data or 'category_id' not in data:

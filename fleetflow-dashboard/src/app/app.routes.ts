@@ -5,6 +5,7 @@ import { pendingChangesGuard } from './guards/pending-changes.guard';
 const ALL_ROLES = ['Super_admin', 'management', 'shop_manager', 'driver'];
 const NON_DRIVER = ['Super_admin', 'management', 'shop_manager'];
 const ADMIN_ONLY = ['Super_admin', 'super_admin', 'management'];
+const DRIVER_ONLY = ['driver'];
 
 export const routes: Routes = [
   {
@@ -154,11 +155,25 @@ export const routes: Routes = [
         loadComponent: () => import('./dashboard/cargo-items/cargo-items').then((c) => c.CargoItems),
         canDeactivate: [pendingChangesGuard],
         canActivate: [roleGuard],
-        data: { roles: ADMIN_ONLY }
+        data: { roles: NON_DRIVER }
       },
       { path: 'vehicles', redirectTo: 'overview' },
       { path: 'maintenance', redirectTo: 'overview' },
-      { path: 'routes', redirectTo: 'overview' }
+      { path: 'routes', redirectTo: 'overview' },
+      {
+        path: 'driver-ui',
+        loadComponent: () => import('./dashboard/driver-ui/driver-ui.component').then(m => m.DriverUiComponent),
+        canDeactivate: [pendingChangesGuard],
+        canActivate: [roleGuard],
+        data: { roles: DRIVER_ONLY }
+      },
+      {
+        path: 'balance-share',
+        loadComponent: () => import('./dashboard/balance-share/balance-share.component').then((c) => c.BalanceShareComponent),
+        canDeactivate: [pendingChangesGuard],
+        canActivate: [roleGuard],
+        data: { roles: ALL_ROLES }
+      }
     ]
   },
   {

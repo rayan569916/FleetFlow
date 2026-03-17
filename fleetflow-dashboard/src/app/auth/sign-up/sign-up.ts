@@ -134,6 +134,8 @@ export class SignUpComponent implements OnInit {
       return;
     }
 
+    if (this.isLoading) return;
+
     const formData = this.signupForm.value;
     const registerData = {
       username: formData.email, // Mapping email to username

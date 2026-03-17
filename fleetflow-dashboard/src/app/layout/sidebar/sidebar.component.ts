@@ -35,6 +35,8 @@ export class SidebarComponent {
     }
     
     const fullAccess = this.authService.hasFullAccess();
+    const shopManager = this.authService.isShopManager();
+    const isAdmin = this.authService.isAdmin();
     const allItems = SIDEBAR_ITEMS;
 
     const groups: NavGroup[] = [
@@ -48,16 +50,16 @@ export class SidebarComponent {
       // },
       {
         label: 'Finance',
-        items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'purchase', 'receipt'].includes(i.id))
+        items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'purchase', 'receipt', 'balance-share'].includes(i.id))
       },
       {
         label: 'System',
         items: allItems.filter(i => {
           if (['settings'].includes(i.id)) return true; // Maybe restrict settings to fullAccess later, for now left as is
-          if (i.id === 'register') return fullAccess;
-          if (i.id === 'offices') return fullAccess;
+          if (i.id === 'register') return isAdmin;
+          if (i.id === 'offices') return isAdmin;
           if (i.id === 'unit-price') return fullAccess;
-          if (i.id === 'cargo-items') return fullAccess;
+          if (i.id === 'cargo-items') return fullAccess || shopManager;
           return false;
         })
       }

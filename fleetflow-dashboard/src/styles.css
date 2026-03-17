@@ -210,74 +210,66 @@ textarea:focus {
    PRINT STYLES - GLOBAL OVERRIDES
    ========================================= */
 @media print {
+  /* 1. Global Page Reset */
+  @page {
+    margin: 1cm;
+    size: auto;
+  }
 
-  /* Hide the main app shell structure */
+  /* 2. Hide dashboard UI elements */
   app-sidebar,
   app-header,
   .sidebar,
   .mobile-overlay,
   .no-print,
-  .header-actions {
+  .header-actions,
+  .invoice-header,
+  .no-print * {
     display: none !important;
   }
 
-  /* Reset body and html for printing */
-  body,
-  html {
-    background: white !important;
+  /* 3. Reset main containers to standard block layout */
+  html, body, app-root, .app-shell, .content-shell, .invoice-container, .print-container {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
     height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: #000000 !important;
     overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
   }
 
-  /* Force the invoice container (or any printer-friendly area) to be visible */
-  .print-container {
+  /* 4. Force invoice content visibility and color */
+  #printable-area {
     display: block !important;
-    position: relative !important;
+    visibility: visible !important;
     width: 100% !important;
-    margin: 0 !important;
+    position: static !important;
+    margin: 0 auto !important;
     padding: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
     background: white !important;
   }
 
-  /* Ensure the content shell allows printing */
-  .app-shell,
-  .content-shell {
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    background: white !important;
+  /* 5. Force ALL text to be black */
+  #printable-area *, 
+  h1, h2, h3, h4, h5, h6, b, p, span, div, td, th {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: transparent !important;
     visibility: visible !important;
   }
 
-  /* Improve print typography and layout */
-  .invoice-paper {
-    border: 1px solid #ddd !important;
-    box-shadow: none !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
+  /* 6. Professional print adjustments */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  p,
-  span,
-  div,
-  td,
-  th {
-    color: black !important;
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-
-  /* Ensure colors print correctly (browsers may still strip backgrounds) */
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
 }

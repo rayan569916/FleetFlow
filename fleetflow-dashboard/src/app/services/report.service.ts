@@ -56,10 +56,10 @@ export class ReportService {
         : `${environment.apiBaseUrl}/api`;
     private apiUrl = `${this.apiRoot}/reports`;
 
-    getDailyReport(date?: string, officeId?: number): Observable<DailyReportData> {
+    getDailyReport(date?: string, officeId?: any): Observable<DailyReportData> {
         const params: any = {};
         if (date) params.date = date;
-        if (officeId) params.office_id = officeId;
+        if (officeId) params.office_id = parseInt(officeId);
         return this.http.get<DailyReportData>(`${this.apiUrl}/daily`, { params });
     }
 

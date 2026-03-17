@@ -13,7 +13,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
-    provideAnimations(), provideServiceWorker('ngsw-worker.js', {
+    provideAnimations(), provideServiceWorker('custom-sw.js', {
             enabled: true,
             registrationStrategy: 'registerWhenStable:30000'
           })

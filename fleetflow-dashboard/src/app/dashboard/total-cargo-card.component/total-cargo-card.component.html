@@ -1,10 +1,13 @@
-<app-card
-  extraClass="relative h-auto rounded-3xl border border-white/10 bg-gradient-to-br from-violet-600 to-indigo-700 p-8 text-white shadow-xl shadow-indigo-900/20">
+<div>
   <div class="mb-2 flex items-center justify-between">
-    <h2 class="text-lg font-medium tracking-tight text-white/90">Final Daily Total</h2>
+    <h2 class="text-lg font-medium tracking-tight text-[var(--brand-purple-800)]">
+      Final Daily Total
+    </h2>
   </div>
 
-  <div class="my-6 text-5xl font-bold tracking-tight">{{ formatIncome((reportDetails$ | async)?.daily_total) }}</div>
+  <div class="my-6 text-5xl text-[var(--brand-purple-800)] font-bold tracking-tight">
+    {{ formatIncome((reportDetails$ | async)?.daily_total) }}
+  </div>
 
   <!-- <div class="mb-2 flex items-center justify-between text-sm text-white/80">
     <span>Total Cargo</span>
@@ -22,4 +25,4 @@
     <option class="bg-[#5B21B6] text-white" [value]="option.value">{{ option.label }}</option>
     }
   </select> -->
-</app-card>
+</div>

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import datetime
 from extensions import db
+from sqlalchemy.orm import joinedload
 from models.finance import Purchase, Receipt, Payment
 from utils.auth import (
     role_required,
@@ -45,7 +46,14 @@ def get_paginated_list(model, serializer, current_user):
         except:
             pass
 
-    pagination = query.order_by(model.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    pagination = (
+        query.options(
+            joinedload(model.office)
+        )
+        .order_by(model.created_at.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+
     
     return jsonify({
         'items': [serializer(item) for item in pagination.items],
@@ -148,6 +156,19 @@ def get_payment_categories(current_user):
 @role_required(['Super_admin', 'management', 'shop_manager'])
 def get_purchases(current_user): return get_paginated_list(Purchase, serialize_purchase, current_user)
 
+from models.finance import DailyReport
+def get_daily_balance(office_id):
+    daily_total = (
+        DailyReport.query
+        .with_entities(DailyReport.daily_total)
+        .filter(
+            DailyReport.office_id == office_id,
+            DailyReport.date == datetime.date.today()
+        )
+        .first()
+    )    
+    return daily_total.daily_total if daily_total else 0.0
+
 @finance_bp.route('/purchases', methods=['POST'])
 @role_required(['Super_admin', 'management', 'shop_manager'])
 def create_purchase(current_user):
@@ -155,6 +176,11 @@ def create_purchase(current_user):
     office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
     if not validate_office_id(office_id):
         return jsonify({'message': 'A valid office_id is required'}), 400
+
+    daily_total = get_daily_balance(office_id)
+
+    if daily_total < data['amount']:
+        return jsonify({'message': 'Insufficient balance'}), 400
 
     new_purchase = Purchase(
         amount=data['amount'], description=data.get('description'), 
@@ -225,6 +251,11 @@ def create_payment(current_user):
     office_id = get_effective_write_office_id(current_user, data.get('office_id') if data else None)
     if not validate_office_id(office_id):
         return jsonify({'message': 'A valid office_id is required'}), 400
+
+    daily_total = get_daily_balance(office_id)
+
+    if daily_total < data['amount']:
+        return jsonify({'message': 'Insufficient balance'}), 400
 
     new_payment = Payment(
         amount=data['amount'], description=data.get('description'),

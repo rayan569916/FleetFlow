@@ -31,13 +31,21 @@ export class TrendsChartComponent implements OnInit {
     if (this.authService.hasFullAccess()) {
       this.loadOffices();
     }
+    this.selectedOfficeId.set(
+      parseInt(localStorage.getItem('user_office_id') ?? '0')
+    );
     this.loadDailyReport();
   }
 
   loadOffices(): void {
     this.authService.getOffices().subscribe({
       next: (data) => {
-        this.offices.set(data);
+        if (this.authService.isManagement()) {
+          this.offices.set(
+            data.filter(c=>c.office_type !=='central'));
+        } else {
+          this.offices.set(data);
+        }
       },
       error: (err) => console.error('Error loading offices:', err)
     });

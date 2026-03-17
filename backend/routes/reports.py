@@ -51,7 +51,7 @@ def get_report_data_for_date(target_date, office_id):
     }
 
 @reports_bp.route('/daily', methods=['GET'])
-@role_required(['Super_admin', 'management', 'shop_manager'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def get_daily_report(current_user):
     date_str = request.args.get('date')
     requested_office_id = request.args.get('office_id', type=int)
@@ -69,36 +69,65 @@ def get_daily_report(current_user):
         return jsonify({'message': 'User is not assigned to an office'}), 403
 
     # If aggregated view (office_id is None), we sum up per office
-    if office_id is None:
-        from models.user import Office
-        all_offices = Office.query.all()
-        aggregated_data = {
-            'total_invoice_grand': 0.0,
-            'bank_transfer_swipe_sum': 0.0,
-            'total_payment': 0.0,
-            'total_purchase': 0.0,
-            'total_receipt': 0.0,
-            'previous_total': 0.0,
-            'daily_total': 0.0
-        }
-        for off in all_offices:
-            # For each office, ensure reports exist up to target_date
-            off_report = ensure_office_report(target_date, off.id)
-            aggregated_data['total_invoice_grand'] += off_report.total_invoice_grand
-            aggregated_data['bank_transfer_swipe_sum'] += off_report.bank_transfer_swipe_sum
-            aggregated_data['total_payment'] += off_report.total_payment
-            aggregated_data['total_purchase'] += off_report.total_purchase
-            aggregated_data['total_receipt'] += off_report.total_receipt
-            aggregated_data['previous_total'] += off_report.previous_total
-            aggregated_data['daily_total'] += off_report.daily_total
+    # if office_id is None:
+    #     from models.user import Office
+    #     all_offices = Office.query.all()
+    #     aggregated_data = {
+    #         'total_invoice_grand': 0.0,
+    #         'bank_transfer_swipe_sum': 0.0,
+    #         'total_payment': 0.0,
+    #         'total_purchase': 0.0,
+    #         'total_receipt': 0.0,
+    #         'previous_total': 0.0,
+    #         'daily_total': 0.0
+    #     }
+    #     for off in all_offices:
+    #         # For each office, ensure reports exist up to target_date
+    #         off_report = ensure_office_report(target_date, off.id)
+    #         aggregated_data['total_invoice_grand'] += off_report.total_invoice_grand
+    #         aggregated_data['bank_transfer_swipe_sum'] += off_report.bank_transfer_swipe_sum
+    #         aggregated_data['total_payment'] += off_report.total_payment
+    #         aggregated_data['total_purchase'] += off_report.total_purchase
+    #         aggregated_data['total_receipt'] += off_report.total_receipt
+    #         aggregated_data['previous_total'] += off_report.previous_total
+    #         aggregated_data['daily_total'] += off_report.daily_total
         
-        aggregated_data['date'] = str(target_date)
-        aggregated_data['office_id'] = None
-        aggregated_data['is_stored'] = False # Aggregated is virtual
-        return jsonify(aggregated_data)
+    #     aggregated_data['date'] = str(target_date)
+    #     aggregated_data['office_id'] = None
+    #     aggregated_data['is_stored'] = False # Aggregated is virtual
+    #     return jsonify(aggregated_data)
 
     # Single office view
     report = ensure_office_report(target_date, office_id)
+    if not report:
+        # Fallback for edge cases where ensure_office_report cannot persist/fetch a row.
+        metrics = get_report_data_for_date(target_date, office_id)
+        latest_report = DailyReport.query.filter(
+            DailyReport.office_id == office_id,
+            DailyReport.date < target_date
+        ).order_by(DailyReport.date.desc()).first()
+        previous_total = latest_report.daily_total if latest_report else 0.0
+        daily_total = (
+            metrics['total_invoice_grand']
+            - metrics['bank_transfer_swipe_sum']
+            - metrics['total_payment']
+            - metrics['total_purchase']
+            + metrics['total_receipt']
+            + previous_total
+        )
+        return jsonify({
+            'date': str(target_date),
+            'office_id': office_id,
+            'total_invoice_grand': metrics['total_invoice_grand'],
+            'bank_transfer_swipe_sum': metrics['bank_transfer_swipe_sum'],
+            'total_payment': metrics['total_payment'],
+            'total_purchase': metrics['total_purchase'],
+            'total_receipt': metrics['total_receipt'],
+            'previous_total': previous_total,
+            'daily_total': daily_total,
+            'is_stored': False
+        })
+
     return jsonify({
         'date': str(report.date),
         'office_id': report.office_id,

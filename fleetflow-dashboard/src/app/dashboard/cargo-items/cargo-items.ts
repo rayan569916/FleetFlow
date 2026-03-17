@@ -17,7 +17,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 export class CargoItems implements OnInit {
   private cargoItemsService = inject(CargoItemsService);
   private toastService = inject(ToastService);
-    private confirmationService = inject(ConfirmationDialogService);
+  private confirmationService = inject(ConfirmationDialogService);
 
   cargoItemList = signal<CargoItem[]>([]);
   categories = signal<ItemCategory[]>([]);
@@ -25,6 +25,7 @@ export class CargoItems implements OnInit {
   isFormOpen = signal(false);
   editingId = signal<number | null>(null);
   isLoading = signal(false);
+  isSubmitting = signal(false);
   private initialFormModel = '';
 
   // Search and Filter
@@ -133,14 +134,21 @@ export class CargoItems implements OnInit {
 
     if (!confirmed) return;
 
+    if (this.isSubmitting()) return;
+    this.isSubmitting.set(true);
+
     if (isEditing) {
       this.cargoItemsService.updateCargoItem(this.editingId()!, this.formModel).subscribe({
         next: () => {
           this.toastService.show('Item updated successfully', 'success');
           this.loadItems();
           this.closeForm(true);
+          this.isSubmitting.set(false);
         },
-        error: () => this.toastService.show('Failed to update item', 'error')
+        error: () => {
+          this.toastService.show('Failed to update item', 'error');
+          this.isSubmitting.set(false);
+        }
       });
     } else {
       this.cargoItemsService.createCargoItem(this.formModel).subscribe({
@@ -148,8 +156,12 @@ export class CargoItems implements OnInit {
           this.toastService.show('Item created successfully', 'success');
           this.loadItems();
           this.closeForm(true);
+          this.isSubmitting.set(false);
         },
-        error: () => this.toastService.show('Failed to create item', 'error')
+        error: () => {
+          this.toastService.show('Failed to create item', 'error');
+          this.isSubmitting.set(false);
+        }
       });
     }
   }

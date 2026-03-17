@@ -1,0 +1,496 @@
+<div class="space-y-6 animate-in fade-in duration-500 pb-16">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-yellow-300 tracking-tight">Balance Sharing</h1>
+      <p class="text-slate-100 mt-1">
+        Share daily balances with related offices (Driver > Shop > Management > Central).
+      </p>
+    </div>
+    <button
+      (click)="openShareModal()"
+      class="px-4 py-2 bg-[var(--brand-yellow-500)] text-slate-900 rounded-xl font-medium hover:bg-yellow-400 transition shadow-lg shadow-yellow-200/50 flex items-center gap-2"
+    >
+      <span>Share Balance</span>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6" [class.lg:grid-cols-2]="!authService.isDriver()">
+    @if (!authService.isDriver()) {
+      <!-- Incoming Requests -->
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full"
+      >
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+          <h2 class="text-lg font-bold text-slate-800">Incoming Requests</h2>
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+            {{ incomingRequests().length }} Total
+          </span>
+        </div>
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left table-fixed">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-100">
+                <th
+                  class="w-1/3 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+                >
+                  From
+                </th>
+                <th
+                  class="w-1/4 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+                >
+                  Amount
+                </th>
+                <th
+                  class="w-1/4 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+                >
+                  Status
+                </th>
+                <th
+                  class="w-1/4 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+                >
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (req of incomingRequests(); track req.id) {
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-6 py-3 text-center align-middle text-sm text-slate-800 font-medium">
+                    {{ req.sender_office_name }}
+                    <div class="text-[10px] text-slate-500">{{ req.date }}</div>
+                  </td>
+                  <td class="px-6 py-3 text-center align-middle text-sm text-slate-800 font-bold">
+                    {{ req.amount | number: '1.2-2' }}
+                  </td>
+                  <td class="px-6 py-3 text-center align-middle">
+                    <span
+                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize {{
+                        getStatusClass(req.status)
+                      }}"
+                    >
+                      {{ req.status }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-3 text-center align-middle">
+                    <div class="flex flex-col gap-1 items-center" *ngIf="req.status === 'waiting'">
+                      <button
+                        class="text-xs bg-green-100 text-green-700 font-bold px-2 py-1 rounded hover:bg-green-200 w-full disabled:opacity-50"
+                        (click)="acceptRequest(req)"
+                        [disabled]="isSubmitting()"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        class="text-xs bg-red-100 text-red-700 font-bold px-2 py-1 rounded hover:bg-red-200 w-full"
+                        (click)="openCancelModal(req)"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <div
+                      class="text-xs text-slate-500 text-center"
+                      *ngIf="req.status !== 'waiting' && req.comment"
+                    >
+                      <span class="block text-[10px] uppercase font-bold text-slate-400"
+                        >Comment</span
+                      >
+                      <span
+                        class="block mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap break-words rounded-md bg-slate-50 px-2 py-1 text-left leading-5"
+                        [title]="req.comment"
+                        >{{ req.comment }}</span
+                      >
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">
+                    No incoming requests found.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="md:hidden divide-y divide-slate-100">
+          @for (req of incomingRequests(); track req.id) {
+            <div class="p-4 space-y-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider"
+                    >From</span
+                  >
+                  <p class="text-sm font-semibold text-slate-800 break-words">
+                    {{ req.sender_office_name }}
+                  </p>
+                  <p class="text-[11px] text-slate-500">{{ req.date }}</p>
+                </div>
+                <span
+                  class="shrink-0 px-2 py-1 rounded-full text-[11px] font-semibold capitalize {{
+                    getStatusClass(req.status)
+                  }}"
+                >
+                  {{ req.status }}
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-500 font-medium">Amount</span>
+                <span class="text-slate-800 font-bold">{{ req.amount | number: '1.2-2' }}</span>
+              </div>
+
+              <div
+                *ngIf="req.status !== 'waiting' && req.comment"
+                class="rounded-lg bg-slate-50 border border-slate-200 p-3"
+              >
+                <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider"
+                  >Comment</span
+                >
+                <p
+                  class="text-sm text-slate-700 leading-5 whitespace-pre-wrap break-words max-h-28 overflow-y-auto pr-1"
+                >
+                  {{ req.comment }}
+                </p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2" *ngIf="req.status === 'waiting'">
+                <button
+                  class="text-xs bg-green-100 text-green-700 font-bold px-3 py-2 rounded-lg hover:bg-green-200 disabled:opacity-50"
+                  (click)="acceptRequest(req)"
+                  [disabled]="isSubmitting()"
+                >
+                  Accept
+                </button>
+                <button
+                  class="text-xs bg-red-100 text-red-700 font-bold px-3 py-2 rounded-lg hover:bg-red-200"
+                  (click)="openCancelModal(req)"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div class="px-6 py-8 text-center text-sm text-slate-500">
+              No incoming requests found.
+            </div>
+          }
+        </div>
+        <div
+          class="px-4 sm:px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between mt-auto"
+        >
+          <span class="text-xs text-slate-500 font-medium">
+            Showing {{ incomingRequests().length }} of {{ totalItemsRecieved }} results (Page
+            {{ currentPageRecieved }} of {{ totalPagesRecieved }})
+          </span>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button
+              (click)="prevPageBalanceShareRecieved()"
+              [disabled]="currentPageRecieved === 1"
+              class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
+            >
+              <!--  -->
+              Previous
+            </button>
+            <button
+              (click)="nextPageBalanceShareRecieved()"
+              [disabled]="currentPageRecieved === totalPagesRecieved || totalPagesRecieved === 0"
+              class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
+            >
+              <!--  -->
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Outgoing Requests -->
+    <div
+      class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full"
+    >
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h2 class="text-lg font-bold text-slate-800">Outgoing Requests</h2>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+          {{ outgoingRequests().length }} Total
+        </span>
+      </div>
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left table-fixed">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100">
+              <th
+                class="w-1/3 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              >
+                To
+              </th>
+              <th
+                class="w-1/4 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              >
+                Amount
+              </th>
+              <th
+                class="w-1/4 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              >
+                Status
+              </th>
+              <th
+                class="w-1/4 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              >
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (req of outgoingRequests(); track req.id) {
+              <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-6 py-3 text-center align-middle text-sm text-slate-800 font-medium">
+                  {{ req.receiver_office_name }}
+                  <div class="text-[10px] text-slate-500">{{ req.date }}</div>
+                </td>
+                <td class="px-6 py-3 text-center align-middle text-sm text-slate-800 font-bold">
+                  {{ req.amount | number: '1.2-2' }}
+                </td>
+                <td class="px-6 py-3 text-center align-middle">
+                  <span
+                    class="px-2 py-1 rounded-full text-xs font-semibold capitalize {{
+                      getStatusClass(req.status)
+                    }}"
+                  >
+                    {{ req.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-3 text-center align-middle">
+                  <div class="flex flex-col gap-1 items-center" *ngIf="req.status === 'waiting'">
+                    <button
+                      class="text-xs bg-red-100 text-red-700 font-bold px-2 py-1 rounded-lg hover:bg-red-200 w-full sm:w-auto"
+                      (click)="openCancelModal(req)"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <div
+                    class="text-xs text-slate-500 text-center"
+                    *ngIf="req.status !== 'waiting' && req.comment"
+                  >
+                    <span class="block text-[10px] uppercase font-bold text-slate-400"
+                      >Comment</span
+                    >
+                    <span
+                      class="block mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap break-words rounded-md bg-slate-50 px-2 py-1 text-left leading-5"
+                      [title]="req.comment"
+                      >{{ req.comment }}</span
+                    >
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">
+                  No outgoing requests found.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="md:hidden divide-y divide-slate-100">
+        @for (req of outgoingRequests(); track req.id) {
+          <div class="p-4 space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider"
+                  >To</span
+                >
+                <p class="text-sm font-semibold text-slate-800 break-words">
+                  {{ req.receiver_office_name }}
+                </p>
+                <p class="text-[11px] text-slate-500">{{ req.date }}</p>
+              </div>
+              <span
+                class="shrink-0 px-2 py-1 rounded-full text-[11px] font-semibold capitalize {{
+                  getStatusClass(req.status)
+                }}"
+              >
+                {{ req.status }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-slate-500 font-medium">Amount</span>
+              <span class="text-slate-800 font-bold">{{ req.amount | number: '1.2-2' }}</span>
+            </div>
+
+            <div
+              *ngIf="req.status !== 'waiting' && req.comment"
+              class="rounded-lg bg-slate-50 border border-slate-200 p-3"
+            >
+              <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider"
+                >Comment</span
+              >
+              <p
+                class="text-sm text-slate-700 leading-5 whitespace-pre-wrap break-words max-h-28 overflow-y-auto pr-1"
+              >
+                {{ req.comment }}
+              </p>
+            </div>
+
+            <div *ngIf="req.status === 'waiting'">
+              <button
+                class="w-full text-xs bg-red-100 text-red-700 font-bold px-3 py-2 rounded-lg hover:bg-red-200"
+                (click)="openCancelModal(req)"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="px-6 py-8 text-center text-sm text-slate-500">
+            No outgoing requests found.
+          </div>
+        }
+      </div>
+      <div
+        class="px-4 sm:px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between mt-auto"
+      >
+        <span class="text-xs text-slate-500 font-medium">
+          Showing {{ outgoingRequests().length }} of {{ totalItems }} results (Page
+          {{ currentPageRecieved }} of {{ totalPages }})
+        </span>
+        <div class="flex gap-2 w-full sm:w-auto">
+                      <button
+              (click)="prevPageBalanceShareRequests()"
+              [disabled]="currentPage === 1"
+              class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
+            >
+              <!--  -->
+              Previous
+            </button>
+            <button
+              (click)="nextPageBalanceShareRequests()"
+              [disabled]="currentPage === totalPages || totalPages === 0"
+              class="px-3 py-1 border border-slate-200 rounded-lg bg-white text-xs text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50 flex-1 sm:flex-none"
+            >
+              <!--  -->
+              Next
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div
+  *ngIf="isShareModalOpen()"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+>
+  <form
+    [formGroup]="balanceShareForm"
+    (ngSubmit)="submitShare()"
+    class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 animate-in zoom-in-95 duration-200"
+  >
+    <div class="p-6 border-b border-slate-100 text-center">
+      <h3 class="text-lg font-bold text-slate-800">Share Balance</h3>
+      <p class="text-sm text-slate-500">Select upper office to share balance with</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">Receiver Office</label>
+        <select
+          formControlName="receiver_office_id"
+          [class.error]="
+            balanceShareForm.get('receiver_office_id')?.invalid &&
+            balanceShareForm.get('receiver_office_id')?.touched
+          "
+          class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white cursor-pointer hover:border-indigo-300 transition-colors"
+        >
+          <option value="">-- Select Office --</option>
+          @for (off of offices(); track off.id) {
+            <option *ngIf="off.id !== currentUserOfficeId()" [value]="off.id">
+              {{ off.name }} ({{ off.office_type || 'Unknown Type' }})
+            </option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">Amount</label>
+        <input
+          type="number"
+          formControlName="amount"
+          [class.error]="
+            balanceShareForm.get('amount')?.invalid && balanceShareForm.get('amount')?.touched
+          "
+          class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm hover:border-indigo-300 transition-colors"
+          placeholder="0.00"
+        />
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-2">
+      <button
+        (click)="closeShareModal()"
+        class="px-6 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="isSubmitting()"
+        class="px-6 py-2.5 text-sm font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2"
+      >
+        <span
+          *ngIf="isSubmitting()"
+          class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+        {{ isSubmitting() ? 'Submitting...' : 'Request Share' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Cancel Modal -->
+<div
+  *ngIf="isCancelModalOpen()"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+>
+  <form
+    [formGroup]="cancelForm"
+    (ngSubmit)="submitCancel()"
+    class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 animate-in zoom-in-95 duration-200"
+  >
+    <div class="p-6 border-b border-slate-100 text-center">
+      <h3 class="text-lg font-bold text-red-600">Cancel Request</h3>
+      <p class="text-sm text-slate-500">Provide a comment explaining the cancellation</p>
+    </div>
+    <div class="p-6">
+      <label class="block text-sm font-semibold text-slate-700 mb-1">Comment (Required)</label>
+      <textarea
+        formControlName="comment"
+        rows="3"
+        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm hover:border-red-300 transition-colors"
+        [class.error]="cancelForm.get('comment')?.invalid && cancelForm.get('comment')?.touched"
+        placeholder="Reason for cancellation..."
+      ></textarea>
+    </div>
+    <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-2">
+      <button
+        (click)="closeCancelModal()"
+        class="px-6 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors"
+      >
+        Go Back
+      </button>
+      <button
+        type="submit"
+        [disabled]="isSubmitting()"
+        class="px-6 py-2.5 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
+      >
+        <span
+          *ngIf="isSubmitting()"
+          class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+        {{ isSubmitting() ? 'Cancelling...' : 'Confirm Cancel' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<app-mobile-nav *ngIf="authService.currentUserRole() === 'driver'"></app-mobile-nav>

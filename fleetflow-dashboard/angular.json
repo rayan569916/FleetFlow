@@ -23,7 +23,8 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/custom-sw.js"
             ],
             "styles": [
               "src/styles.css"
@@ -56,7 +57,7 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "serviceWorker": false
+              "serviceWorker": "ngsw-config.json"
             }
           },
           "defaultConfiguration": "production"

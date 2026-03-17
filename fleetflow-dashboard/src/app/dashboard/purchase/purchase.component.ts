@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { Category } from '../../core/models/dashboard.models';
 import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 import { UiStateService } from '../../services/ui-state.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-purchase',
@@ -20,11 +21,13 @@ export class PurchaseComponent implements OnInit {
   dashboardDataService = inject(DashboardDataService);
   private confirmationService = inject(ConfirmationDialogService);
   private uiStateService = inject(UiStateService);
+  private toastService = inject(ToastService);
 
   purchases = signal<any[]>([]);
   categories = signal<Category[]>([]);
   showForm = signal(false);
   editingItem = signal<any | null>(null);
+  isSubmitting = signal(false);
 
   // Pagination & Filtering Signals
   searchTerm = signal('');
@@ -157,6 +160,9 @@ export class PurchaseComponent implements OnInit {
 
       if (!confirmed) return;
 
+      if (this.isSubmitting()) return;
+      this.isSubmitting.set(true);
+
       const request = isEdit 
         ? this.dashboardDataService.updatePurchase(this.editingItem().id, this.purchaseForm.value)
         : this.dashboardDataService.createPurchase(this.purchaseForm.value);
@@ -165,8 +171,18 @@ export class PurchaseComponent implements OnInit {
         next: () => {
           this.fetchData();
           this.toggleForm(true);
+          this.toastService.show(isEdit ? 'Purchase updated successfully' : 'Purchase recorded successfully','success');
+          this.isSubmitting.set(false);
         },
-        error: (err: any) => console.error(`Failed to ${isEdit ? 'update' : 'create'} purchase`, err)
+        error: (err: any) => {
+          if (err.status === 400) {
+            this.toastService.show(err.error.message,'error');
+          } else {
+            this.toastService.show(`Failed to ${isEdit ? 'update' : 'create'} purchase`,'error');
+          }
+          console.error(`Failed to ${isEdit ? 'update' : 'create'} purchase`, err);
+          this.isSubmitting.set(false);
+        }
       });
     }
   }

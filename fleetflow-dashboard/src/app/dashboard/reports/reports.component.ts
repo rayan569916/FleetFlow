@@ -40,7 +40,7 @@ export class ReportsComponent implements OnInit {
   
   // New Filters and State
   reportType = signal<'daily-list' | 'invoices' | 'payments' | 'purchases' | 'receipts'>('daily-list');
-  startDate = signal<string>(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  startDate = signal<string>(new Date().toISOString().split('T')[0]);
   endDate = signal<string>(new Date().toISOString().split('T')[0]);
   selectedOfficeId = signal<number | undefined>(undefined);
   selectedCategoryId = signal<number | undefined>(undefined);
@@ -79,7 +79,13 @@ export class ReportsComponent implements OnInit {
 
   fetchOffices() {
     this.authService.getOffices().subscribe({
-      next: (data) => this.offices.set(data),
+      next: (data) => {
+      if (this.authService.isManagement()){
+        this.offices.set(data.filter(c=>c.office_type !== 'central'));
+      } else {
+        this.offices.set(data);
+      }
+      },
       error: (err) => console.error('Failed to fetch offices', err)
     });
   }

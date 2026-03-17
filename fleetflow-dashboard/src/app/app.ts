@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { ConfirmationDialogComponent } from './shared/components/confirmation-dialog/confirmation-dialog.component';
+import { PushNotificationService } from './services/push.notification.service';
 
 @Component({
   selector: 'app-root',
@@ -11,8 +12,13 @@ import { ConfirmationDialogComponent } from './shared/components/confirmation-di
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class App {
+export class App implements OnInit {
   private router = inject(Router);
+  private pushService = inject(PushNotificationService);
+
+  ngOnInit() {
+    this.pushService.subscribe();
+  }
 
   @HostListener('input', ['$event'])
   onInput(event: any) {

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from extensions import db
-from models.unit_price import Unit_price, Country
+from models.unit_price import Unit_price, Country, City
 from utils.auth import role_required
 
 unit_price_bp = Blueprint('unit_price', __name__)
@@ -30,6 +30,26 @@ def list_countries(current_user):
     try:
         countries = Country.query.all()
         return jsonify([country.name for country in countries])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@unit_price_bp.route('/cities', methods=['GET'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
+def list_cities(current_user):
+    try:
+        country_name = request.args.get('country')
+        query = request.args.get('q', '')
+
+        city_query = City.query
+        
+        if country_name:
+            city_query = city_query.join(Country).filter(Country.name.ilike(country_name))
+        
+        if query:
+            city_query = city_query.filter(City.name.ilike(f'%{query}%'))
+        
+        cities = city_query.limit(50).all()
+        return jsonify([city.name for city in cities])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
