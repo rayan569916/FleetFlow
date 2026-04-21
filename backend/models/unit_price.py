@@ -5,6 +5,14 @@ class Country(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
 
+class Postal_code(db.Model):
+    __tablename__= 'postal_code'
+    id = db.Column(db.Integer, primary_key=True)
+    statename = db.Column(db.String(100), nullable=False)
+    district = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    pincode = db.Column(db.Integer, nullable=False)
+
 class City(db.Model):
     __tablename__ = 'city'
     id = db.Column(db.Integer, primary_key=True)

@@ -33,7 +33,7 @@ def get_report_data_for_date(target_date, office_id):
     bank_transfer_swipe_sum_query = db.session.query(func.sum(InvoiceAmountDetail.grand_total)).\
         join(InvoiceHeader).\
         filter(InvoiceHeader.date == target_date).\
-        filter(func.lower(InvoiceHeader.mode_of_payment).in_(['bank_transfer', 'swipe', 'bank transfer', 'direct bank transfer', 'direct_bank_transfer']))
+        filter(func.lower(InvoiceHeader.mode_of_payment).in_(['bank_transfer', 'swipe', 'bank transfer', 'direct bank transfer', 'direct_bank_transfer', 'Direct Bank Transfer'.lower()]))
     if office_id is not None:
         bank_transfer_swipe_sum_query = bank_transfer_swipe_sum_query.filter(InvoiceHeader.office_id == office_id)
     bank_transfer_swipe_sum = bank_transfer_swipe_sum_query.scalar() or 0.0

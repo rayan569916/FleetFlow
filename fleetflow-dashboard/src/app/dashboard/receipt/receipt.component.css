@@ -1,0 +1,63 @@
+
+/* Floating Input Modernization */
+.floating-group {
+  position: relative;
+  width: 100%;
+}
+
+.floating-input {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent white to blend with section yellow */
+  border: 1px solid rgba(242, 210, 27, 0.35); /* Brand Yellow Border */
+  border-radius: 0.75rem; /* rounded-xl */
+  padding: 1.25rem 0.75rem 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #0f172a; /* text-slate-900 */
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.floating-input:focus,
+.sender-code-lookup [tabindex="0"]:focus,
+.consignee-code-lookup [tabindex="0"]:focus,
+.consignee-country-lookup [tabindex="0"]:focus,
+.mode-of-delivery-lookup [tabindex="0"]:focus,
+.mode-of-payment-lookup [tabindex="0"]:focus {
+  border-color: var(--brand-purple-600); /* purple */
+  box-shadow: 0 0 0 2px rgba(124, 28, 154, 0.25);
+  outline: none;
+}
+
+/* Ensure containers have higher z-index when focused to show dropdowns clearly */
+.sender-code-lookup:focus-within,
+.consignee-code-lookup:focus-within,
+.consignee-country-lookup:focus-within,
+.sender-city-autocomplete:focus-within,
+.consignee-city-autocomplete:focus-within,
+.mode-of-delivery-lookup:focus-within,
+.mode-of-payment-lookup:focus-within,
+.item-autocomplete-input:focus-within {
+  z-index: 50;
+}
+
+.floating-label {
+  position: absolute;
+  left: 0.75rem;
+  top: 1rem;
+  color: #94a3b8; /* text-slate-400 */
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.floating-input:focus + .floating-label,
+.floating-input:not(:placeholder-shown) + .floating-label {
+  top: 0.35rem;
+  font-size: 0.75rem;
+  color: #a16207; /* Changed from indigo to yellow-800 */
+  font-weight: 600;
+}
+
+.floating-input.error {
+  border-color: #ef4444;
+}

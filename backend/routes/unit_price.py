@@ -1,13 +1,13 @@
 from flask import Blueprint, request, jsonify
 from extensions import db
-from models.unit_price import Unit_price, Country, City
+from models.unit_price import Unit_price, Country, City, Postal_code
 from utils.auth import role_required
+
 
 unit_price_bp = Blueprint('unit_price', __name__)
 
 @unit_price_bp.route('/list_unit_price', methods=['GET'])
-@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
-def list_unit_price(current_user):
+def list_unit_price():
     try:
         unit_prices = Unit_price.query.all()
         output = []
@@ -39,16 +39,21 @@ def list_cities(current_user):
     try:
         country_name = request.args.get('country')
         query = request.args.get('q', '')
+        include_id = request.args.get('include_id', 'false').lower() == 'true'
 
         city_query = City.query
         
         if country_name:
             city_query = city_query.join(Country).filter(Country.name.ilike(country_name))
+        else:
+            city_query = city_query.join(Country)
         
         if query:
             city_query = city_query.filter(City.name.ilike(f'%{query}%'))
         
         cities = city_query.limit(50).all()
+        if include_id:
+            return jsonify([{'id': city.id, 'name': city.name} for city in cities])
         return jsonify([city.name for city in cities])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -158,3 +163,33 @@ def update_unit_price(current_user, id):
         db.session.rollback()
         return jsonify({'message': 'Failed to update unit price', 'error': str(e)}), 500
 
+@unit_price_bp.route('/postal_codes', methods=['GET'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
+def list_postal_codes(current_user):
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify([])
+        
+        # Search by pincode or name (city/district/state)
+        postal_query = Postal_code.query.filter(
+            (db.cast(Postal_code.pincode, db.String).ilike(f'%{query}%')) |
+            (Postal_code.name.ilike(f'%{query}%')) |
+            (Postal_code.district.ilike(f'%{query}%')) |
+            (Postal_code.statename.ilike(f'%{query}%'))
+        )
+        
+        results = postal_query.limit(20).all()
+        output = []
+        for p in results:
+            output.append({
+                'id': p.id,
+                'pincode': str(p.pincode),
+                'name': p.name,
+                'district': p.district,
+                'statename': p.statename,
+                'label': f"{p.pincode} - {p.name}, {p.district},{p.statename}"
+            })
+        return jsonify(output)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

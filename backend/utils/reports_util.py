@@ -6,6 +6,7 @@ from sqlalchemy import func
 
 NON_CASH_PAYMENT_MODES = [
     # Canonical values used by the frontend
+    'Direct Bank Transfer',
     'bank_transfer',
     'swipe',
     # Common legacy/human-readable variants (keep lower-case here)

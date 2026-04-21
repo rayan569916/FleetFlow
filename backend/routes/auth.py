@@ -163,8 +163,8 @@ def delete_user(current_user, user_id):
 @auth_bp.route('/offices', methods=['GET'])
 @role_required(['Super_admin', 'super_admin', 'management', 'driver', 'shop_manager'])
 def get_offices(current_user):
-    offices = Office.query.order_by(Office.name.asc()).all()
-    return jsonify([{'id': o.id, 'name': o.name, 'location': o.location, 'office_type': o.office_type} for o in offices])
+    offices = Office.query.options(db.joinedload(Office.city)).order_by(Office.name.asc()).all()
+    return jsonify([{'id': o.id, 'name': o.name, 'location_id': o.location_id, 'location': o.city.name if o.city else o.location, 'office_type': o.office_type} for o in offices])
 
 @auth_bp.route('/offices_for_balance_sharing', methods=['GET'])
 @role_required(['Super_admin', 'super_admin', 'management', 'driver', 'shop_manager'])
@@ -183,7 +183,7 @@ def get_offices_for_balance_sharing(current_user):
         office_list = []
 
     return jsonify([
-        {'id': o.id, 'name': o.name, 'location': o.location, 'office_type': o.office_type}
+        {'id': o.id, 'name': o.name, 'location_id': o.location_id, 'location': o.city.name if o.city else o.location, 'office_type': o.office_type}
         for o in office_list
     ])
 
@@ -194,6 +194,7 @@ def create_office(current_user):
 
     name = (data.get('name') or '').strip()
     location = (data.get('location') or '').strip()
+    location_id = data.get('location_id')
 
     office_type = data.get('office_type')
 
@@ -204,13 +205,13 @@ def create_office(current_user):
     if existing_office:
         return jsonify({'message': 'Office name already exists'}), 400
 
-    office = Office(name=name, location=location or None, office_type=office_type or None)
+    office = Office(name=name, location=location or None, location_id=location_id or None, office_type=office_type or None)
     db.session.add(office)
     db.session.commit()
 
     return jsonify({
         'message': 'Office created successfully!',
-        'office': {'id': office.id, 'name': office.name, 'location': office.location, 'office_type': office.office_type}
+        'office': {'id': office.id, 'name': office.name, 'location_id': office.location_id, 'location': office.city.name if office.city else office.location, 'office_type': office.office_type}
     }), 201
 
 @auth_bp.route('/offices/<int:office_id>', methods=['PUT'])
@@ -221,6 +222,7 @@ def update_office(current_user, office_id):
 
     name = (data.get('name') or '').strip()
     location = (data.get('location') or '').strip()
+    location_id = data.get('location_id')
 
     if not name:
         return jsonify({'message': 'Office name is required'}), 400
@@ -230,14 +232,17 @@ def update_office(current_user, office_id):
         return jsonify({'message': 'Office name already exists'}), 400
 
     office.name = name
-    office.location = location or None
+    if 'location' in data or 'location_id' in data:
+        office.location = location or None
+        office.location_id = location_id or None
+        
     if 'office_type' in data:
         office.office_type = data.get('office_type') or None
     db.session.commit()
 
     return jsonify({
         'message': 'Office updated successfully!',
-        'office': {'id': office.id, 'name': office.name, 'location': office.location, 'office_type': office.office_type}
+        'office': {'id': office.id, 'name': office.name, 'location_id': office.location_id, 'location': office.city.name if office.city else office.location, 'office_type': office.office_type}
     })
 
 @auth_bp.route('/save-subscription', methods=['POST'])

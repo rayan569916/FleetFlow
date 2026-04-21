@@ -39,6 +39,18 @@ export class UnitPriceService {
         });
     }
 
+    getCitiesWithIds(country: string, query: string = ''): Observable<{id: number, name: string}[]> {
+        return this.http.get<{id: number, name: string}[]>(`${this.apiUrl}/cities`, {
+            params: { country, q: query, include_id: 'true' }
+        });
+    }
+
+    getPostalCodes(query: string = ''): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/postal_codes`, {
+            params: { q: query }
+        });
+    }
+
     createUnitPrice(unitPriceData: Omit<UnitPriceInterface, 'id'>): Observable<any> {
         return this.http.post<any>(this.apiUrl, unitPriceData);
     }

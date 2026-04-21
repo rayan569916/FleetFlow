@@ -1,232 +1,492 @@
 <div class="space-y-6">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div>
-      <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Shipments</h1>
-      <p class="text-slate-500 mt-1">Manage and track all shipments.</p>
-    </div>
-    <button
-      (click)="toggleCreateMode()"
-      class="px-4 py-2 bg-yellow-400 text-slate-900 rounded-xl font-medium hover:bg-yellow-500 transition shadow-lg shadow-yellow-200/50 flex items-center gap-2"
-    >
-      <svg
-        *ngIf="!isCreating"
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-4 w-4"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      <span *ngIf="!isCreating">New Shipment</span>
-      <span *ngIf="isCreating">Cancel</span>
-    </button>
+  <div>
+    <h1 class="text-3xl font-bold text-[var(--brand-yellow-400)] tracking-tight">
+      Shipment Groups
+    </h1>
+    <p class="text-[var(--brand-yellow-400)] mt-1">
+      Move grouped invoices through stops, assign container details, and add manual tracking
+      updates.
+    </p>
   </div>
 
-  <!-- CREATE/EDIT FORM -->
-  <div
-    *ngIf="isCreating"
-    class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-fade-in"
-  >
-    <h2 class="text-xl font-bold text-slate-800 mb-4">
-      {{ isEditing ? 'Edit Shipment' : 'Create New Shipment' }}
-    </h2>
-    <form [formGroup]="shipmentForm" (ngSubmit)="onSubmit()">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Tracking Number</label>
-          <input
-            formControlName="tracking_number"
-            type="text"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            placeholder="e.g. TRK-123456"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Carrier</label>
-          <input
-            formControlName="carrier"
-            type="text"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            placeholder="e.g. DHL, FedEx"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Origin</label>
-          <input
-            formControlName="origin"
-            type="text"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            placeholder="Origin City/Country"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Destination</label>
-          <input
-            formControlName="destination"
-            type="text"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            placeholder="Destination City/Country"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Estimated Delivery</label>
-          <input
-            formControlName="estimated_delivery"
-            type="date"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
-          <select
-            formControlName="status"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-          >
-            <option value="Pending">Pending</option>
-            <option value="In Transit">In Transit</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-      <div class="mt-6 flex justify-end">
-        <button
-          type="submit"
-          [disabled]="shipmentForm.invalid || isLoading"
-          class="px-6 py-2 bg-yellow-400 text-slate-900 rounded-lg font-medium hover:bg-yellow-500 transition disabled:opacity-50"
-        >
-          {{ isLoading ? 'Saving...' : isEditing ? 'Update Shipment' : 'Create Shipment' }}
-        </button>
-      </div>
-    </form>
-  </div>
-
-  <!-- LIST VIEW -->
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full table-fixed text-left">
-        <thead>
-          <tr class="bg-slate-50 border-b border-slate-200">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
             <th
-              class="w-1/6 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              class="px-4 py-3 text-left text-xs font-medium text-[var(--brand-purple-900)] uppercase tracking-wider"
             >
-              Tracking #
+              Group Code
             </th>
             <th
-              class="w-1/6 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              class="px-4 py-3 text-left text-xs font-medium text-[var(--brand-purple-900)] uppercase tracking-wider"
             >
-              Carrier
+              Origin
             </th>
             <th
-              class="w-1/4 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              class="px-4 py-3 text-left text-xs font-medium text-[var(--brand-purple-900)] uppercase tracking-wider"
             >
-              Origin / Dest
+              Destination
             </th>
             <th
-              class="w-1/6 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              class="px-4 py-3 text-left text-xs font-medium text-[var(--brand-purple-900)] uppercase tracking-wider"
             >
-              Est. Delivery
+              Loading Date
             </th>
-            <th
-              class="w-1/6 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+            <!-- <th
+              class="px-4 py-3 text-left text-xs font-medium text-[var(--brand-purple-900)] uppercase tracking-wider"
             >
               Status
-            </th>
+            </th> -->
             <th
-              class="w-1/12 px-6 py-4 text-sm font-bold text-slate-500 uppercase tracking-wider text-center align-middle"
+              class="px-4 py-3 text-right text-xs font-medium text-[var(--brand-purple-900)] uppercase tracking-wider"
             >
               Actions
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
-          @for (item of shipments(); track item.id) {
-            <tr class="hover:bg-slate-50/50 transition-colors">
-              <td
-                class="px-6 py-4 text-center align-middle font-mono text-sm text-slate-700 truncate"
-              >
-                {{ item.tracking_number }}
+        <tbody class="bg-white divide-y divide-slate-200 text-sm">
+          @for (group of groups(); track group.id) {
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-4 py-3 font-semibold text-[var(--brand-purple-600)]">
+                {{ group.group_code }}
               </td>
-              <td class="px-6 py-4 text-center align-middle text-sm text-slate-600 truncate">
-                {{ item.carrier || '-' }}
-              </td>
-              <td class="px-6 py-4 align-middle text-sm text-slate-600">
-                <div class="flex flex-col items-center gap-0.5">
-                  <span class="truncate max-w-full"
-                    ><span class="text-xs text-slate-400">From:</span>
-                    {{ item.origin || 'N/A' }}</span
-                  >
-                  <span class="truncate max-w-full"
-                    ><span class="text-xs text-slate-400">To:</span>
-                    {{ item.destination || 'N/A' }}</span
-                  >
-                </div>
-              </td>
-              <td class="px-6 py-4 text-center align-middle text-sm text-slate-600">
-                {{ item.estimated_delivery | date: 'mediumDate' }}
-              </td>
-              <td class="px-6 py-4 text-center align-middle">
+              <td class="px-4 py-3 text-slate-600">{{ group.origin }}</td>
+              <td class="px-4 py-3 text-slate-600">{{ group.destination }}</td>
+              <td class="px-4 py-3 text-slate-500">{{ group.loading_date | date }}</td>
+              <!-- <td class="px-4 py-3">
                 <span
-                  class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold capitalize"
-                  [ngClass]="{
-                    'bg-yellow-100/50 text-yellow-700': item.status === 'In Transit',
-                    'bg-green-100 text-green-700': item.status === 'Delivered',
-                    'bg-yellow-100 text-yellow-700': item.status === 'Pending',
-                    'bg-red-100 text-red-700': item.status === 'Cancelled',
-                  }"
+                  class="status-pill"
+                  [ngClass]="
+                    group.status === 'Created' || group.status === 'Unknown'
+                      ? 'status-neutral'
+                      : 'status-active'
+                  "
                 >
-                  {{ item.status }}
+                  {{ group.status }}
                 </span>
-              </td>
-              <td class="px-6 py-4 text-center align-middle">
-                <div class="flex items-center justify-center gap-2">
+              </td> -->
+              <td class="px-4 py-3 text-right">
+                <div class="flex justify-end gap-2 flex-wrap">
                   <button
-                    (click)="editShipment(item)"
-                    class="p-2 text-slate-400 hover:text-yellow-600 transition-colors hover:bg-yellow-50 rounded-lg"
-                    title="Edit"
+                    (click)="viewGroupDetails(group)"
+                    class="text-slate-700 hover:text-slate-900 text-xs border border-slate-200 rounded px-2 py-1 transition-all"
                   >
-                    <svg
-                      class="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+                    Details
                   </button>
                   <button
-                    (click)="deleteShipment(item.id!)"
-                    class="p-2 text-slate-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
-                    title="Delete"
+                    (click)="exportToExcel(group)"
+                    class="text-indigo-700 hover:text-indigo-900 text-xs border border-indigo-200 rounded px-2 py-1 transition-all"
                   >
-                    <svg
-                      class="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M3 6h18"></path>
-                      <path
-                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                      ></path>
-                    </svg>
+                    Export Excel
                   </button>
+                  <!-- <button
+                    (click)="openContainerModal(group)"
+                    class="text-green-700 hover:text-green-900 text-xs border border-green-200 rounded px-2 py-1 transition-all"
+                  >
+                    Assign Container
+                  </button>
+                  <button
+                    (click)="openManualEventModal(group)"
+                    class="text-blue-700 hover:text-blue-900 text-xs border border-blue-200 rounded px-2 py-1 transition-all"
+                  >
+                    Update Stops
+                  </button> -->
                 </div>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="py-20 text-center text-slate-400">No shipments found.</td>
+              <td colspan="6" class="px-6 py-10 text-center text-slate-500">
+                @if (loading()) {
+                  Loading shipment groups...
+                } @else {
+                  No shipment groups found.
+                }
+              </td>
             </tr>
           }
         </tbody>
       </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div
+        class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex items-center justify-between sm:px-6"
+      >
+        <p class="text-sm text-slate-700">
+          Page <span class="font-medium">{{ currentPage() }}</span> of
+          <span class="font-medium">{{ totalPages() }}</span>
+        </p>
+        <div class="flex gap-2">
+          <button
+            (click)="loadGroups(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="px-3 py-1 text-sm rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-all"
+          >
+            Previous
+          </button>
+          <button
+            (click)="loadGroups(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()"
+            class="px-3 py-1 text-sm rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-all"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (selectedGroupDetails(); as detail) {
+    <div
+      class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 animate-in slide-in-from-bottom-4 duration-300"
+    >
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-lg font-bold text-slate-800 mb-1">
+            Group Invoices: {{ detail.group_code }}
+          </h3>
+          <p class="text-sm text-slate-500">
+            {{ detail.origin }} &rarr; {{ detail.destination }} |
+            <span class="font-medium text-indigo-600">{{ detail.status }}</span>
+          </p>
+        </div>
+        <button
+          (click)="selectedGroupDetails.set(null)"
+          class="text-slate-400 hover:text-slate-600"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto rounded-lg border border-slate-100">
+        <table class="min-w-full divide-y divide-slate-100 text-sm">
+          <thead class="bg-slate-50">
+            <tr>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Tracking
+              </th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Destination
+              </th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Cartons
+              </th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Weight
+              </th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 bg-white">
+            @for (inv of detail.invoices; track inv.tracking_number) {
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-2 font-mono text-slate-800">{{ inv.tracking_number }}</td>
+                <td class="px-4 py-2 text-slate-600">{{ inv.destination }}</td>
+                <td class="px-4 py-2 text-slate-600">{{ inv.total_cartons }}</td>
+                <td class="px-4 py-2 text-slate-600">{{ inv.total_weight }}</td>
+                <td class="px-4 py-2">
+                  <span
+                    class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium"
+                  >
+                    {{ inv.status }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">
+                  No invoices mapped to this group yet.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Move Group Modal -->
+  <div *ngIf="isMoveModalOpen" class="modal-backdrop" (click)="closeMoveModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <form [formGroup]="moveForm" (ngSubmit)="submitMove()">
+        <div class="bg-white px-6 pt-5 pb-4">
+          <h3 class="text-lg leading-6 font-bold text-slate-900 mb-1">Move Group</h3>
+          <p class="text-sm text-slate-500 mb-4">Group: {{ selectedGroup?.group_code }}</p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Next Stop / Hub</label>
+              <input
+                type="text"
+                formControlName="next_location_name"
+                placeholder="e.g. Riyadh Central Shop"
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+            <div>
+              <div class="floating-group move-status-lookup relative">
+                <div
+                  (click)="toggleLookup('moveStatus')"
+                  (blur)="onLookupBlur('moveStatus')"
+                  (keydown)="onLookupKeydown('moveStatus', $event)"
+                  tabindex="0"
+                  class="floating-input text-black cursor-pointer flex justify-between items-center"
+                  [class.error]="moveForm.get('status')?.invalid && moveForm.get('status')?.touched"
+                >
+                  <span>{{ moveForm.get('status')?.value || 'Select Status' }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
+                <label class="floating-label" [class.!text-red-500]="moveForm.get('status')?.invalid && moveForm.get('status')?.touched">
+                  @if (moveForm.get('status')?.invalid && moveForm.get('status')?.touched) {
+                    Select status
+                  } @else {
+                    Update Status To *
+                  }
+                </label>
+
+                <div
+                  *ngIf="showMoveStatusDropdown"
+                  class="absolute z-[100] left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let status of getFilteredStatusOptions(); let i = index"
+                    (click)="selectLookupOption('moveStatus', status)"
+                    (mouseenter)="activeMoveStatusIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeMoveStatusIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium text-black">{{ status }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Tracking Notes</label>
+              <input
+                type="text"
+                formControlName="notes"
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Effective Date</label>
+              <input
+                type="date"
+                formControlName="loading_date"
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeMoveModal()" class="btn-secondary">Cancel</button>
+          <button type="submit" [disabled]="submitting || moveForm.invalid" class="btn-primary">
+            Record Movement
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assign Container Modal -->
+  <div *ngIf="isContainerModalOpen" class="modal-backdrop" (click)="closeContainerModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <form [formGroup]="containerForm" (ngSubmit)="submitContainer()">
+        <div class="bg-white px-6 pt-5 pb-4">
+          <h3 class="text-lg leading-6 font-bold text-slate-900 mb-1">Assign Container</h3>
+          <p class="text-sm text-slate-500 mb-4">Group: {{ selectedGroup?.group_code }}</p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Container Number</label>
+              <input
+                type="text"
+                formControlName="container_number"
+                placeholder="Enter number..."
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Assignment Date</label>
+              <input
+                type="date"
+                formControlName="container_date"
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+            <div>
+              <div class="floating-group container-status-lookup relative">
+                <div
+                  (click)="toggleLookup('containerStatus')"
+                  (blur)="onLookupBlur('containerStatus')"
+                  (keydown)="onLookupKeydown('containerStatus', $event)"
+                  tabindex="0"
+                  class="floating-input text-black cursor-pointer flex justify-between items-center"
+                  [class.error]="containerForm.get('status')?.invalid && containerForm.get('status')?.touched"
+                >
+                  <span>{{ containerForm.get('status')?.value || 'Select Status' }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
+                <label class="floating-label" [class.!text-red-500]="containerForm.get('status')?.invalid && containerForm.get('status')?.touched">
+                  @if (containerForm.get('status')?.invalid && containerForm.get('status')?.touched) {
+                    Select status
+                  } @else {
+                    Update Status To *
+                  }
+                </label>
+
+                <div
+                  *ngIf="showContainerStatusDropdown"
+                  class="absolute z-[100] left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let status of getFilteredStatusOptions(); let i = index"
+                    (click)="selectLookupOption('containerStatus', status)"
+                    (mouseenter)="activeContainerStatusIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeContainerStatusIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium text-black">{{ status }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeContainerModal()" class="btn-secondary">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="submitting || containerForm.invalid"
+            class="btn-primary"
+          >
+            Save Container
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual Event Modal -->
+  <div *ngIf="isManualEventModalOpen" class="modal-backdrop" (click)="closeManualEventModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <form [formGroup]="manualEventForm" (ngSubmit)="submitManualEvent()">
+        <div class="bg-white px-6 pt-5 pb-4">
+          <h3 class="text-lg leading-6 font-bold text-slate-900 mb-1">Custom Tracking Update</h3>
+          <p class="text-sm text-slate-500 mb-4">Group: {{ selectedGroup?.group_code }}</p>
+
+          <div class="space-y-4">
+            <div>
+              <div class="floating-group manual-status-lookup relative">
+                <div
+                  (click)="toggleLookup('manualStatus')"
+                  (blur)="onLookupBlur('manualStatus')"
+                  (keydown)="onLookupKeydown('manualStatus', $event)"
+                  tabindex="0"
+                  class="floating-input mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm text-black cursor-pointer flex justify-between items-center"
+                  [class.error]="manualEventForm.get('status')?.invalid && manualEventForm.get('status')?.touched"
+                >
+                  <span>{{ manualEventForm.get('status')?.value || 'Select Status' }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
+                <label class="floating-label" [class.!text-red-500]="manualEventForm.get('status')?.invalid && manualEventForm.get('status')?.touched">
+                  @if (manualEventForm.get('status')?.invalid && manualEventForm.get('status')?.touched) {
+                    Select status
+                  } @else {
+                    Status *
+                  }
+                </label>
+
+                <div
+                  *ngIf="showManualStatusDropdown"
+                  class="absolute z-[100] left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let status of getFilteredStatusOptions(); let i = index"
+                    (click)="selectLookupOption('manualStatus', status)"
+                    (mouseenter)="activeManualStatusIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeManualStatusIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium text-black">{{ status }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="floating-group">
+              <input
+                type="text"
+                formControlName="location_name"
+                placeholder=" "
+                class="floating-input mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+              <label class="floating-label">Location</label>
+            </div>
+            <div class="floating-group">
+              <textarea
+                formControlName="notes"
+                rows="3"
+                class="floating-input mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+                placeholder=" "
+              ></textarea>
+              <label class="floating-label">Detailed Notes</label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeManualEventModal()" class="btn-secondary">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="submitting || manualEventForm.invalid"
+            class="btn-primary"
+          >
+            Add Update
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

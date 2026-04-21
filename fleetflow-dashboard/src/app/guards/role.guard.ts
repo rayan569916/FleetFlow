@@ -14,7 +14,10 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  if (allowedRoles.length === 0 || allowedRoles.includes(currentRole)) {
+  const isAllowed = allowedRoles.length === 0 || 
+                    allowedRoles.some(role => role.toLowerCase() === currentRole.toLowerCase());
+
+  if (isAllowed) {
     return true;
   }
 

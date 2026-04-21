@@ -74,6 +74,10 @@ export class HeaderComponent implements OnInit {
     return mappings[cleanPath] || cleanPath.charAt(0).toUpperCase() + cleanPath.slice(1);
   }
 
+  onToggleNotifications(): void {
+    this.router.navigate(['/dashboard/cargo_requests']);
+  }
+
   onToggleSidebar(): void {
     this.menuClicked.emit();
   }

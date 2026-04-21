@@ -1,49 +1,79 @@
 <div class="max-w-3xl mx-auto space-y-8">
   <div class="text-center space-y-2">
-    <h1 class="text-3xl font-bold text-slate-800">Track Your Shipment</h1>
-    <p class="text-slate-500">Enter your tracking number to get real-time updates.</p>
+    <h1 class="text-3xl font-bold text-[var(--brand-yellow-400)]">Track Your Shipment</h1>
+    <p class="text-[var(--brand-yellow-400)]">
+      Enter your tracking number to get real-time updates.
+    </p>
   </div>
 
   <!-- Search Box -->
-  <div
-    class="bg-white p-2 rounded-2xl shadow-lg shadow-indigo-100 border border-slate-200 flex items-center gap-2 max-w-xl mx-auto"
-  >
-    <div class="pl-4 text-slate-400">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+  <div class="relative max-w-xl mx-auto">
+    <div class="bg-white p-2 rounded-2xl shadow-lg border border-slate-200 flex items-center gap-2">
+      <div class="pl-4 text-slate-400">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+      <div class="floating-group flex-1">
+        <input
+          type="text"
+          [ngModel]="trackingNumber()"
+          (input)="onTrackingNumber($event)"
+          (keyup.enter)="trackShipment()"
+          (keydown)="onPhoneSearchKeydown($event)"
+          placeholder=" "
+          class="floating-input w-full py-3 bg-transparent border-none focus:ring-0 text-lg font-medium text-slate-800"
         />
-      </svg>
+        <label class="floating-label">Tracking Number</label>
+      </div>
+      <button
+        (click)="trackShipment()"
+        [disabled]="loading()"
+        class="bg-yellow-400 hover:bg-yellow-500 text-slate-900 px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-70"
+      >
+        {{ loading() ? 'Tracking...' : 'Track' }}
+      </button>
     </div>
-    <input
-      type="text"
-      [(ngModel)]="trackingNumber"
-      (keyup.enter)="trackShipment()"
-      placeholder="e.g. TRK-987654321"
-      class="flex-1 py-3 bg-transparent border-none focus:ring-0 text-lg font-medium placeholder-slate-400 text-slate-800"
-    />
-    <button
-      (click)="trackShipment()"
-      [disabled]="loading()"
-      class="bg-yellow-400 hover:bg-yellow-500 text-slate-900 px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+
+    <!-- Autocomplete -->
+    <div
+      *ngIf="showTrackingDropdown && FoundTrackingNumbers.length > 0"
+      class="absolute z-[100] left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2"
     >
-      {{ loading() ? 'Tracking...' : 'Track' }}
-    </button>
+      <div
+        *ngFor="let tracking of FoundTrackingNumbers; let i = index"
+        (click)="selectTracking(tracking.tracking_id)"
+        (mouseenter)="activeTrackingSuggestionIndex = i"
+        class="px-4 py-3 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+        [ngClass]="
+          i === activeTrackingSuggestionIndex ? 'bg-indigo-50 text-indigo-900' : 'hover:bg-slate-50'
+        "
+      >
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-bold text-slate-800">{{ tracking.tracking_id }}</span>
+          <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold"
+            >MATCH</span
+          >
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Error Message -->
   @if (error()) {
     <div
-      class="bg-red-50 text-red-600 p-4 rounded-xl text-center font-medium border border-red-100 animate-in fade-in slide-in-from-top-2"
+      class="bg-red-50 text-red-600 p-4 rounded-xl text-center font-medium border border-red-100"
     >
       {{ error() }}
     </div>
@@ -64,148 +94,595 @@
           </div>
           <div class="text-2xl font-black text-slate-800">{{ data.tracking_number }}</div>
         </div>
-        <div
-          class="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm"
-        >
-          <span class="relative flex h-3 w-3">
-            <span
-              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
-            ></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-          </span>
-          <span class="font-bold text-green-700">{{ data.status }}</span>
-        </div>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="p-8 pb-0">
-        <div class="relative">
-          <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-slate-100">
-            <div
-              class="shadow-none flex flex-col text-center whitespace-nowrap text-slate-900 justify-center bg-yellow-400 transition-all duration-1000"
-              style="width: 65%"
-            ></div>
-          </div>
+        <div class="flex flex-col items-center gap-3">
           <div
-            class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider"
+            class="px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center gap-2"
           >
-            <div class="text-yellow-600">Picked Up</div>
-            <div class="text-yellow-600">In Transit</div>
-            <div class="">Out for Delivery</div>
-            <div class="">Delivered</div>
+            <span class="relative flex h-3 w-3">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+              ></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span class="status-pill status-active">{{ data.status }}</span>
+          </div>
+          <div class="gap-2 flex">
+            <div class="flex grid grid-cols-3 gap-1">
+              <!-- Update Status -->
+              <button
+                (click)="openManualEventModal()"
+                class="group flex items-center justify-center w-auto bg-gradient-to-r from-[var(--brand-purple-600)] to-[var(--brand-purple-700)] hover:from-[var(--brand-purple-700)] hover:to-[var(--brand-purple-800)] text-[var(--brand-yellow-400)] text-xs font-semibold px-3 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 ease-in-out active:scale-[0.97]"
+              >
+                <!-- <span>📍</span> -->
+                Update Status
+              </button>
+
+              @if(shipment()?.mode_of_delivery!= 'air'){
+
+              <!-- Container -->
+              <button
+                (click)="openContainerModal()"
+                class="group flex items-center justify-center w-auto bg-gradient-to-r from-[var(--brand-yellow-400)] to-[var(--brand-yellow-500)] hover:from-[var(--brand-yellow-500)] hover:to-[var(--brand-yellow-600)] text-[var(--brand-purple-900)] text-xs font-semibold px-3 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 ease-in-out active:scale-[0.97]"
+              >
+                <!-- <span>📦</span> -->
+                Container
+              </button>
+                
+              }
+              <!-- External Link -->
+              <button
+                (click)="openExternalTrackingModal()"
+                class="group flex items-center justify-center w-auto bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 ease-in-out active:scale-[0.97]"
+              >
+                <!-- <span>🔗</span> -->
+                Link
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Details Grid -->
-      <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="space-y-6">
+      <div class="p-8">
+        <h3 class="text-xl font-bold text-slate-800 mb-8">Tracking History</h3>
+
+        <div class="relative max-w-2xl mx-auto">
+          <!-- Line -->
+          <div
+            class="absolute left-6 top-2 bottom-2 w-0.5 bg-gradient-to-b from-indigo-400 via-indigo-200 to-slate-200"
+          ></div>
+
+          <div
+            *ngFor="let event of data.timeline; let i = index"
+            class="mb-10 ml-16 relative group"
+          >
+            <!-- Icon -->
+            <div
+              class="absolute -left-[52px] flex items-center justify-center w-10 h-10 rounded-2xl bg-white shadow-md border-2 z-10"
+              [ngClass]="{
+                'border-blue-400 text-blue-500': event.color === 'blue',
+                'border-amber-400 text-amber-500': event.color === 'amber',
+                'border-green-400 text-green-500': event.color === 'green',
+                'border-indigo-400 text-indigo-500': event.color === 'indigo',
+                'border-red-400 text-red-500': event.color === 'red',
+                'border-slate-300 text-slate-400': event.color === 'slate',
+              }"
+            >
+              <ng-container [ngSwitch]="event.icon">
+                <svg
+                  *ngSwitchCase="'package-plus'"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'truck'"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'check-circle'"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'warehouse'"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'alert-circle'"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchDefault
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </ng-container>
+            </div>
+
+            <!-- Card -->
+            <div
+              class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm transition-all duration-300"
+              [ngClass]="{
+                'border-indigo-300 shadow-indigo-100 bg-gradient-to-br from-white to-indigo-50/20':
+                  event.isLast,
+              }"
+            >
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="text-base font-bold text-slate-800">{{ event.status }}</h4>
+                <span class="text-[10px] font-bold text-slate-400">{{
+                  event.timestamp | date: 'MMM d, h:mm a'
+                }}</span>
+              </div>
+              <div class="flex items-center gap-2 mb-2 text-slate-600">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                </svg>
+                <span class="text-sm font-medium">{{ event.location }}</span>
+              </div>
+              <p
+                *ngIf="event.description"
+                class="text-sm text-slate-500 italic bg-slate-50 p-2 rounded-lg border border-slate-100"
+              >
+                {{ event.description }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="p-8 border-t border-slate-100 space-y-6">
+        <!-- Route & Shipment Info -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Origin -->
           <div class="flex items-start gap-4">
-            <div class="mt-1 p-2 bg-yellow-50 text-yellow-700 rounded-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+            <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                 />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
               </svg>
             </div>
             <div>
-              <div class="text-sm font-bold text-slate-400">Origin</div>
-              <div class="text-lg font-bold text-slate-800">{{ data.origin }}</div>
-              <div class="text-sm text-slate-500">Warehouse A-12</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Origin
+              </div>
+              <div class="text-base font-bold text-slate-800">{{ data.origin }}</div>
             </div>
           </div>
+
           <!-- Destination -->
           <div class="flex items-start gap-4">
-            <div class="mt-1 p-2 bg-yellow-50 text-yellow-700 rounded-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+            <div class="p-2 bg-amber-50 text-amber-600 rounded-lg shrink-0">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 11V3"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 21h14"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
             </div>
             <div>
-              <div class="text-sm font-bold text-slate-400">Destination</div>
-              <div class="text-lg font-bold text-slate-800">{{ data.destination }}</div>
-              <div class="text-sm text-slate-500">Distribution Center</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Destination
+              </div>
+              <div class="text-base font-bold text-slate-800">{{ data.destination }}</div>
             </div>
           </div>
         </div>
 
-        <div class="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-          <div class="flex justify-between items-center">
-            <span class="text-slate-500 font-medium">Estimated Delivery</span>
-            <span class="font-bold text-slate-800">{{
-              data.estimated_delivery || 'Calculating...'
-            }}</span>
+        <!-- Shipment Meta Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Current Location -->
+          <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-1">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Current Location
+            </div>
+            <div class="text-sm font-semibold text-slate-800">
+              {{ data.current_location || '—' }}
+            </div>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-500 font-medium">Current Location</span>
-            <span class="font-bold text-slate-800">{{ data.current_location }}</span>
+
+          <!-- Mode of Delivery -->
+          <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-1">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Mode of Delivery
+            </div>
+            <div class="text-sm font-semibold text-slate-800">
+              {{ data.mode_of_delivery || '—' }}
+            </div>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-500 font-medium">Service Type</span>
-            <span class="font-bold text-slate-800">Standard Freight</span>
+
+          <!-- Sender -->
+          <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-1">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sender</div>
+            <div class="text-sm font-semibold text-slate-800">{{ data.sender_name || '—' }}</div>
+          </div>
+        </div>
+
+        <!-- Consignee Details -->
+        <div class="bg-indigo-50/40 rounded-2xl border border-indigo-100 p-5">
+          <div class="text-sm font-bold text-indigo-700 mb-4 flex items-center gap-2">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            Consignee Details
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+            <div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Name
+              </div>
+              <div class="text-sm font-semibold text-slate-800">
+                {{ data.consignee_name || '—' }}
+              </div>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Address
+              </div>
+              <div class="text-sm font-semibold text-slate-800">
+                {{ data.consignee_address || '—' }}
+              </div>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                City
+              </div>
+              <div class="text-sm font-semibold text-slate-800">
+                {{ data.consignee_city || '—' }}
+              </div>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Country
+              </div>
+              <div class="text-sm font-semibold text-slate-800">
+                {{ data.consignee_country || '—' }}
+              </div>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Postal Code
+              </div>
+              <div class="text-sm font-semibold text-slate-800">
+                {{ data.consignee_postal_code || '—' }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   }
 
-  <!-- No Reuslts / Initial State Helper -->
-  <div *ngIf="!shipment() && !loading() && !error()" class="text-center py-12">
+  <!-- Initial State -->
+  <div *ngIf="!shipment() && !loading() && !error()" class="text-center py-20">
     <div
-      class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4 text-slate-400"
+      class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white mb-6 text-indigo-400 shadow-sm border border-slate-100"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="h-8 w-8"
-        viewBox="0 0 24 24"
+        class="h-10 w-10"
         fill="none"
+        viewBox="0 0 24 24"
         stroke="currentColor"
-        stroke-width="2"
       >
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
     </div>
-    <h3 class="text-lg font-bold text-slate-800">Enter a Tracking Number</h3>
-    <p class="text-slate-500">Please enter a tracking number above to see shipment details.</p>
+    <h3 class="text-xl font-bold text-slate-800">Ready to Track?</h3>
+    <p class="text-slate-500">Enter a valid tracking ID above to see the journey.</p>
+  </div>
+
+  <!-- External Tracking Modal -->
+  <div
+    *ngIf="isExternalTrackingModalOpen"
+    class="modal-backdrop"
+    (click)="closeExternalTrackingModal()"
+  >
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <form [formGroup]="externalTrackingForm" (ngSubmit)="submitExternalTracking()">
+        <div class="bg-white px-6 pt-5 pb-4">
+          <h3 class="text-lg leading-6 font-bold text-slate-900 mb-1">External Tracking Details</h3>
+          <p class="text-sm text-slate-500 mb-4">Invoice: {{ externalTrackingInvoiceNumber }}</p>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700"
+                >External Tracking Number</label
+              >
+              <input
+                type="text"
+                formControlName="external_tracking_number"
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Tracking Website Link</label>
+              <input
+                type="url"
+                formControlName="external_tracking_link"
+                placeholder="https://..."
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeExternalTrackingModal()" class="btn-secondary">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="submitting || externalTrackingForm.invalid"
+            class="btn-primary"
+          >
+            Save Link
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual Event Modal -->
+  <div *ngIf="isManualEventModalOpen" class="modal-backdrop" (click)="closeManualEventModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <form [formGroup]="manualEventForm" (ngSubmit)="submitManualEvent()">
+        <div class="bg-white px-6 pt-5 pb-4">
+          <h3 class="text-lg leading-6 font-bold text-slate-900 mb-1">Manual Status Update</h3>
+          <p class="text-sm text-slate-500 mb-4">Invoice: {{ manualEventInvoiceNumber }}</p>
+          <div class="space-y-4">
+            <div>
+              <div class="floating-group manual-status-lookup relative">
+                <div
+                  (click)="toggleLookup('manualStatus')"
+                  (blur)="onLookupBlur('manualStatus')"
+                  (keydown)="onLookupKeydown('manualStatus', $event)"
+                  tabindex="0"
+                  class="floating-input mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm text-black cursor-pointer flex justify-between items-center"
+                  [class.error]="
+                    manualEventForm.get('status')?.invalid && manualEventForm.get('status')?.touched
+                  "
+                >
+                  <span>{{ manualEventForm.get('status')?.value || 'Select Status' }}</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                </div>
+                <label
+                  class="floating-label"
+                  [class.!text-red-500]="
+                    manualEventForm.get('status')?.invalid && manualEventForm.get('status')?.touched
+                  "
+                >
+                  @if (
+                    manualEventForm.get('status')?.invalid && manualEventForm.get('status')?.touched
+                  ) {
+                    Select status
+                  } @else {
+                    New Status *
+                  }
+                </label>
+
+                <div
+                  *ngIf="showManualStatusDropdown"
+                  class="absolute z-[100] left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div
+                    *ngFor="let status of getFilteredStatusOptions(); let i = index"
+                    (click)="selectLookupOption('manualStatus', status)"
+                    (mouseenter)="activeManualStatusIndex = i"
+                    class="px-4 py-2 cursor-pointer border-b text-black border-slate-50 last:border-0 transition-colors"
+                    [ngClass]="
+                      i === activeManualStatusIndex
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'hover:bg-yellow-50'
+                    "
+                  >
+                    <span class="text-sm font-medium text-black">{{ status }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="relative">
+              <div class="floating-group">
+                <input
+                  type="text"
+                  formControlName="location_name"
+                  (input)="onLocationInput($event)"
+                  (blur)="onLocationBlur()"
+                  (keydown)="onLocationKeydown($event, 'Manual')"
+                  autocomplete="off"
+                  placeholder=" "
+                  class="floating-input mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+                <label class="floating-label">Location</label>
+              </div>
+
+              @if (isFetchingLocations()) {
+                <div class="absolute right-3 top-[34px]">
+                  <div
+                    class="animate-spin rounded-full h-4 w-4 border-2 border-slate-200 border-t-indigo-600"
+                  ></div>
+                </div>
+              }
+              @if (locationSuggestions().length > 0) {
+                <ul
+                  class="absolute z-[100] w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-60 overflow-y-auto"
+                >
+                  @for (city of locationSuggestions(); track city.id; let i = $index) {
+                    <li
+                      (click)="selectLocation(city, 'Manual')"
+                      (mouseenter)="activeLocationIndex = i"
+                      [ngClass]="
+                        i === activeLocationIndex
+                          ? 'bg-purple-100 text-purple-900'
+                          : 'hover:bg-slate-50'
+                      "
+                      class="px-4 py-2 text-[var(--brand-purple-800)] cursor-pointer text-sm transition-colors"
+                    >
+                      {{ city.name }}
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+            <div>
+              <div class="floating-group">
+                <textarea
+                  formControlName="notes"
+                  rows="3"
+                  class="floating-input mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                ></textarea>
+                <label class="floating-label">Notes (Optional)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeManualEventModal()" class="btn-secondary">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="submitting || manualEventForm.invalid"
+            class="btn-primary"
+          >
+            Save Update
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assign Container Modal (Individual & Bulk) -->
+  <div *ngIf="isContainerModalOpen" class="modal-backdrop" (click)="closeContainerModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <form [formGroup]="containerForm" (ngSubmit)="submitContainer()">
+        <div class="bg-white px-6 pt-5 pb-4">
+          <h3 class="text-lg leading-6 font-bold text-slate-900 mb-1">
+            {{ containerTarget === 'single' ? 'Assign Container' : 'Bulk Assign Container' }}
+          </h3>
+          <p class="text-sm text-slate-500 mb-4">
+            {{
+              containerTarget === 'single'
+                ? 'Invoice: ' + containerTargetInvoice?.invoice_number
+                : selectedInvoiceIds.length + ' invoices selected'
+            }}
+          </p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Container Number</label>
+              <input
+                type="text"
+                formControlName="container_number"
+                placeholder="Enter number..."
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Assignment Date</label>
+              <input
+                type="date"
+                formControlName="container_date"
+                class="mt-1 block w-full py-2 px-3 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeContainerModal()" class="btn-secondary">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="submitting || containerForm.invalid"
+            class="btn-primary"
+          >
+            Save Container
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

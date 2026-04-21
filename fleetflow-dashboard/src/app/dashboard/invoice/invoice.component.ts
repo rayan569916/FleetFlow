@@ -5,7 +5,7 @@ import { finalize, timeout, Observable, Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { InvoiceItem } from '../../core/models/dashboard.models';
 import { modeOfDeliveryOptions, modeOfPaymentOptions } from '../../core/constants/dashboard.constants';
-import { InvoiceService, Invoice } from '../../services/invoice.service';
+import { InvoiceService, Invoice, InvoiceNumber } from '../../services/invoice.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
@@ -58,6 +58,7 @@ export class InvoiceComponent implements OnInit {
   @ViewChild('consigneeMobileInput') consigneeMobileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('consigneeAddressInput') consigneeAddressInput!: ElementRef<HTMLInputElement>;
   @ViewChild('consigneeCityInput') consigneeCityInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('consigneePostalCodeInput') consigneePostalCodeInput!: ElementRef<HTMLInputElement>;
   @ViewChild('senderCodeLookup') senderCodeLookup!: ElementRef<HTMLElement>;
   @ViewChild('consigneeCodeLookup') consigneeCodeLookup!: ElementRef<HTMLElement>;
   @ViewChild('consigneeCountryLookup') consigneeCountryLookup!: ElementRef<HTMLElement>;
@@ -125,6 +126,16 @@ export class InvoiceComponent implements OnInit {
   senderMaxMobileLength = 9;
   consigneeMaxMobileLength = 9;
 
+  // Cargo Request Tracking
+  prefilledCargoRequestId: number | null = null;
+
+  // Postal Code Autocomplete
+  private postalCodeSearchSubject = new Subject<string>();
+  postalCodeSuggestions: any[] = [];
+  showPostalCodeDropdown = false;
+  activePostalCodeIndex = -1;
+  postalCodeDisplayValue = '';
+
   // Pagination Signals
   currentPage = 1;
   pageSize = 10;
@@ -161,7 +172,7 @@ export class InvoiceComponent implements OnInit {
   // Navigation Map
   fieldSequence = [
     'senderName', 'senderCode', 'phone', 'address', 'city', 'zipCode', 'email', 'locationLink',
-    'consigneeName', 'consigneeCode', 'consigneeMobile', 'consigneeAddress', 'consigneeCountry', 'consigneeCity',
+    'consigneeName', 'consigneeCode', 'consigneeMobile', 'consigneeAddress', 'consigneeCountry', 'consigneeCity', 'consigneePostalCode',
     'modeOfDelivery', 'modeOfPayment', 'itemDescription', 'quantity', 'unitWeight', 'addItemButton',
     'totalCartons', 'pricePerKg', 'billCharge', 'discount'
   ];
@@ -181,6 +192,8 @@ export class InvoiceComponent implements OnInit {
     this.currentUserRole = this.authService.currentUserRole();
   }
 
+  isDriver = this.authService.isDriver;
+
   ngOnInit(): void {
     this.initializeForms();
     this.loadInvoices();
@@ -188,6 +201,15 @@ export class InvoiceComponent implements OnInit {
     this.setupCustomerSearch();
     this.setupItemAutocomplete();
     this.setupCityAutocomplete();
+    this.setupPostalCodeAutocomplete();
+
+    const state = window.history.state;
+    if (state && state.cargoRequest) {
+      // Switch view mode immediately
+      this.viewMode = 'create';
+      this.prefillFromCargoRequest(state.cargoRequest);
+      this.cdr.detectChanges();
+    }
 
     // Check for pending edit from Report
     const pendingEdit = this.uiStateService.getPendingEdit();
@@ -196,8 +218,50 @@ export class InvoiceComponent implements OnInit {
     }
   }
 
+  prefillFromCargoRequest(request: any) {
+    this.viewMode = 'create';
+    this.prefilledCargoRequestId = request.id;
+
+    // Clean phone number
+    const cleanPhone = (request.customer_phone || '').replace(/^0+/, '');
+
+    // Generate Location Link
+    let locationLink = '';
+    const hasOrigin = request.pickup_lat && request.pickup_lng;
+    const hasDest = request.dropoff_lat && request.dropoff_lng;
+
+    if (hasOrigin || hasDest) {
+      locationLink = 'https://www.google.com/maps/dir/?api=1';
+      if (hasOrigin) {
+        locationLink += `&origin=${request.pickup_lat},${request.pickup_lng}`;
+        if (request.pickup_place_id) locationLink += `&origin_place_id=${request.pickup_place_id}`;
+      }
+      if (hasDest) {
+        locationLink += `&destination=${request.dropoff_lat},${request.dropoff_lng}`;
+        if (request.dropoff_place_id) locationLink += `&destination_place_id=${request.dropoff_place_id}`;
+      }
+    }
+
+    this.userInfoForm.patchValue({
+      customerName: request.customer_name,
+      email: request.customer_email || '',
+      phone: cleanPhone,
+      address: request.pickup_address,
+      consigneeAddress: request.dropoff_address,
+      locationLink: locationLink
+    });
+
+    // this.itemForm.patchValue({
+    //   description: request.cargo_description,
+    //   quantity: request.number_of_packages || 1,
+    //   unitWeight: request.estimated_weight || null
+    // });
+
+    this.toastService.show('Form prefilled with cargo request data. Please complete missing fields.', 'info');
+  }
+
   @HostListener('window:resize')
-  onResize(){
+  onResize() {
     this.isMobile = window.innerWidth <= 768;
   }
 
@@ -315,6 +379,16 @@ export class InvoiceComponent implements OnInit {
   }
 
   selectCustomer(customer: any): void {
+    const senderCode = customer.senderCountryCode || '+966';
+    const consigneeCode = customer.consigneeCountryCode || '+966';
+
+    // Update max lengths based on country code
+    const senderOption = this.countryCodeOptions.find(o => o.code === senderCode);
+    const consigneeOption = this.countryCodeOptions.find(o => o.code === consigneeCode);
+
+    if (senderOption) this.senderMaxMobileLength = senderOption.phoneLength;
+    if (consigneeOption) this.consigneeMaxMobileLength = consigneeOption.phoneLength;
+
     this.userInfoForm.patchValue({
       customerName: customer.customerName,
       email: customer.email,
@@ -322,14 +396,19 @@ export class InvoiceComponent implements OnInit {
       address: customer.address,
       city: customer.city,
       zipCode: customer.zipCode,
-      senderCountryCode: customer.senderCountryCode || '+966',
+      senderCountryCode: senderCode,
       consigneeName: customer.consigneeName,
-      consigneeCountryCode: customer.consigneeCountryCode || '+966',
+      consigneeCountryCode: consigneeCode,
       consigneeMobile: (customer.consigneeMobile || '').replace(/^0+/, ''),
       consigneeAddress: customer.consigneeAddress,
       consigneeCountry: customer.consigneeCountry,
       consigneeCity: customer.consigneeCity,
     });
+
+    // Refresh validation for phone fields
+    this.userInfoForm.get('phone')?.updateValueAndValidity();
+    this.userInfoForm.get('consigneeMobile')?.updateValueAndValidity();
+
     this.showCustomerDropdown = false;
     this.foundCustomers = [];
     if (this.phoneSearchInput) {
@@ -359,14 +438,21 @@ export class InvoiceComponent implements OnInit {
     this.itemSearchSubject.next(val);
   }
 
-  onItemSearch(event: any): void {
+  onItemInput(event: any): void {
     const search = event.target.value;
     this.itemSearchSubject.next(search);
     // Sync the manual value to the form
     this.itemForm.patchValue({ description: search }, { emitEvent: false });
   }
 
-  onItemDescriptionKeydown(event: KeyboardEvent): void {
+  onItemBlur(): void {
+    setTimeout(() => {
+      this.showItemDropdown = false;
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
+  onItemKeydown(event: KeyboardEvent): void {
     if (!this.showItemDropdown || this.suggestedItems.length === 0) return;
 
     if (event.key === 'ArrowDown') {
@@ -478,7 +564,7 @@ export class InvoiceComponent implements OnInit {
       this.userInfoForm.patchValue({ consigneeCity: city });
       this.showConsigneeCityDropdown = false;
       this.activeConsigneeCitySuggestionIndex = -1;
-      setTimeout(() => this.modeOfDeliveryLookup?.nativeElement?.focus());
+      setTimeout(() => this.consigneePostalCodeInput?.nativeElement?.focus());
     }
     this.cdr.detectChanges();
   }
@@ -562,6 +648,82 @@ export class InvoiceComponent implements OnInit {
     }
   }
 
+  setupPostalCodeAutocomplete(): void {
+    this.postalCodeSearchSubject.pipe(
+      debounceTime(300),
+      switchMap(search => {
+        const country = this.userInfoForm.get('consigneeCountry')?.value || '';
+        if (!country) return of([]);
+        else if (country !== 'India') {
+          return of([]);
+        }
+        return this.unitPriceService.getPostalCodes(search);
+      })
+    ).subscribe(res => {
+      this.postalCodeSuggestions = res || [];
+      this.showPostalCodeDropdown = this.postalCodeSuggestions.length > 0;
+      this.activePostalCodeIndex = this.postalCodeSuggestions.length > 0 ? 0 : -1;
+      this.cdr.detectChanges();
+    });
+  }
+
+  onPostalCodeInput(event: any): void {
+    const val = event.target.value;
+    this.postalCodeDisplayValue = val;
+    this.postalCodeSearchSubject.next(val);
+    // Also update form
+    this.userInfoForm.patchValue({ consigneePostalCode: val }, { emitEvent: false });
+  }
+
+  onPostalCodeFocus(): void {
+    const val = this.userInfoForm.get('consigneePostalCode')?.value || '';
+    this.postalCodeSearchSubject.next(val);
+  }
+
+  onPostalCodeBlur(): void {
+    setTimeout(() => {
+      this.showPostalCodeDropdown = false;
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
+  onPostalCodeKeydown(event: KeyboardEvent): void {
+    if (!this.showPostalCodeDropdown || this.postalCodeSuggestions.length === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.activePostalCodeIndex = (this.activePostalCodeIndex + 1) % this.postalCodeSuggestions.length;
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.activePostalCodeIndex = (this.activePostalCodeIndex - 1 + this.postalCodeSuggestions.length) % this.postalCodeSuggestions.length;
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      const selected = this.postalCodeSuggestions[this.activePostalCodeIndex] || this.postalCodeSuggestions[0];
+      if (selected) {
+        this.selectPostalCode(selected);
+      }
+    } else if (event.key === 'Escape') {
+      this.showPostalCodeDropdown = false;
+    }
+    this.cdr.detectChanges();
+  }
+
+  selectPostalCode(option: any): void {
+    const code = option.pincode || (typeof option === 'string' ? option : '');
+    this.postalCodeDisplayValue = code;
+    this.userInfoForm.patchValue({ consigneePostalCode: code });
+
+    // Auto-fill city if available (backend returns city name as 'name')
+    if (option.name) {
+      this.userInfoForm.patchValue({ consigneeCity: option.name });
+    }
+
+    this.showPostalCodeDropdown = false;
+    this.activePostalCodeIndex = -1;
+    this.cdr.detectChanges();
+    setTimeout(() => this.modeOfDeliveryLookup?.nativeElement?.focus());
+  }
+
 
   onPhoneInput(controlName: 'phone' | 'consigneeMobile', event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -573,6 +735,185 @@ export class InvoiceComponent implements OnInit {
       input.value = value;
     }
     this.userInfoForm.patchValue({ [controlName]: value }, { emitEvent: false });
+  }
+
+  onGeneralKeydown(event: KeyboardEvent, currentField: string): void {
+    if (event.key === 'Enter') {
+      // Prevent form submission
+      const dropdownsOpen = this.showCustomerDropdown || this.showItemDropdown ||
+        this.showSenderCityDropdown || this.showConsigneeCityDropdown ||
+        this.showSenderCodeDropdown || this.showConsigneeCodeDropdown ||
+        this.showConsigneeCountryDropdown || this.showModeOfDeliveryDropdown ||
+        this.showModeOfPaymentDropdown || this.showPostalCodeDropdown;
+
+      if (dropdownsOpen) return;
+
+      event.preventDefault();
+      const currentIndex = this.fieldSequence.indexOf(currentField);
+      if (currentIndex !== -1 && currentIndex < this.fieldSequence.length - 1) {
+        const nextField = this.fieldSequence[currentIndex + 1];
+        this.focusField(nextField);
+      }
+    }
+  }
+
+  onNumberInputKeydown(event: KeyboardEvent): void {
+    // Allow: backspace, delete, tab, escape, enter
+    if ([46, 8, 9, 27, 13].indexOf(event.keyCode) !== -1 ||
+      // Allow: Ctrl+A, Command+A
+      (event.keyCode === 65 && (event.ctrlKey === true || event.metaKey === true)) ||
+      // Allow: home, end, left, right, down, up
+      (event.keyCode >= 35 && event.keyCode <= 40)) {
+      // let it happen, don't do anything
+      return;
+    }
+    // Ensure that it is a number and stop the keypress
+    if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) && (event.keyCode < 96 || event.keyCode > 105)) {
+      event.preventDefault();
+    }
+  }
+
+  private focusField(fieldName: string): void {
+    const elMap: { [key: string]: ElementRef } = {
+      senderName: this.customerNameInput,
+      senderCode: this.senderCodeLookup,
+      phone: this.phoneInput,
+      address: this.addressInput,
+      city: this.senderCityInput,
+      zipCode: this.zipCodeInput,
+      email: this.emailInput,
+      locationLink: this.locationLinkInput,
+      consigneeName: this.consigneeNameInput,
+      consigneeCode: this.consigneeCodeLookup,
+      consigneeMobile: this.consigneeMobileInput,
+      consigneeAddress: this.consigneeAddressInput,
+      consigneeCountry: this.consigneeCountryLookup,
+      consigneeCity: this.consigneeCityInput,
+      consigneePostalCode: this.consigneePostalCodeInput,
+      modeOfDelivery: this.modeOfDeliveryLookup,
+      modeOfPayment: this.modeOfPaymentLookup,
+      itemDescription: this.itemDescriptionInput,
+      quantity: this.quantityInput,
+      unitWeight: this.unitWeightInput,
+      addItemButton: this.addItemButton,
+      totalCartons: this.totalCartonsInput,
+      pricePerKg: this.pricePerKgInput,
+      billCharge: this.billChargeInput,
+      discount: this.discountInput
+    };
+
+    const target = elMap[fieldName];
+    if (target) {
+      if (target.nativeElement.tagName === 'INPUT' || target.nativeElement.tagName === 'BUTTON') {
+        target.nativeElement.focus();
+      } else {
+        target.nativeElement.focus(); // for tabindex=0 divs
+      }
+    }
+  }
+
+  toggleLookup(type: string): void {
+    if (type === 'senderCode') this.showSenderCodeDropdown = !this.showSenderCodeDropdown;
+    if (type === 'consigneeCode') this.showConsigneeCodeDropdown = !this.showConsigneeCodeDropdown;
+    if (type === 'consigneeCountry') this.showConsigneeCountryDropdown = !this.showConsigneeCountryDropdown;
+    if (type === 'modeOfDelivery') this.showModeOfDeliveryDropdown = !this.showModeOfDeliveryDropdown;
+    if (type === 'modeOfPayment') this.showModeOfPaymentDropdown = !this.showModeOfPaymentDropdown;
+    this.cdr.detectChanges();
+  }
+
+  onLookupBlur(type: string): void {
+    setTimeout(() => {
+      if (type === 'senderCode') this.showSenderCodeDropdown = false;
+      if (type === 'consigneeCode') this.showConsigneeCodeDropdown = false;
+      if (type === 'consigneeCountry') this.showConsigneeCountryDropdown = false;
+      if (type === 'modeOfDelivery') this.showModeOfDeliveryDropdown = false;
+      if (type === 'modeOfPayment') this.showModeOfPaymentDropdown = false;
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
+  onLookupKeydown(type: string, event: KeyboardEvent): void {
+    let options: any[] = [];
+    let currentIndex = -1;
+    let showDropdown = false;
+
+    if (type === 'senderCode' || type === 'consigneeCode') {
+      options = [...this.countryCodeOptions];
+      currentIndex = type === 'senderCode' ? this.activeSenderCodeIndex : this.activeConsigneeCodeIndex;
+      showDropdown = type === 'senderCode' ? this.showSenderCodeDropdown : this.showConsigneeCodeDropdown;
+    } else if (type === 'consigneeCountry') {
+      options = [...this.countryOptions];
+      currentIndex = this.activeConsigneeCountryIndex;
+      showDropdown = this.showConsigneeCountryDropdown;
+    } else if (type === 'modeOfDelivery') {
+      options = [...this.modeOfDeliveryOptions];
+      currentIndex = this.activeModeOfDeliveryIndex;
+      showDropdown = this.showModeOfDeliveryDropdown;
+    } else if (type === 'modeOfPayment') {
+      options = [...this.modeOfPaymentOptions];
+      currentIndex = this.activeModeOfPaymentIndex;
+      showDropdown = this.showModeOfPaymentDropdown;
+    }
+
+    if (!showDropdown) {
+      if (event.key === 'Enter' || event.key === 'ArrowDown' || event.key === ' ') {
+        this.toggleLookup(type);
+      }
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      currentIndex = (currentIndex + 1) % options.length;
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      currentIndex = (currentIndex - 1 + options.length) % options.length;
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const selected = options[currentIndex] || options[0];
+      this.selectLookupOption(type, selected);
+      return;
+    } else if (event.key === 'Escape' || event.key === 'Tab') {
+      this.onLookupBlur(type);
+      return;
+    }
+
+    // Update index back
+    if (type === 'senderCode') this.activeSenderCodeIndex = currentIndex;
+    else if (type === 'consigneeCode') this.activeConsigneeCodeIndex = currentIndex;
+    else if (type === 'consigneeCountry') this.activeConsigneeCountryIndex = currentIndex;
+    else if (type === 'modeOfDelivery') this.activeModeOfDeliveryIndex = currentIndex;
+    else if (type === 'modeOfPayment') this.activeModeOfPaymentIndex = currentIndex;
+    this.cdr.detectChanges();
+  }
+
+  selectLookupOption(type: string, option: any): void {
+    if (type === 'senderCode') {
+      this.userInfoForm.patchValue({ senderCountryCode: option.code });
+      this.senderMaxMobileLength = option.phoneLength;
+      this.userInfoForm.get('phone')?.updateValueAndValidity();
+      this.showSenderCodeDropdown = false;
+      this.focusField('phone');
+    } else if (type === 'consigneeCode') {
+      this.userInfoForm.patchValue({ consigneeCountryCode: option.code });
+      this.consigneeMaxMobileLength = option.phoneLength;
+      this.userInfoForm.get('consigneeMobile')?.updateValueAndValidity();
+      this.showConsigneeCodeDropdown = false;
+      this.focusField('consigneeMobile');
+    } else if (type === 'consigneeCountry') {
+      this.userInfoForm.patchValue({ consigneeCountry: option });
+      this.showConsigneeCountryDropdown = false;
+      this.focusField('consigneeCity');
+    } else if (type === 'modeOfDelivery') {
+      this.userInfoForm.patchValue({ modeOfDelivery: option.value });
+      this.showModeOfDeliveryDropdown = false;
+      this.focusField('modeOfPayment');
+    } else if (type === 'modeOfPayment') {
+      this.userInfoForm.patchValue({ modeOfPayment: option.value });
+      this.showModeOfPaymentDropdown = false;
+      this.focusField('itemDescription');
+    }
+    this.cdr.detectChanges();
   }
 
   loadCountries(): void {
@@ -615,7 +956,7 @@ export class InvoiceComponent implements OnInit {
       }]],
       address: ['', [Validators.required, Validators.minLength(5)]],
       city: ['', Validators.required],
-      zipCode: ['', Validators.required],
+      zipCode: [''],
       locationLink: [''],
 
       // Delivery and Payment Details
@@ -631,7 +972,8 @@ export class InvoiceComponent implements OnInit {
       }]],
       consigneeAddress: ['', [Validators.required, Validators.minLength(5)]],
       consigneeCountry: ['', Validators.required],
-      consigneeCity: ['', Validators.required]
+      consigneeCity: ['', Validators.required],
+      consigneePostalCode: ['', Validators.required]
     });
 
     // Item Form
@@ -743,30 +1085,26 @@ export class InvoiceComponent implements OnInit {
     }
   }
 
-  generateTrackingNumber(): string {
-    const prefix = 'TRK';
-    const random = Math.floor(100000 + Math.random() * 900000);
-    const timestamp = Date.now().toString().slice(-4);
-    return `${prefix}-${random}-${timestamp}`;
-  }
-
-  generateInvoiceNumber(): string {
-    const prefix = 'CAP';
-    const random = Math.floor(100000 + Math.random() * 900000);
-    const timestamp = Date.now().toString().slice(-4);
-    return `${prefix}-${random}-${timestamp}`;
-  }
-
   // View Switching
   switchToCreate(): void {
-    this.resetForm();
-    this.isEditMode = false;
-    this.editingInvoiceId = null;
-    this.invoiceNumber = this.generateInvoiceNumber();
-    this.trackingNumber = this.generateTrackingNumber();
-    this.viewMode = 'create';
-    this.errorMessage = null;
-    this.successMessage = null;
+    // Optionally show a loading indicator here
+    this.invoiceService.get_inv_num().subscribe({
+      next: (res: InvoiceNumber) => {
+        this.resetForm();
+        this.isEditMode = false;
+        this.editingInvoiceId = null;
+        this.invoiceNumber = res.invoice_number;
+        this.trackingNumber = res.invoice_number;
+        this.viewMode = 'create';
+        this.errorMessage = null;
+        this.successMessage = null;
+      },
+      error: (err) => {
+        console.error('Error fetching invoice number:', err);
+        // Fallback or error message
+        this.errorMessage = 'Failed to generate invoice number. Please try again.';
+      }
+    });
   }
 
   onEditInvoice(invoice: any): void {
@@ -895,6 +1233,8 @@ export class InvoiceComponent implements OnInit {
         });
         if (!confirmed) return;
       }
+
+      this.resetForm();
     }
 
     this.viewMode = 'list';
@@ -1181,8 +1521,9 @@ export class InvoiceComponent implements OnInit {
       invoice_number: this.invoiceNumber,
       amount: this.grandTotal,
       date: new Date().toISOString().split('T')[0],
-      status: 'Pending',
+      status: 'Awaiting Bank Approval',
       description: description,
+      cargo_request_id: this.prefilledCargoRequestId,
       tracking_number: this.trackingNumber,
       items: this.items.map(i => ({
         description: i.description,
@@ -1208,6 +1549,7 @@ export class InvoiceComponent implements OnInit {
       next: () => {
         this.isSubmitting.set(false);
         this.isLoading = false;
+        this.resetForm();
         this.viewMode = 'list';
         this.toastService.show(`Invoice ${this.isEditMode ? 'updated' : 'created'} successfully!`, 'success');
         this.loadInvoices();
@@ -1449,299 +1791,4 @@ export class InvoiceComponent implements OnInit {
     }, 0);
   }
 
-  // Code and Country Lookups
-  toggleLookup(type: 'senderCode' | 'consigneeCode' | 'consigneeCountry' | 'modeOfDelivery' | 'modeOfPayment'): void {
-    if (type === 'senderCode') {
-      this.showSenderCodeDropdown = !this.showSenderCodeDropdown;
-      if (this.showSenderCodeDropdown) this.activeSenderCodeIndex = 0;
-    } else if (type === 'consigneeCode') {
-      this.showConsigneeCodeDropdown = !this.showConsigneeCodeDropdown;
-      if (this.showConsigneeCodeDropdown) this.activeConsigneeCodeIndex = 0;
-    } else if (type === 'consigneeCountry') {
-      this.showConsigneeCountryDropdown = !this.showConsigneeCountryDropdown;
-      if (this.showConsigneeCountryDropdown) this.activeConsigneeCountryIndex = 0;
-    } else if (type === 'modeOfDelivery') {
-      this.showModeOfDeliveryDropdown = !this.showModeOfDeliveryDropdown;
-      if (this.showModeOfDeliveryDropdown) this.activeModeOfDeliveryIndex = 0;
-    } else if (type === 'modeOfPayment') {
-      this.showModeOfPaymentDropdown = !this.showModeOfPaymentDropdown;
-      if (this.showModeOfPaymentDropdown) this.activeModeOfPaymentIndex = 0;
-    }
-    this.cdr.detectChanges();
-  }
-
-  selectLookupOption(type: 'senderCode' | 'consigneeCode' | 'consigneeCountry' | 'modeOfDelivery' | 'modeOfPayment', option: any): void {
-    if (type === 'senderCode') {
-      this.userInfoForm.patchValue({ senderCountryCode: option.code });
-      this.showSenderCodeDropdown = false;
-      this.maxLength(option.code, 'senderCode');
-      setTimeout(() => this.phoneInput?.nativeElement?.focus());
-    } else if (type === 'consigneeCode') {
-      this.userInfoForm.patchValue({ consigneeCountryCode: option.code });
-      this.showConsigneeCodeDropdown = false;
-      this.maxLength(option.code, 'consigneeCode');
-      setTimeout(() => this.consigneeMobileInput?.nativeElement?.focus());
-    } else if (type === 'consigneeCountry') {
-      this.userInfoForm.patchValue({ consigneeCountry: option });
-      this.showConsigneeCountryDropdown = false;
-      setTimeout(() => {
-        if (this.consigneeCityInput) {
-          this.consigneeCityInput.nativeElement.focus();
-        }
-      });
-    } else if (type === 'modeOfDelivery') {
-      this.userInfoForm.patchValue({ modeOfDelivery: option.value });
-      this.showModeOfDeliveryDropdown = false;
-      setTimeout(() => this.modeOfPaymentLookup?.nativeElement?.focus());
-    } else if (type === 'modeOfPayment') {
-      this.userInfoForm.patchValue({ modeOfPayment: option.value });
-      this.showModeOfPaymentDropdown = false;
-      setTimeout(() => {
-        if (this.itemDescriptionInput) {
-          this.itemDescriptionInput.nativeElement.focus();
-        }
-      });
-    }
-    this.cdr.detectChanges();
-  }
-
-  onLookupKeydown(type: 'senderCode' | 'consigneeCode' | 'consigneeCountry' | 'modeOfDelivery' | 'modeOfPayment', event: KeyboardEvent): void {
-    const isVisible = type === 'senderCode' ? this.showSenderCodeDropdown :
-      type === 'consigneeCode' ? this.showConsigneeCodeDropdown :
-        type === 'consigneeCountry' ? this.showConsigneeCountryDropdown :
-          type === 'modeOfDelivery' ? this.showModeOfDeliveryDropdown :
-            this.showModeOfPaymentDropdown;
-
-    const options = type === 'consigneeCountry' ? this.countryOptions :
-      type === 'modeOfDelivery' ? this.modeOfDeliveryOptions :
-        type === 'modeOfPayment' ? this.modeOfPaymentOptions :
-          this.countryCodeOptions;
-
-    let index = type === 'senderCode' ? this.activeSenderCodeIndex :
-      type === 'consigneeCode' ? this.activeConsigneeCodeIndex :
-        type === 'consigneeCountry' ? this.activeConsigneeCountryIndex :
-          type === 'modeOfDelivery' ? this.activeModeOfDeliveryIndex :
-            this.activeModeOfPaymentIndex;
-
-    if (!isVisible) {
-      if (event.key === 'ArrowDown' || event.key === 'Enter') {
-        this.toggleLookup(type);
-      } else if (event.key.length === 1 && /[a-zA-Z0-9]/.test(event.key)) {
-        // Quick search for character
-        const char = event.key.toLowerCase();
-        const found = options.find((opt: any) => {
-          const label = typeof opt === 'string' ? opt : (opt.label || opt.code || '');
-          return label.toLowerCase().startsWith(char);
-        });
-        if (found) {
-          this.selectLookupOption(type, found);
-          event.preventDefault();
-        }
-      }
-      return;
-    }
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      index = (index + 1) % options.length;
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      index = (index - 1 + options.length) % options.length;
-    } else if (event.key === 'Enter') {
-      event.preventDefault();
-      this.selectLookupOption(type, options[index]);
-      return;
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      if (type === 'senderCode') this.showSenderCodeDropdown = false;
-      else if (type === 'consigneeCode') this.showConsigneeCodeDropdown = false;
-      else if (type === 'consigneeCountry') this.showConsigneeCountryDropdown = false;
-      else if (type === 'modeOfDelivery') this.showModeOfDeliveryDropdown = false;
-      else if (type === 'modeOfPayment') this.showModeOfPaymentDropdown = false;
-    }
-
-    if (type === 'senderCode') this.activeSenderCodeIndex = index;
-    else if (type === 'consigneeCode') this.activeConsigneeCodeIndex = index;
-    else if (type === 'consigneeCountry') this.activeConsigneeCountryIndex = index;
-    else if (type === 'modeOfDelivery') this.activeModeOfDeliveryIndex = index;
-    else if (type === 'modeOfPayment') this.activeModeOfPaymentIndex = index;
-    this.cdr.detectChanges();
-  }
-
-  async canDeactivate(): Promise<boolean> {
-    if (this.viewMode !== 'create') return true;
-
-    const hasUnsavedChanges = this.isEditMode
-      || this.userInfoForm?.dirty
-      || this.itemForm?.dirty
-      || this.financialForm?.dirty
-      || this.chargesForm?.dirty
-      || this.items.length > 0;
-
-    if (!hasUnsavedChanges) return true;
-
-    return this.confirmationService.confirm({
-      title: 'Unsaved Changes',
-      message: 'You have an unsaved invoice. Leave this page and discard changes?',
-      confirmText: 'Leave',
-      cancelText: 'Stay'
-    });
-  }
-
-  maxLength(code: any, type: string) {
-    const country = this.countryCodeOptions.find((c: any) => c.code === code);
-    const length = country?.phoneLength || 9;
-    if (type === 'senderCode') {
-      this.senderMaxMobileLength = length;
-      this.userInfoForm.get('phone')?.updateValueAndValidity();
-    } else if (type === 'consigneeCode') {
-      this.consigneeMaxMobileLength = length;
-      this.userInfoForm.get('consigneeMobile')?.updateValueAndValidity();
-    }
-  }
-
-  onNumberInputKeydown(event: KeyboardEvent): void {
-    const isControlKey = ['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Delete', 'End', 'Home'].includes(event.key);
-    const isNumber = /[0-9]/.test(event.key);
-    const isDecimal = event.key === '.' && !(event.target as HTMLInputElement).value.includes('.');
-
-    if (!isControlKey && !isNumber && !isDecimal) {
-      event.preventDefault();
-    }
-  }
-
-  onGeneralKeydown(event: KeyboardEvent, currentField: string): void {
-    // If it's a lookup field and dropdown is visible, don't intercept navigation
-    const isLookup = ['senderCode', 'consigneeCode', 'consigneeCountry', 'modeOfDelivery', 'modeOfPayment'].includes(currentField);
-    if (isLookup) {
-      const isVisible = currentField === 'senderCode' ? this.showSenderCodeDropdown :
-        currentField === 'consigneeCode' ? this.showConsigneeCodeDropdown :
-          currentField === 'consigneeCountry' ? this.showConsigneeCountryDropdown :
-            currentField === 'modeOfDelivery' ? this.showModeOfDeliveryDropdown :
-              this.showModeOfPaymentDropdown;
-      if (isVisible) return;
-    }
-
-    // Similar for City and Item Autocomplete
-    if (currentField === 'city' && this.showSenderCityDropdown) return;
-    if (currentField === 'consigneeCity' && this.showConsigneeCityDropdown) return;
-    if (currentField === 'itemDescription' && this.showItemDropdown) return;
-
-    if (event.key === 'Enter' || event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
-      const isEnter = event.key === 'Enter';
-      const isRight = event.key === 'ArrowRight';
-      const isLeft = event.key === 'ArrowLeft';
-
-      // For normal inputs, only navigate on Arrow keys if cursor is at bounds OR if it's a lookup div
-      const target = event.target as HTMLInputElement;
-      const isAtStart = target.selectionStart === 0 && target.selectionEnd === 0;
-      const isAtEnd = target.selectionStart === target.value?.length && target.selectionEnd === target.value?.length;
-
-      if (isEnter || (isRight && (isAtEnd || isLookup)) || (isLeft && (isAtStart || isLookup))) {
-        // For the Add button, let the default Enter behavior trigger its own (keydown.enter) handler
-        // which calls addItem(true), refocusing the description automatically.
-        if (currentField === 'addItemButton' && isEnter) return;
-
-        event.preventDefault();
-
-        // Handle Carton Navigation
-        if (currentField === 'pricePerKg' && (isEnter || isRight)) {
-          this.focusField('cartonWeight_0');
-          return;
-        }
-
-        if (currentField === 'billCharge' && isLeft) {
-          const lastIndex = this.cartons.length - 1;
-          this.focusField('cartonPacking_' + lastIndex);
-          return;
-        }
-
-        if (currentField.startsWith('carton')) {
-          const parts = currentField.split('_');
-          const fieldType = parts[0];
-          const index = parseInt(parts[1]);
-
-          if (isEnter || isRight) {
-            if (fieldType === 'cartonWeight') {
-              this.focusField('cartonCustoms_' + index);
-            } else if (fieldType === 'cartonCustoms') {
-              this.focusField('cartonPacking_' + index);
-            } else if (fieldType === 'cartonPacking') {
-              if (index < this.cartons.length - 1) {
-                this.focusField('cartonWeight_' + (index + 1));
-              } else {
-                this.focusField('billCharge');
-              }
-            }
-          } else if (isLeft) {
-            if (fieldType === 'cartonWeight') {
-              if (index > 0) {
-                this.focusField('cartonPacking_' + (index - 1));
-              } else {
-                this.focusField('pricePerKg');
-              }
-            } else if (fieldType === 'cartonCustoms') {
-              this.focusField('cartonWeight_' + index);
-            } else if (fieldType === 'cartonPacking') {
-              this.focusField('cartonCustoms_' + index);
-            }
-          }
-          return;
-        }
-
-        const currentIndex = this.fieldSequence.indexOf(currentField);
-        if (currentIndex === -1) return;
-
-        let nextIndex = currentIndex;
-        if (isEnter || isRight) {
-          nextIndex = (currentIndex + 1) % this.fieldSequence.length;
-        } else if (isLeft) {
-          nextIndex = (currentIndex - 1 + this.fieldSequence.length) % this.fieldSequence.length;
-        }
-
-        const nextField = this.fieldSequence[nextIndex];
-        this.focusField(nextField);
-      }
-    }
-  }
-
-  private focusField(field: string): void {
-    const fieldMap: { [key: string]: ElementRef | undefined } = {
-      'senderName': this.customerNameInput,
-      'senderCode': this.senderCodeLookup,
-      'phone': this.phoneInput,
-      'address': this.addressInput,
-      'city': this.senderCityInput,
-      'zipCode': this.zipCodeInput,
-      'email': this.emailInput,
-      'locationLink': this.locationLinkInput,
-      'consigneeName': this.consigneeNameInput,
-      'consigneeCode': this.consigneeCodeLookup,
-      'consigneeMobile': this.consigneeMobileInput,
-      'consigneeAddress': this.consigneeAddressInput,
-      'consigneeCountry': this.consigneeCountryLookup,
-      'consigneeCity': this.consigneeCityInput,
-      'modeOfDelivery': this.modeOfDeliveryLookup,
-      'modeOfPayment': this.modeOfPaymentLookup,
-      'itemDescription': this.itemDescriptionInput,
-      'quantity': this.quantityInput,
-      'unitWeight': this.unitWeightInput,
-      'addItemButton': this.addItemButton,
-      'totalCartons': this.totalCartonsInput,
-      'pricePerKg': this.pricePerKgInput,
-      'billCharge': this.billChargeInput,
-      'discount': this.discountInput
-    };
-
-    const target = fieldMap[field];
-    if (target) {
-      target.nativeElement.focus();
-    } else if (field.startsWith('carton')) {
-      // Dynamic focus for carton fields using ID
-      const element = document.getElementById(field);
-      if (element) {
-        element.focus();
-      }
-    }
-  }
 }

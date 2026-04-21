@@ -16,6 +16,10 @@ export interface Invoice {
     office_name?: string;
 }
 
+export interface InvoiceNumber {
+    invoice_number: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -52,5 +56,13 @@ export class InvoiceService {
 
     searchCustomers(phone: string): Observable<any> {
         return this.http.get<any>(`${this.apiUrl}/customers/search`, { params: { phone } });
+    }
+
+    getNextInvoiceNumber(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/next-number`);
+    }
+
+    get_inv_num(): Observable<InvoiceNumber> {
+        return this.http.get<InvoiceNumber>(`${this.apiUrl}/get_inv_num`);
     }
 }

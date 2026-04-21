@@ -24,15 +24,19 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { id: 'purchase', label: 'Purchase', icon: 'shopping-cart', route: '/dashboard/purchase' },
   { id: 'drivers', label: 'Drivers', icon: 'users', route: '/dashboard/drivers' },
   { id: 'reports', label: 'Reports', icon: 'file', route: '/dashboard/reports' },
-  // { id: 'income', label: 'Income', icon: 'income', route: '/dashboard/income' },
+  { id: 'shipment-groups', label: 'Loading List', icon: 'list', route: '/dashboard/tracking-dashboard/shipment-groups' },
   { id: 'invoice', label: 'Billing Invoice', icon: 'invoice', route: '/dashboard/invoice' },
   { id: 'settings', label: 'Settings', icon: 'settings', route: '/dashboard/settings' },
   { id: 'balance-share', label: 'Balance Share', icon: 'dollar-sign', route: '/dashboard/balance-share' },
   { id: 'register', label: 'Register User', icon: 'users', route: '/dashboard/register' },
   { id: 'offices', label: 'Create Office', icon: 'settings', route: '/dashboard/offices' },
   { id: 'unit-price', label: 'Unit Price', icon: 'dollar-sign', route: '/dashboard/unit-price' },
+  { id: 'featured-offers', label: 'Featured Offers', icon: 'star', route: '/dashboard/featured-offers' },
   { id: 'logout', label: 'Logout', icon: 'logout', route: '' },
   { id: 'cargo-items', label: 'Cargo Items', icon: 'box', route: '/dashboard/cargo-items' },
+  { id: 'cargo-requests', label: 'Cargo Requests', icon: 'file-text', route: '/dashboard/cargo-requests' },
+  { id: 'bank-approvals', label: 'Bank Approvals', icon: 'check-circle', route: '/dashboard/bank-approvals' },
+  { id: 'tracking-dashboard', label:'Tracking', icon:'map', route: '/dashboard/tracking-dashboard/tracking'}
 ];
 
 
@@ -61,7 +65,7 @@ export const modeOfDeliveryOptions: ReadonlyArray<DeliveryOption> = [
 
 export const modeOfPaymentOptions = [
   { label: 'Swipe', value: 'swipe' },
-  { label: 'Direct Bank Transfer', value: 'bank_transfer' },
+  { label: 'Direct Bank Transfer', value: 'Direct Bank Transfer' },
   { label: 'Direct Cash', value: 'cash' }
 ] as const satisfies ReadonlyArray<PaymentOption>;
 

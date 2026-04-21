@@ -46,8 +46,16 @@ export class SidebarComponent {
       },
       // {
       //   label: 'Fleet Management',
-      //   items: allItems.filter(i => ['tracking', 'shipments', 'live-tracking', 'drivers'].includes(i.id))
+      //   items: allItems.filter(i => ['tracking', 'shipments', 'live-tracking', 'shipment-groups', 'drivers'].includes(i.id))
       // },
+      {
+        label: 'Fleet Management',
+        items: allItems.filter(i => {
+          if (['tracking-dashboard', 'cargo-requests'].includes(i.id)) return true;
+          if (i.id === 'bank-approvals') return isAdmin;
+          return false;
+        })
+      },
       {
         label: 'Finance',
         items: allItems.filter(i => ['income', 'reports', 'invoice', 'payment', 'purchase', 'receipt', 'balance-share'].includes(i.id))
@@ -59,6 +67,7 @@ export class SidebarComponent {
           if (i.id === 'register') return isAdmin;
           if (i.id === 'offices') return isAdmin;
           if (i.id === 'unit-price') return fullAccess;
+          if (i.id === 'featured-offers') return fullAccess;
           if (i.id === 'cargo-items') return fullAccess || shopManager;
           return false;
         })
