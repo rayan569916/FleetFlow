@@ -11,6 +11,7 @@
   --brand-yellow-400: #ffe35a;
   --brand-text: #f7f3ff;
   --brand-muted: #d3c2ee;
+  --text-color :rgba(255, 248, 223, 0.97);
   --surface-glass: rgba(79, 18, 98, 0.78);
   --surface-card: rgba(99, 23, 123, 0.64);
   --surface-border: rgba(242, 210, 27, 0.28);
@@ -272,4 +273,98 @@ textarea:focus {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+/* =========================================
+   MODAL SYSTEM - GLOBAL
+   ========================================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background-color: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modal-box {
+  position: relative;
+  z-index: 9999;
+  background: white;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(242, 210, 27, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 32rem;
+  overflow: hidden;
+  animation: modal-slide-up 0.3s ease-out;
+}
+
+@keyframes modal-slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Modal Actions */
+.btn-primary {
+  padding: 0.6rem 1.5rem;
+  background: #4f46e5;
+  color: white !important;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+.btn-primary:hover { background: #4338ca; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  padding: 0.6rem 1.5rem;
+  background: white;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { background: #f8fafc; border-color: #94a3b8; }
+
+/* Status Pills visibility improvements */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.status-neutral {
+  background-color: #f1f5f9;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0;
+}
+
+.status-active {
+  background-color: #e0e7ff;
+  color: #3730a3 !important;
+  border: 1px solid #c7d2fe;
 }

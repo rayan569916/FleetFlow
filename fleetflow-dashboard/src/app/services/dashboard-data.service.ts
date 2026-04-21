@@ -22,7 +22,9 @@ export class DashboardDataService {
     return this.http.get<ActivityLog[]>(`${this.apiUrl}/recent-activity`);
   }
 
-
+  searchTrackingNumber(tracking_id: string): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/tracking/invoices/search`, { params: { tracking_id } });
+  }
 
   getSelectedIncome(): Observable<IncomeSnapshot> {
     return this.incomePeriod$.pipe(
@@ -123,9 +125,66 @@ export class DashboardDataService {
     return this.http.post(`${this.rootUrl}/fleet/drivers`, data);
   }
 
-  // --- Tracking ---
+  // --- Tracking & Shipments ---
   getTrackingInfo(trackingNumber: string): Observable<any> {
-    return this.http.get<any>(`${this.rootUrl}/shipments/tracking/${trackingNumber}`);
+    return this.http.get<any>(`${this.rootUrl}/tracking/invoices/${trackingNumber}`);
+  }
+
+  getShipments(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/tracking/shipments`, { params });
+  }
+
+  getShipmentDetails(id: number): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/tracking/shipments/${id}/details`);
+  }
+
+  createShipment(data: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/tracking/shipments`, data);
+  }
+
+  updateShipmentStatus(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.rootUrl}/tracking/shipments/${id}/status`, data);
+  }
+
+  getShipmentStatus(): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/tracking/shipment-status`);
+  }
+
+  // --- Loading List ---
+  getLoadingList(params: any = {}): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/loading-list`, { params });
+  }
+
+  moveCargo(data: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/loading-list/move`, data);
+  }
+
+  createShipmentGroupFromLoadingList(data: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/loading-list/create-group`, data);
+  }
+
+  moveShipmentGroup(id: number, data: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/loading-list/group/${id}/move`, data);
+  }
+
+  assignShipmentGroupContainer(id: number, data: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/loading-list/group/${id}/assign-container`, data);
+  }
+
+  addLoadingListManualEvent(data: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/loading-list/manual-event`, data);
+  }
+
+  assignContainer(data: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/loading-list/assign-container`, data);
+  }
+
+  updateCargoStatus(data: any): Observable<any> {
+    return this.http.put<any>(`${this.rootUrl}/loading-list/status`, data);
+  }
+
+  updateExternalTracking(data: any): Observable<any> {
+    return this.http.put<any>(`${this.rootUrl}/loading-list/external-tracking`, data);
   }
 
   setIncomePeriod(period: IncomePeriod): void {

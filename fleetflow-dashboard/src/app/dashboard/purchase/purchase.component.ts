@@ -13,7 +13,7 @@ import { ToastService } from '../../services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './purchase.component.html',
-  styles: ``
+  styleUrls: ['./purchase.component.css']
 })
 export class PurchaseComponent implements OnInit {
   private fb = inject(FormBuilder);

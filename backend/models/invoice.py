@@ -10,20 +10,34 @@ class InvoiceHeader(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     invoice_number = db.Column(db.String(50), unique=True, nullable=False)
     date = db.Column(db.Date, nullable=False, index=True)
-    status = db.Column(db.String(20), default='Pending') # Pending, Paid, Canceled
-    tracking_number = db.Column(db.String(50), nullable=True)
+    status = db.Column(db.String(50), default='Pending') # Pending, Paid, Canceled
+    tracking_number = db.Column(db.String(50), unique=True, nullable=True)
     mode_of_delivery = db.Column(db.String(50))
     mode_of_payment = db.Column(db.String(50))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     
+    # Loading List Fields
+    current_office_id = db.Column(db.Integer, db.ForeignKey('offices.id'), nullable=True)
+    cargo_status_id = db.Column(db.Integer, db.ForeignKey('shipment_group_status.id'), nullable=True)
+    cargo_request_id = db.Column(db.Integer, db.ForeignKey('cargo_requests.id'), nullable=True)
+    container_number = db.Column(db.String(100), nullable=True)
+    container_date = db.Column(db.Date, nullable=True)
+    loading_date = db.Column(db.Date, nullable=True)
+    cargo_status = db.Column(db.String(50), default='At Shop')
+    external_tracking_number = db.Column(db.String(100), nullable=True)
+    external_tracking_link = db.Column(db.String(500), nullable=True)
+    
     # Relationships
     customer = db.relationship('InvoiceCustomerDetail', backref='header', uselist=False, cascade="all, delete-orphan")
     items = db.relationship('InvoiceItem', backref='header', cascade="all, delete-orphan")
     amount_detail = db.relationship('InvoiceAmountDetail', backref='header', uselist=False, cascade="all, delete-orphan")
     creator = db.relationship('User', backref='invoices_created')
-    office = db.relationship('Office', backref=db.backref('invoice_headers', lazy=True))
+    office = db.relationship('Office', foreign_keys=[office_id], backref=db.backref('invoice_headers', lazy=True))
+    current_office = db.relationship('Office', foreign_keys=[current_office_id], backref=db.backref('invoices_currently_here', lazy=True))
+    shipment_status = db.relationship('ShipmentGroupStatus', foreign_keys=[cargo_status_id], backref=db.backref('invoices', lazy=True))
+    cargo_request = db.relationship('CargoRequest', backref=db.backref('invoice', uselist=False))
 
 class InvoiceCustomerDetail(db.Model):
     __tablename__ = 'invoice_customers'
@@ -47,6 +61,7 @@ class InvoiceCustomerDetail(db.Model):
     consignee_address = db.Column(db.String(200))
     consignee_country = db.Column(db.String(100))
     consignee_city = db.Column(db.String(100))
+    consignee_postal_code = db.Column(db.String(20))
 
 class InvoiceItem(db.Model):
     __tablename__ = 'invoice_items'

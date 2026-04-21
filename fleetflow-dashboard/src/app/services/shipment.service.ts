@@ -39,4 +39,12 @@ export class ShipmentService {
     deleteShipment(id: number): Observable<any> {
         return this.http.delete<any>(`${this.apiUrl}/${id}`);
     }
+
+    getDestination(destination:any): Observable<any> {
+        return this.http.get<any>(`${this.apiRoot}/tracking/get_destination`, {params: {destination}});
+    }
+
+    exportShipmentExcel(id: number): Observable<any> {
+        return this.http.get<any>(`${this.apiRoot}/tracking/${id}/export-data`);
+    }
 }

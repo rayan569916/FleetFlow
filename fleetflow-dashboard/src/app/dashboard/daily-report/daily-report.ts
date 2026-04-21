@@ -93,7 +93,7 @@ export class DailyReport implements OnInit {
       .filter((inv) => inv?.invoice_details?.modeOfPayment === 'swipe')
       .reduce((sum, inv) => sum + Number(inv?.amount ?? 0), 0);
     this.totalBankTransferAmount = this.submittedInvoices
-      .filter((inv) => inv?.invoice_details?.modeOfPayment === 'bank_transfer')
+      .filter((inv) => inv?.invoice_details?.modeOfPayment === 'bank_transfer' || inv?.invoice_details?.modeOfPayment === 'Direct Bank Transfer')
       .reduce((sum, inv) => sum + Number(inv?.amount ?? 0), 0);
     this.totalCashAmount = this.submittedInvoices
       .filter((inv) => inv?.invoice_details?.modeOfPayment === 'cash')

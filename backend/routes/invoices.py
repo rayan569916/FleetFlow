@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify
 import datetime
+from sqlalchemy import func
 import json
+import uuid
 from extensions import db
 from models.invoice import InvoiceHeader, InvoiceCustomerDetail, InvoiceItem, InvoiceAmountDetail
+from models.cargo_request import CargoRequest
 from utils.auth import (
     role_required,
     get_effective_read_office_id,
@@ -11,8 +14,60 @@ from utils.auth import (
     validate_office_id,
 )
 from utils.reports_util import update_daily_report
+from models.tracking import ShipmentGroupStatus, ShipmentTrackingEvent, TrackingEventType
+from models.unit_price import City
 
 invoices_bp = Blueprint('invoices', __name__)
+
+def generate_next_invoice_number():
+    """Generates the next invoice number in CAP-YYYY-XXX format."""
+    now = datetime.datetime.now()
+    year = now.year
+    prefix = f"CAP-{year}-"
+    
+    # Query for the maximum invoice number for the current year with a row lock
+    last_invoice = db.session.query(InvoiceHeader.invoice_number)\
+        .filter(InvoiceHeader.invoice_number.like(f"{prefix}%"))\
+        .order_by(InvoiceHeader.invoice_number.desc())\
+        .with_for_update()\
+        .first()
+    
+    if last_invoice:
+        try:
+            # Extract the numeric part (e.g., from CAP-2026-001 extract 001)
+            last_number_str = last_invoice[0].split('-')[-1]
+            next_number = int(last_number_str) + 1
+            return f"{prefix}{str(next_number).zfill(3)}"
+        except (ValueError, IndexError):
+            # Fallback if the format was unexpected
+            return f"{prefix}001"
+    else:
+        return f"{prefix}001"
+
+def _get_or_create_group_status(name):
+    status = ShipmentGroupStatus.query.filter_by(name=name).first()
+    if not status:
+        status = ShipmentGroupStatus(name=name)
+        db.session.add(status)
+        db.session.flush()
+    return status
+
+def _get_or_create_event_type(name):
+    event_type = TrackingEventType.query.filter_by(event_type=name).first()
+    if not event_type:
+        event_type = TrackingEventType(event_type=name)
+        db.session.add(event_type)
+        db.session.flush()
+    return event_type
+
+@invoices_bp.route('/get_inv_num',methods=['GET'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
+def get_inv_num(current_user):
+    try:
+        return jsonify({'invoice_number': generate_next_invoice_number()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Database error', 'error': str(e)}), 500
 
 @invoices_bp.route('', methods=['GET'])
 @role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
@@ -33,6 +88,17 @@ def get_invoices(current_user):
         if date_str:
             target_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
             query = query.filter(InvoiceHeader.date == target_date)
+            
+        status_filter = request.args.get('status')
+
+        if status_filter:
+            query = query.filter(InvoiceHeader.status.ilike(status_filter))
+
+        payment_filter = request.args.get('mode_of_payment')
+        print(payment_filter)
+        if payment_filter:
+            # Match either the value or the label for robustness
+            query = query.filter(InvoiceHeader.mode_of_payment.ilike(payment_filter))
             
         search_query = request.args.get('search')
         if search_query:
@@ -58,7 +124,9 @@ def get_invoices(current_user):
         total = paginated_data.total
         pages = paginated_data.pages
 
+
     except Exception as e:
+        db.session.rollback()
         return jsonify({'message': 'Database error', 'error': str(e)}), 500
     
     output = []
@@ -115,6 +183,7 @@ def search_customers(current_user):
             InvoiceCustomerDetail.consignee_address,
             InvoiceCustomerDetail.consignee_country,
             InvoiceCustomerDetail.consignee_city,
+            InvoiceCustomerDetail.consignee_postal_code,
         ).join(InvoiceHeader).filter(InvoiceCustomerDetail.sender_phone.like(f'%{phone}%'))
         
         # if office_id is not None:
@@ -141,6 +210,7 @@ def search_customers(current_user):
                     'consigneeAddress': c.consignee_address,
                     'consigneeCountry': c.consignee_country,
                     'consigneeCity': c.consignee_city,
+                    'consigneePostalCode': c.consignee_postal_code,
                 })
                 seen_phones.add(c.sender_phone)
                 if len(output) >= 10: # Limit result count
@@ -175,6 +245,7 @@ def get_invoice(current_user, id):
         'consigneeAddress': inv.customer.consignee_address if inv.customer else '',
         'consigneeCountry': inv.customer.consignee_country if inv.customer else '',
         'consigneeCity': inv.customer.consignee_city if inv.customer else '',
+        'consigneePostalCode': inv.customer.consignee_postal_code if inv.customer else '',
         'modeOfDelivery': inv.mode_of_delivery,
         'modeOfPayment': inv.mode_of_payment,
         'trackingNumber': inv.tracking_number,
@@ -221,11 +292,17 @@ def get_invoice(current_user, id):
         'invoice_details': details
     })
 
+@invoices_bp.route('/next-number', methods=['GET'])
+@role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
+def get_next_number(current_user):
+    """Preview the next available invoice number."""
+    return jsonify({'next_number': generate_next_invoice_number()})
+
 @invoices_bp.route('', methods=['POST'])
 @role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
 def create_invoice(current_user):
     data = request.get_json()
-    if not data or 'invoice_number' not in data or 'amount' not in data or 'date' not in data:
+    if not data or 'amount' not in data or 'date' not in data:
         return jsonify({'message': 'Missing required fields'}), 400
 
     try:
@@ -233,16 +310,37 @@ def create_invoice(current_user):
         if not validate_office_id(office_id):
             return jsonify({'message': 'A valid office_id is required'}), 400
 
-        # 1. Create Header
+        # 1. Generate Invoice Number in Backend (Concurrent Safe)
+        invoice_num = generate_next_invoice_number()
+        tracking_num = invoice_num
+            
+        # Determine status based on role
+        user_role = (current_user.role.name if current_user.role else '').lower()
+        if user_role == 'driver':
+            status_name = 'Shipment Picked Up'
+        else:
+            status_name = 'Arrived at Origin Facility'
+            
+        status_obj = _get_or_create_group_status(status_name)
+
+        # Validate cargo_request_id if supplied
+        cargo_request_id = data.get('cargo_request_id')
+        if cargo_request_id:
+            cargo_req_check = CargoRequest.query.get(cargo_request_id)
+            if not cargo_req_check:
+                cargo_request_id = None  # ignore invalid id silently
+
         header = InvoiceHeader(
-            invoice_number=data['invoice_number'],
+            invoice_number=invoice_num,
             date=datetime.datetime.strptime(data['date'], '%Y-%m-%d').date(),
             status=data.get('status', 'Pending'),
-            tracking_number=data.get('tracking_number'),
+            tracking_number=tracking_num,
             mode_of_delivery=data.get('modeOfDelivery'),
             mode_of_payment=data.get('modeOfPayment'),
             creator_id=current_user.id,
-            office_id=office_id
+            office_id=office_id,
+            cargo_status_id=status_obj.id,
+            cargo_request_id=cargo_request_id  # ← Link to cargo request
         )
         db.session.add(header)
         db.session.flush() # Get header.id
@@ -263,7 +361,8 @@ def create_invoice(current_user):
             consignee_mobile=data.get('consigneeMobile'),
             consignee_address=data.get('consigneeAddress'),
             consignee_country=data.get('consigneeCountry'),
-            consignee_city=data.get('consigneeCity')
+            consignee_city=data.get('consigneeCity'),
+            consignee_postal_code=data.get('consigneePostalCode')
         )
         db.session.add(customer)
 
@@ -302,8 +401,63 @@ def create_invoice(current_user):
             grand_total=data['amount'] # This is the grand total
         )
         db.session.add(amount)
+        db.session.flush()
+
+        # 4.5. Update Cargo Request Status if linked
+        cargo_req_id = data.get('cargo_request_id')
+        if cargo_req_id:
+            cargo_req = CargoRequest.query.get(cargo_req_id)
+            if cargo_req:
+                cargo_req.status = 'Invoice_Created'
+                # The invoice status is already correctly set during initialization at line 327.
+                # We respect the status passed from the frontend (e.g. 'Awaiting Bank Approval')
 
         db.session.commit()
+
+        # 5. Create Initial Tracking Events
+        try:
+            # Determine location_id for the tracking event from the user's office
+            location_id = current_user.office.location_id if current_user.office else None
+            
+            # Fallback to satisfy non-nullable location_id constraint if office has no city assigned
+            if not location_id:
+                fallback_city = City.query.first()
+                location_id = fallback_city.id if fallback_city else 1
+
+            if user_role == 'driver':
+                # Just one event
+                event_type_picked = _get_or_create_event_type('Shipment Picked Up')
+                db.session.add(ShipmentTrackingEvent(
+                    tracking_id=header.tracking_number,
+                    location_id=location_id,
+                    event_type_id=event_type_picked.id,
+                    notes='Shipment Picked Up by Driver',
+                    scanned_by=current_user.id
+                ))
+            else:
+                # Manager: create TWO events
+                event_type_picked = _get_or_create_event_type('Shipment Picked Up')
+                event_type_arrived = _get_or_create_event_type('Arrived at Origin Facility')
+                
+                db.session.add(ShipmentTrackingEvent(
+                    tracking_id=header.tracking_number,
+                    location_id=location_id,
+                    event_type_id=event_type_picked.id,
+                    notes='Shipment Picked Up (Auto-logged)',
+                    scanned_by=current_user.id
+                ))
+                db.session.add(ShipmentTrackingEvent(
+                    tracking_id=header.tracking_number,
+                    location_id=location_id,
+                    event_type_id=event_type_arrived.id,
+                    notes='Arrived at Origin Facility (Logged by Shop Manager)',
+                    scanned_by=current_user.id
+                ))
+            db.session.commit()
+        except Exception as te:
+            print(f"Tracking event creation failed: {str(te)}")
+            # Don't fail the whole invoice creation if tracking event fails
+
         # Update daily report in real-time
         update_daily_report(header.date, header.office_id)
     except Exception as e:
@@ -312,6 +466,33 @@ def create_invoice(current_user):
         return jsonify({'message': 'Failed to create invoice', 'error': str(e)}), 500
 
     return jsonify({'message': 'Invoice created!', 'id': header.id}), 201
+
+@invoices_bp.route('/<int:id>/status', methods=['PUT'])
+@role_required(['Super_admin', 'management', 'shop_manager'])
+def update_invoice_status(current_user, id):
+    data = request.get_json()
+    status = data.get('status')
+    if not status:
+        return jsonify({'message': 'Status is required'}), 400
+    
+    invoice = InvoiceHeader.query.get(id)
+    if not invoice:
+        return jsonify({'message': 'Invoice not found'}), 404
+    
+    if not can_access_office(current_user, invoice.office_id):
+        return jsonify({'message': 'You cannot access records from another office'}), 403
+
+    try:
+        invoice.status = status
+        db.session.commit()
+        
+        # Update daily report in real-time
+        update_daily_report(invoice.date, invoice.office_id)
+        
+        return jsonify({'message': f'Invoice status updated to {status}'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to update status', 'error': str(e)}), 500
 
 @invoices_bp.route('/<int:id>', methods=['PUT'])
 @role_required(['Super_admin', 'management', 'shop_manager', 'driver'])
@@ -352,6 +533,7 @@ def update_invoice(current_user, id):
             c.consignee_address = data.get('consigneeAddress', c.consignee_address)
             c.consignee_country = data.get('consigneeCountry', c.consignee_country)
             c.consignee_city = data.get('consigneeCity', c.consignee_city)
+            c.consignee_postal_code = data.get('consigneePostalCode', c.consignee_postal_code)
 
         # 3. Update Items (Delete and Re-add for simplicity/reliability)
         if 'items' in data:

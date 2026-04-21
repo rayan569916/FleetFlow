@@ -1,4 +1,5 @@
 <div class="invoice-paper bg-white p-8 shadow-lg rounded-lg w-full" id="printable-area">
+
   <div class="flex justify-between items-start mb-8 border-b pb-6">
     <div>
       <h2 class="text-3xl font-bold text-gray-800">INVOICE</h2>
@@ -31,8 +32,9 @@
         <p class="font-bold text-lg">{{ details?.consigneeName }}</p>
         <p>{{ details?.consigneeAddress }}</p>
         <p>
-          {{ details?.consigneeCity
-          }}{{ details?.consigneeCountry ? ', ' + details?.consigneeCountry : '' }}
+          {{ details?.consigneeCity }}
+          {{ details?.consigneePostalCode ? ' - ' + details?.consigneePostalCode : '' }}
+          {{ details?.consigneeCountry ? ', ' + details?.consigneeCountry : '' }}
         </p>
         <p>Tel: {{ details?.consigneeCountryCode || '' }} {{ details?.consigneeMobile }}</p>
       </div>
@@ -47,7 +49,10 @@
         <p>{{ details?.city }} - {{ details?.zipCode }}</p>
         <p>Tel: {{ details?.senderCountryCode || '' }} {{ details?.phone }}</p>
         <p>{{ details?.email }}</p>
-        <p *ngIf="details?.locationLink">Location: {{ details?.locationLink }}</p>
+        <p *ngIf="details?.locationLink" class="flex items-center justify-end gap-1 mt-1 truncate" title="{{ details?.locationLink }}">
+          <span class="text-gray-500">Location:</span>
+          <a [href]="details?.locationLink" target="_blank" class="text-blue-600 hover:text-blue-800 underline truncate max-w-[200px]">View Map</a>
+        </p>
       </div>
     </div>
   </div>

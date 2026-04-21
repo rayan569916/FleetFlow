@@ -1,0 +1,258 @@
+/* Floating Input Modernization */
+.floating-group {
+  position: relative;
+  width: 100%;
+}
+
+.floating-input {
+  width: 100%;
+  padding: 1.5rem 0.75rem 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: transparent;
+}
+
+.floating-input:focus,
+.sender-code-lookup [tabindex="0"]:focus,
+.consignee-code-lookup [tabindex="0"]:focus,
+.consignee-country-lookup [tabindex="0"]:focus,
+.mode-of-delivery-lookup [tabindex="0"]:focus,
+.mode-of-payment-lookup [tabindex="0"]:focus {
+  outline: none;
+}
+
+/* Ensure containers have higher z-index when focused to show dropdowns clearly */
+.sender-code-lookup:focus-within,
+.consignee-code-lookup:focus-within,
+.consignee-country-lookup:focus-within,
+.sender-city-autocomplete:focus-within,
+.consignee-city-autocomplete:focus-within,
+.mode-of-delivery-lookup:focus-within,
+.mode-of-payment-lookup:focus-within,
+.item-autocomplete-input:focus-within {
+  z-index: 50;
+}
+
+.floating-label {
+  position: absolute;
+  left: 0.75rem;
+  top: 1rem;
+  color: #94a3b8; /* text-slate-400 */
+  font-size: 0.875rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.floating-input:focus + .floating-label,
+.floating-input:not(:placeholder-shown) + .floating-label {
+  top: 0.4rem;
+  font-size: 0.7rem;
+  color: #a16207; /* Changed from indigo to yellow-800 */
+  font-weight: 600;
+  transform: translateY(-0.1rem);
+}
+
+/* Special handling for date inputs which often have a system placeholder */
+.floating-input[type="date"] + .floating-label {
+  top: 0.4rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.floating-input[type="date"]:focus + .floating-label {
+  color: #a16207;
+}
+
+.floating-input.error {
+  border-color: #ef4444;
+}
+
+/* Filter Bar Specifics */
+.filter-container {
+  background: var(--app-white, rgba(255, 248, 223, 0.95));
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(242, 210, 27, 0.2);
+  transition: all 0.3s ease;
+}
+
+.filter-container:focus-within {
+  border-color: rgba(242, 210, 27, 0.5);
+  box-shadow: 0 4px 20px -5px rgba(242, 210, 27, 0.15);
+}
+
+.filter-group {
+  min-width: 160px;
+  width: auto;
+  flex: 1;
+}
+
+.filter-group.wide {
+  min-width: 220px;
+  width: auto;
+  flex: 1.5;
+}
+
+.filter-floating-input {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding-top: 1.25rem;
+  padding-bottom: 0.35rem;
+  height: 3.25rem;
+}
+
+.filter-floating-input:focus {
+  border-color: var(--brand-purple-600);
+  background: white;
+}
+
+.filter-floating-label {
+  top: 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.filter-floating-input:focus ~ .filter-floating-label,
+.filter-floating-input:not(:placeholder-shown) ~ .filter-floating-label,
+.filter-floating-input[type="date"] ~ .filter-floating-label {
+  top: 0.35rem;
+  font-size: 0.65rem;
+  color: var(--brand-purple-600);
+  font-weight: 700;
+}
+
+.filter-btn {
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-apply {
+  background: var(--brand-purple-600);
+  color: white;
+  box-shadow: 0 4px 12px rgba(124, 28, 154, 0.2);
+}
+
+.btn-apply:hover {
+  background: var(--brand-purple-700);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(124, 28, 154, 0.3);
+}
+
+.btn-clear {
+  background: white;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-clear:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+/* Timeline Animations */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-in.slide-in-from-left-4 {
+  animation: slide-in-left 0.5s ease-out forwards;
+}
+
+@keyframes slide-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in.slide-in-from-top-4 {
+  animation: slide-in-top 0.4s ease-out forwards;
+}
+
+@keyframes slide-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in.slide-in-from-bottom-4 {
+  animation: slide-in-bottom 0.4s ease-out forwards;
+}
+
+/* Premium Card Effects */
+.shadow-yellow-100 {
+  box-shadow: 0 10px 25px -5px rgba(250, 204, 21, 0.1), 0 8px 10px -6px rgba(250, 204, 21, 0.1);
+}
+
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+.from-white {
+  --tw-gradient-from: #ffffff var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.to-yellow-50\/30 {
+  --tw-gradient-to: rgb(254 252 232 / 0.3) var(--tw-gradient-to-position);
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Dropdown Opaque Background Fix */
+.manual-status-lookup div.absolute,
+.relative ul.absolute,
+.move-status-lookup div.absolute,
+.container-status-lookup div.absolute {
+  background-color: #ffffff !important;
+  z-index: 100 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+.manual-status-lookup div.absolute div:hover,
+.relative ul.absolute li:hover {
+  background-color: #f8fafc !important;
+}

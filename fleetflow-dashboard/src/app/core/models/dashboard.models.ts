@@ -93,11 +93,11 @@ export interface LiveTrackingParams {
   driver_name?: string;
 }
 
-export interface PaymentOption extends SelectOption<'swipe' | 'bank_transfer' | 'cash'> { }
+export interface PaymentOption extends SelectOption<'swipe' | 'Direct Bank Transfer' | 'cash'> { }
 
 export interface InvoiceRecord {
   grandTotal: number;
-  modeOfPayment: 'swipe' | 'bank_transfer' | 'cash';
+  modeOfPayment: 'swipe' | 'Direct Bank Transfer' | 'cash';
   totalWeight: number;
   date: string;
 }

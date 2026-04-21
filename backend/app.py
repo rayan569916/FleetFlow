@@ -1,15 +1,18 @@
+from pathlib import Path
 from flask import Flask, jsonify
+from dotenv import load_dotenv
+
+# Load env from backend/.env regardless of execution cwd
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
 from extensions import db
 from flask_cors import CORS
-from config import Config
-# from config_development import Config
-# from config_local import Config
+from config_local import Config
+# from config import Config
 from routes import register_routes
-from dotenv import load_dotenv
 from flask_migrate import Migrate
 
-load_dotenv()
-migrate=Migrate()
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
@@ -17,13 +20,17 @@ def create_app():
 
     # Initialize extensions
     db.init_app(app)
-    # Restrict CORS to known frontend origins only (no wildcard).
-    CORS(app, origins=[
+    
+    # CORS configuration: Allow existing web app origins AND broaden for mobile development
+    CORS(app, resources={r"/*": {"origins": [
         "http://localhost:4200",
         "https://app.captaincargo.co",
-        "http://64.227.153.54"
-    ])
+        "http://64.227.153.54",
+        "*" # Broaden for mobile development preflight
+    ]}})
+    
     migrate.init_app(app, db)
+
     # Register routes
     register_routes(app)
     
@@ -57,7 +64,6 @@ def register_error_handlers(app: Flask):
 
     @app.errorhandler(Exception)
     def internal_error(e):
-        # Log the full traceback for server-side debugging
         app.logger.exception('Unhandled exception: %s', e)
         return jsonify({'message': 'An internal server error occurred'}), 500
 
@@ -65,7 +71,5 @@ app = create_app()
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all() # Uncomment if you want automatic table creation
-        pass
-    # For local development only
+        db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=False)

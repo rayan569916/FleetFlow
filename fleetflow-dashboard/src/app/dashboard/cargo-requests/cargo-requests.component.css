@@ -1,0 +1,12 @@
+/* Cargo Requests Styles */
+.cargo-requests-container {
+  padding: 2rem;
+}
+
+.request-card {
+  transition: transform 0.2s;
+}
+
+.request-card:hover {
+  transform: translateY(-4px);
+}

@@ -25,7 +25,7 @@ def role_required(allowed_roles):
                 if not current_user:
                      return jsonify({'message': 'User not found!'}), 401
                 
-                if current_user.role.name not in allowed_roles:
+                if current_user.role.name not in allowed_roles and current_user.role.name.lower() not in [r.lower() for r in allowed_roles]:
                     return jsonify({'message': 'Permission denied!'}), 403
 
             except Exception as e:
@@ -36,7 +36,9 @@ def role_required(allowed_roles):
     return decorator
 
 def is_super_user(user):
-    return bool(user and user.role and user.role.name in ['Super_admin', 'super_admin', 'management'])
+    if not user or not user.role:
+        return False
+    return user.role.name.lower() in ['super_admin', 'management']
 
 def get_effective_read_office_id(current_user, requested_office_id=None):
     """
