@@ -88,3 +88,18 @@ class InvoiceAmountDetail(db.Model):
     
     subtotal = db.Column(db.Float, nullable=False)
     grand_total = db.Column(db.Float, nullable=False)
+
+
+class InvoicePayments(db.Model):
+    __tablename__ = 'invoice_payments'
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoice_headers.id'), nullable=False)
+    payment_method = db.Column(db.String(50))
+    original_amount = db.Column(db.Float, nullable=False)
+    wallet_used = db.Column(db.Float, default=0.0)
+    final_paid = db.Column(db.Float, nullable=False)
+    payment_date = db.Column(db.Date, nullable=False)
+    
+    # Relationships
+    invoice_header = db.relationship('InvoiceHeader', backref='payments')
+
