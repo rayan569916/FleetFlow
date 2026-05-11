@@ -222,7 +222,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./layout/login-sign-up-layout.component/login-sign-up-layout.component').then((c) => c.LoginSignUpLayoutComponent)
+    loadComponent: () => import('./auth/login/login').then((c) => c.LoginComponent)
   },
   {
     path: 'transaction-layout',

@@ -207,6 +207,19 @@
   border-color: #ef4444;
 }
 
+/* Hide default numeric spinners */
+/* Chrome, Safari, Edge, Opera */
+.floating-input::-webkit-outer-spin-button,
+.floating-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.floating-input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* Table Styles (mainly for Item creation & Detail views) */
 .items-table-wrapper {
   overflow-x: auto;
