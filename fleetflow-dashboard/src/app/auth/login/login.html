@@ -1,177 +1,434 @@
-<!-- Error Message Banner -->
 <div
-  *ngIf="errorMessage"
-  class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r shadow-sm flex items-start animate-fade-in"
-  role="alert"
+  class="min-h-screen flex w-full relative overflow-hidden"
+  style="
+    background: linear-gradient(135deg, #240c31 0%, #351347 50%, #20082b 100%);
+    font-family: 'Outfit', sans-serif;
+  "
 >
-  <svg
-    class="h-5 w-5 text-red-500 mr-2 mt-0.5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
+  <!-- Subtle Background Pattern / Lines -->
+  <img class="absolute w-full h-full object-cover opacity-30" src="/icons/port.jpg" alt="" />
+  <div class="absolute inset-0 z-0 bg-pattern opacity-10"></div>
+
+  <div
+    class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-[#f2d21b] opacity-[0.03] blur-[120px] pointer-events-none z-0"
+  ></div>
+  <div
+    class="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-[#7c1c9a] opacity-[0.1] blur-[100px] pointer-events-none z-0"
+  ></div>
+
+  <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
+    <svg
+      class="absolute w-[150%] h-[150%] top-[-25%] left-[-25%]"
+      viewBox="0 0 1000 1000"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M 0 500 Q 250 200 500 500 T 1000 500"
+        fill="none"
+        stroke="#f2d21b"
+        stroke-width="1"
+        stroke-dasharray="5 15"
+      />
+      <path
+        d="M 0 600 Q 250 300 500 600 T 1000 600"
+        fill="none"
+        stroke="rgba(255,255,255,0.2)"
+        stroke-width="0.5"
+      />
+    </svg>
+  </div>
+
+  <!-- Error Message Banner -->
+  <div
+    *ngIf="errorMessage"
+    class="absolute top-6 right-6 z-50 bg-red-500/90 text-white px-6 py-4 rounded-xl shadow-[0_10px_25px_-5px_rgba(239,68,68,0.3)] backdrop-blur-md flex items-center gap-4 animate-[slideIn_0.3s_ease-out]"
+    role="alert"
   >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-  <div>
-    <p class="font-bold">Login Failed</p>
-    <p class="text-sm">{{ errorMessage }}</p>
+    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+    <div>
+      <p class="font-bold text-sm">Login Failed</p>
+      <p class="text-xs text-white/90 mt-0.5">{{ errorMessage }}</p>
+    </div>
+  </div>
+
+  <!-- Left Column: Branding (Hidden on mobile) -->
+  <div class="hidden lg:flex w-1/2 flex-col justify-center items-center relative z-10 p-12">
+    <div class="flex flex-col items-center justify-center max-w-lg w-full mb-8">
+      <!-- Big Logo -->
+      <img
+        src="/icons/3D_logo.png"
+        alt="Captain Cargo Logo"
+        class="w-[500px] h-auto drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] mb-8 transform hover:scale-105 transition-transform duration-500"
+      />
+
+      <!-- Brand Text -->
+      <h1
+        class="text-[2.75rem] font-bold text-white mb-2 tracking-tight leading-tight flex items-center gap-3"
+      >
+        Captain <span class="gold-text">Cargo</span>
+      </h1>
+      <p class="text-lg text-[#d3c2ee] font-light tracking-wide">
+        Transportation Management System
+      </p>
+    </div>
+
+    <!-- Feature Icons -->
+    <div class="flex gap-10 mt-12 w-full justify-center">
+      <!-- Secure Access -->
+      <div class="flex items-center gap-4 group">
+        <div
+          class="w-12 h-12 rounded-xl border border-[#f2d21b]/30 flex items-center justify-center bg-[#f2d21b]/10 text-[#f2d21b] shadow-[0_0_15px_rgba(242,210,27,0.1)] group-hover:scale-110 group-hover:bg-[#f2d21b]/20 transition-all"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
+          </svg>
+        </div>
+        <div class="text-[13px] text-white/80 leading-snug font-medium">Secure<br />Access</div>
+      </div>
+      <!-- Smart Logistics -->
+      <div class="flex items-center gap-4 group">
+        <div
+          class="w-12 h-12 rounded-xl border border-[#f2d21b]/30 flex items-center justify-center bg-[#f2d21b]/10 text-[#f2d21b] shadow-[0_0_15px_rgba(242,210,27,0.1)] group-hover:scale-110 group-hover:bg-[#f2d21b]/20 transition-all"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+        </div>
+        <div class="text-[13px] text-white/80 leading-snug font-medium">Smart<br />Logistics</div>
+      </div>
+      <!-- Real-time Tracking -->
+      <div class="flex items-center gap-4 group">
+        <div
+          class="w-12 h-12 rounded-xl border border-[#f2d21b]/30 flex items-center justify-center bg-[#f2d21b]/10 text-[#f2d21b] shadow-[0_0_15px_rgba(242,210,27,0.1)] group-hover:scale-110 group-hover:bg-[#f2d21b]/20 transition-all"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+            />
+          </svg>
+        </div>
+        <div class="text-[13px] text-white/80 leading-snug font-medium">
+          Real-time<br />Tracking
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Login Card -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center relative z-10 p-6">
+    <div class="w-full max-w-[800px] rounded-2xl p-10 md:mr-48 relative glass-card">
+      <!-- Small Logo Top -->
+      <div class="flex justify-center mb-8 relative">
+        <div
+          class="absolute w-20 h-20 rounded-full bg-[#f2d21b]/20 blur-xl top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-0"
+        ></div>
+        <div
+          class="w-[72px] h-[72px] rounded-full bg-[#1b0722] flex items-center justify-center border-[1.5px] border-[#f2d21b]/30 relative z-10 shadow-[0_0_20px_rgba(242,210,27,0.15)]"
+        >
+          <img src="/icons/3D_logo.png" alt="Small Logo" class="w-32 h-auto" />
+        </div>
+      </div>
+
+      <div class="text-center mb-10">
+        <h2 class="text-[28px] font-bold text-white leading-tight mb-1">Welcome Back,</h2>
+        <h2 class="text-[28px] font-bold gold-text leading-tight mb-4 drop-shadow-sm">Captain!</h2>
+        <p class="text-[13px] text-white/60">Sign in to continue to Captain Cargo</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+        <div class="relative mt-2 w-full">
+          <label class="block text-[13px] font-medium text-white/80 mb-2">Select User</label>
+          <!-- DROPDOWN TRIGGER -->
+          <button
+            type="button"
+            (click)="toggleDropdown()"
+            class="w-full h-[60px] flex items-center justify-between rounded-xl bg-white/5 px-4 text-left text-white border border-white/10 hover:border-[#f2d21b]/50 transition-all focus:outline-none focus:ring-1 focus:ring-[#f2d21b]/50"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-[#1b0722] border-2 border-[#f2d21b]/30 flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(242,210,27,0.1)]"
+              >
+                <img
+                  [src]="selectedUser ? getUserIcon(selectedUser.role) : '/icons/admin.jpg'"
+                  class="w-full h-full object-cover"
+                  alt="avatar"
+                />
+              </div>
+              <div class="flex flex-col justify-center">
+                <span class="text-sm font-semibold truncate leading-tight">{{
+                  selectedUser ? selectedUser.full_name : 'Select a user'
+                }}</span>
+                <span
+                  *ngIf="selectedUser"
+                  class="text-[10px] text-white/50 uppercase tracking-wider leading-none mt-0.5"
+                  >{{ selectedUser.role }}</span
+                >
+              </div>
+            </div>
+
+            <svg
+              class="w-5 h-5 text-white/40 transition-transform duration-200"
+              [class.rotate-180]="isOpen"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+
+          <!-- DROPDOWN MENU -->
+          <div
+            *ngIf="isOpen"
+            class="absolute z-50 mt-2 w-full overflow-hidden rounded-xl bg-[#1b0722] border border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-200"
+          >
+            <!-- Search Input inside dropdown -->
+            <!-- <div class="p-2 border-b border-white/5">
+              <input
+                type="text"
+                (input)="searchTerm.set($any($event.target).value)"
+                (click)="$event.stopPropagation()"
+                placeholder="Search users..."
+                class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs !text-white placeholder:text-white/30 focus:outline-none focus:border-[#f2d21b]/30"
+              />
+            </div> -->
+
+            <div class="max-h-60 overflow-auto py-1 scrollbar-thin scrollbar-thumb-white/10">
+              <div
+                *ngFor="let user of filteredUsers()"
+                (click)="selectUser(user)"
+                class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors group"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-full bg-[#1b0722] flex items-center justify-center border border-white/10 group-hover:border-[#f2d21b]/30 overflow-hidden transition-all shadow-sm"
+                  >
+                    <img [src]="getUserIcon(user.role)" class="w-full h-full object-cover" />
+                  </div>
+                  <div class="flex flex-col">
+                    <span
+                      class="text-sm font-medium text-white group-hover:text-[#f2d21b] transition-colors"
+                    >
+                      {{ user.full_name }}
+                    </span>
+                    <span class="text-[11px] text-white/40">
+                      {{ user.role }} • {{ user.office_name || 'No Office' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- SELECTED INDICATOR -->
+                <div
+                  *ngIf="user.username === selectedUser?.username"
+                  class="w-2 h-2 rounded-full bg-[#f2d21b] shadow-[0_0_10px_rgba(242,210,27,0.5)]"
+                ></div>
+              </div>
+
+              <div *ngIf="filteredUsers().length === 0" class="px-4 py-8 text-center">
+                <p class="text-xs text-white/30">No users found matching "{{ searchTerm() }}"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label class="block text-[13px] font-medium text-white/80 mb-2">Password</label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg
+                class="h-5 w-5 text-white/40 group-focus-within:text-[#f2d21b] transition-colors"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              class="login-input appearance-none block w-full pl-12 pr-12 h-[60px] border border-white/10 rounded-xl focus:outline-none focus:border-[#f2d21b]/50 focus:ring-1 focus:ring-[#f2d21b]/50 sm:text-[15px] tracking-widest transition-all"
+              [class.border-red-500]="
+                loginForm.get('password')?.touched && loginForm.get('password')?.invalid
+              "
+              placeholder="••••••••"
+            />
+
+            <button
+              type="button"
+              (click)="showPassword = !showPassword"
+              class="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors focus:outline-none"
+              tabindex="-1"
+            >
+              <svg
+                *ngIf="!showPassword"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              <svg
+                *ngIf="showPassword"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.076m1.868-2.535A10.048 10.048 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.017 10.017 0 01-1.346 3.328M9 9l6 6m-6 0l6-6"
+                />
+              </svg>
+            </button>
+          </div>
+          <p
+            *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+            class="mt-1.5 text-xs text-red-400 font-medium"
+          >
+            Password is required.
+          </p>
+        </div>
+
+        <!-- Options -->
+        <div class="flex items-center justify-between pt-1 pb-2">
+          <div class="flex items-center">
+            <input id="remember-me" type="checkbox" class="custom-checkbox" />
+            <label
+              for="remember-me"
+              class="ml-2.5 block text-[13px] text-white/70 cursor-pointer select-none"
+            >
+              Remember me
+            </label>
+          </div>
+          <a
+            href="#"
+            class="text-[13px] font-medium text-[#f2d21b] hover:text-[#ffe35a] transition-colors"
+          >
+            Forgot Password?
+          </a>
+        </div>
+
+        <!-- Submit Button -->
+        <div>
+          <button
+            type="submit"
+            [disabled]="loginForm.invalid || isLoading"
+            class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-[0_8px_16px_-4px_rgba(242,210,27,0.3)] text-[15px] font-bold text-[#26092f] bg-gradient-to-r from-[#f2d21b] to-[#f5a623] hover:from-[#ffe35a] hover:to-[#f2d21b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#2b1248] focus:ring-[#f2d21b] disabled:opacity-60 disabled:shadow-none disabled:cursor-not-allowed transition-all group"
+          >
+            <svg
+              *ngIf="isLoading"
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#26092f]"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <span *ngIf="!isLoading">Sign In</span>
+            <svg
+              *ngIf="!isLoading"
+              class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="relative my-8 pt-4 pb-2">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-white/5"></div>
+          </div>
+          <div class="relative flex justify-center text-xs">
+            <span class="px-4 text-white/40 bg-[#291338]">or</span>
+          </div>
+        </div>
+
+        <!-- Help Link -->
+        <div class="text-center">
+          <p class="text-[13px] text-white/50 flex items-center justify-center gap-2">
+            <!-- Headset icon -->
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            Need help?
+            <a
+              href="#"
+              class="text-[#f2d21b] hover:text-[#ffe35a] transition-colors hover:underline"
+              >Contact Support</a
+            >
+          </p>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
-
-<form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
-  <!-- Username Field -->
-  <div>
-    <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-    <div class="relative">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg
-          class="h-5 w-5 text-slate-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </div>
-      <input
-        type="text"
-        formControlName="username"
-        class="appearance-none block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-shadow"
-        [class.border-red-300]="
-          loginForm.get('username')?.touched && loginForm.get('username')?.invalid
-        "
-        placeholder="Enter your username"
-      />
-    </div>
-    <p
-      *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.invalid"
-      class="mt-1 text-xs text-red-500 font-medium"
-    >
-      Username is required.
-    </p>
-  </div>
-
-  <!-- Password Field -->
-  <div>
-    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-    <div class="relative">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg
-          class="h-5 w-5 text-slate-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </div>
-      <input
-        [type]="showPassword ? 'text' : 'password'"
-        formControlName="password"
-        class="appearance-none block w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-shadow"
-        [class.border-red-300]="
-          loginForm.get('password')?.touched && loginForm.get('password')?.invalid
-        "
-        placeholder="Enter your password"
-      />
-      <!-- Password visibility toggle -->
-      <button
-        type="button"
-        (click)="showPassword = !showPassword"
-        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-500 transition-colors focus:outline-none"
-        tabindex="-1"  >
-        <!-- Eye Icon -->
-        <svg
-          *ngIf="!showPassword"
-          class="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
-        </svg>
-        <!-- Eye Off Icon -->
-        <svg
-          *ngIf="showPassword"
-          class="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.076m1.868-2.535A10.048 10.048 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.017 10.017 0 01-1.346 3.328M9 9l6 6m-6 0l6-6"
-          />
-        </svg>
-      </button>
-    </div>
-    <p
-      *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-      class="mt-1 text-xs text-red-500 font-medium"
-    >
-      Password is required.
-    </p>
-  </div>
-
-  <!-- Submit Button -->
-  <div>
-    <button
-      type="submit"
-      [disabled]="loginForm.invalid || isLoading"
-      class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-slate-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5"
-    >
-      <svg
-        *ngIf="isLoading"
-        class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="4"
-        ></circle>
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        ></path>
-      </svg>
-      {{ isLoading ? 'Signing In...' : 'Sign In' }}
-    </button>
-  </div>
-</form>

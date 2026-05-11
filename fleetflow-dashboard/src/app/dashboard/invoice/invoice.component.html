@@ -1188,9 +1188,9 @@
           <div class="floating-group">
             <input
               #unitWeightInput
-              type="text"
-              inputmode="numeric"
-              pattern="[0-9]*[.]?[0-9]*"
+              type="number"
+              step="any"
+              min="0"
               maxlength="14"
               formControlName="unitWeight"
               placeholder=" "
@@ -1296,9 +1296,9 @@
             <div class="floating-group">
               <input
                 #pricePerKgInput
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*[.]?[0-9]*"
+                type="number"
+                step="any"
+                min="0"
                 maxlength="14"
                 formControlName="pricePerKg"
                 placeholder=" "
@@ -1332,9 +1332,9 @@
                   <input
                     #cartonWeight
                     [id]="'cartonWeight_' + i"
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*[.]?[0-9]*"
+                    type="number"
+                    step="any"
+                    min="0"
                     maxlength="14"
                     formControlName="weight"
                     placeholder=" "
@@ -1358,9 +1358,9 @@
                   <input
                     #cartonCustoms
                     [id]="'cartonCustoms_' + i"
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*[.]?[0-9]*"
+                    type="number"
+                    step="any"
+                    min="0"
                     maxlength="14"
                     formControlName="customsCharge"
                     placeholder=" "
@@ -1386,9 +1386,9 @@
                   <input
                     #cartonPacking
                     [id]="'cartonPacking_' + i"
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*[.]?[0-9]*"
+                    type="number"
+                    step="any"
+                    min="0"
                     maxlength="14"
                     formControlName="packingCharge"
                     placeholder=" "
@@ -1418,9 +1418,9 @@
             <div class="floating-group">
               <input
                 #billChargeInput
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*[.]?[0-9]*"
+                type="number"
+                step="any"
+                min="0"
                 maxlength="14"
                 formControlName="billCharge"
                 placeholder=" "
@@ -1437,9 +1437,9 @@
             <div class="floating-group">
               <input
                 #discountInput
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*[.]?[0-9]*"
+                type="number"
+                step="any"
+                min="0"
                 maxlength="14"
                 formControlName="discount"
                 placeholder=" "

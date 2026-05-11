@@ -116,6 +116,23 @@ def get_users(current_user):
         'pages': paginated.pages
     })
 
+@auth_bp.route('/users-login-list',methods=['GET'])
+def get_users_login_list():
+    query = User.query.options(joinedload(User.role), joinedload(User.office))
+    return jsonify({
+        'users':[
+            {
+                'username':u.username,
+                'full_name':u.full_name,
+                'role':u.role.name,
+                'office_name':u.office.name if u.office else None
+            }
+            for u in query.all()
+        ]
+    })
+    
+    
+
 @auth_bp.route('/roles', methods=['GET'])
 def get_roles():
     roles = Role.query.all()

@@ -7,8 +7,8 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 
 from extensions import db
 from flask_cors import CORS
-from config_local import Config
-# from config import Config
+# from config_local import Config
+from config import Config
 from routes import register_routes
 from flask_migrate import Migrate
 
