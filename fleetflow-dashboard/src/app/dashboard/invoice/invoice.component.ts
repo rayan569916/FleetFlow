@@ -758,10 +758,16 @@ export class InvoiceComponent implements OnInit {
   }
 
   onNumberInputKeydown(event: KeyboardEvent): void {
-    // Allow: backspace, delete, tab, escape, enter
-    if ([46, 8, 9, 27, 13].indexOf(event.keyCode) !== -1 ||
-      // Allow: Ctrl+A, Command+A
-      (event.keyCode === 65 && (event.ctrlKey === true || event.metaKey === true)) ||
+    // Block negative sign, exponent, and plus sign
+    if (['-', 'e', 'E', '+'].includes(event.key)) {
+      event.preventDefault();
+      return;
+    }
+
+    // Allow: backspace, delete, tab, escape, enter, and decimal point (.)
+    if ([46, 8, 9, 27, 13, 110, 190].indexOf(event.keyCode) !== -1 ||
+      // Allow: Ctrl+A, Command+A, Ctrl+C, Ctrl+V
+      ((event.keyCode === 65 || event.keyCode === 67 || event.keyCode === 86) && (event.ctrlKey === true || event.metaKey === true)) ||
       // Allow: home, end, left, right, down, up
       (event.keyCode >= 35 && event.keyCode <= 40)) {
       // let it happen, don't do anything

@@ -105,3 +105,20 @@ export interface Category {
   id: number;
   name: string;
 }
+
+
+export interface UsersLoginList {
+  username: string,
+  full_name: string,
+  role: string,
+  office_name: string
+}
+
+export interface UserLogin {
+  id: number;
+  username: string;
+  full_name: string;
+  role: string;
+  office_name: string;
+  avatar?: string;
+}

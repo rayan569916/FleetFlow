@@ -1,8 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, map } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { UsersLoginList } from '../core/models/dashboard.models';
 
 interface LoginResponse {
     token: string;
@@ -89,6 +90,13 @@ export class AuthService {
 
     deleteUser(userId: number): Observable<any> {
         return this.http.delete(`${this.apiUrl}/users/${userId}`);
+    }
+
+    getUsersLoginList(): Observable<UsersLoginList[]> {
+        return this.http.get<{users: UsersLoginList[]}>(`${this.apiUrl}/users-login-list`).pipe(
+            tap(res => console.log('Users list:', res)),
+            map(response => response.users)
+        );
     }
 
     logout() {
